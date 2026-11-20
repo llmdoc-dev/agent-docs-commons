@@ -1,0 +1,26 @@
+{
+  "name": "agent-docs-commons",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Prototype knowledge commons: agents pay (x402/mock, Solana devnet) for versioned doc snippets and earn a 60% share when their facts are used.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "tsx src/server.ts",
+    "dev": "tsx watch src/server.ts",
+    "mcp": "tsx src/mcp.ts",
+    "test": "vitest run",
+    "demo": "tsx scripts/demo.ts",
+    "payout:dry-run": "tsx scripts/payout-dry-run.ts",
+    "seed": "tsx scripts/seed.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^24.9.1",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  }
+}

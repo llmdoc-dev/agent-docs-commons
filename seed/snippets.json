@@ -1,0 +1,102 @@
+[
+  {
+    "id": "react-usestate",
+    "library": "react",
+    "libraryVersion": "19.0.0",
+    "title": "useState declares a state variable",
+    "body": "useState is a React Hook that lets you add a state variable to a component. Call const [state, setState] = useState(initialValue) at the top level of your component. React keeps the state between re-renders. The setter replaces the previous value; passing an updater function receives the pending state. This is a short excerpt for agents, not a substitute for the full API reference.",
+    "sourceUrl": "https://react.dev/reference/react/useState",
+    "license": "CC-BY-4.0",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "react-rules-of-hooks",
+    "library": "react",
+    "libraryVersion": "19.0.0",
+    "title": "Rules of Hooks",
+    "body": "Only call Hooks at the top level of a React function component or a custom Hook. Do not call Hooks inside loops, conditions, nested functions, or after an early return. Only call Hooks from React functions, not from regular JavaScript functions or class components. These rules let React preserve Hook state across renders in a stable order.",
+    "sourceUrl": "https://react.dev/reference/rules/rules-of-hooks",
+    "license": "CC-BY-4.0",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "react-useeffect",
+    "library": "react",
+    "libraryVersion": "19.0.0",
+    "title": "useEffect synchronizes with an external system",
+    "body": "useEffect lets you synchronize a component with an external system. React runs the effect after the component commits to the screen. Return a cleanup function to undo the subscription or timer. Declare every reactive value used inside the effect in the dependency array. Effects are for external systems; you usually do not need an Effect to transform data for rendering.",
+    "sourceUrl": "https://react.dev/reference/react/useEffect",
+    "license": "CC-BY-4.0",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "react-use-client",
+    "library": "react",
+    "libraryVersion": "19.0.0",
+    "title": "use client marks a Client Component module",
+    "body": "The 'use client' directive tells bundlers to treat the module and its imports as Client Components. Put it at the top of the file, before imports. Use it when the module uses state, effects, or browser-only APIs. Server Components are the default in React Server Components apps and do not need a directive. Client Components can import other Client Components, not Server Components.",
+    "sourceUrl": "https://react.dev/reference/rsc/use-client",
+    "license": "CC-BY-4.0",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "express-basic-routing",
+    "library": "express",
+    "libraryVersion": "5.x",
+    "title": "Basic routing with app.METHOD",
+    "body": "Routing determines how an Express app responds to a client request for a particular path and HTTP method. app.get('/path', handler) handles GET requests. The handler receives (req, res, next). Send a response with res.send, res.json, or res.end. Path patterns can include named parameters such as /users/:userId, available as req.params.userId.",
+    "sourceUrl": "https://expressjs.com/en/starter/basic-routing.html",
+    "license": "MIT",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "express-middleware",
+    "library": "express",
+    "libraryVersion": "5.x",
+    "title": "Using middleware",
+    "body": "Middleware functions have access to the request, the response, and the next function in the cycle. They can execute code, change req and res, end the cycle, or call next() to continue. Application-level middleware is bound with app.use or app.METHOD. If a middleware function does not call next() or end the response, the request hangs. Error-handling middleware takes four arguments: (err, req, res, next).",
+    "sourceUrl": "https://expressjs.com/en/guide/using-middleware.html",
+    "license": "MIT",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "express-error-handling",
+    "library": "express",
+    "libraryVersion": "5.x",
+    "title": "Error handling",
+    "body": "Define error-handling middleware last, after other app.use and route calls, with four arguments: (err, req, res, next). In Express 5, rejected promises in middleware and handlers are passed to the error handler automatically. You can still call next(err) to skip to the error handler. Do not write to the response after headers have been sent.",
+    "sourceUrl": "https://expressjs.com/en/guide/error-handling.html",
+    "license": "MIT",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "zod-safeparse",
+    "library": "zod",
+    "libraryVersion": "4.x",
+    "title": "safeParse vs parse",
+    "body": "schema.parse(data) validates and returns the typed value, or throws a ZodError if validation fails. schema.safeParse(data) returns a discriminated result: { success: true, data } or { success: false, error }. Prefer safeParse in request handlers and agent tools so a bad payload does not throw. The error object lists issues with a path and message for each failed check.",
+    "sourceUrl": "https://zod.dev/api",
+    "license": "MIT",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "zod-object",
+    "library": "zod",
+    "libraryVersion": "4.x",
+    "title": "z.object defines a typed object schema",
+    "body": "z.object({ name: z.string(), count: z.number().int() }) describes an object and infers its TypeScript type. Unknown keys are stripped by default in many setups; use .strict() to reject them or .passthrough() to keep them. Build nested objects by composing schemas. Optional fields use .optional() or .default(value).",
+    "sourceUrl": "https://zod.dev/api",
+    "license": "MIT",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "zod-infer",
+    "library": "zod",
+    "libraryVersion": "4.x",
+    "title": "z.infer gets the TypeScript type from a schema",
+    "body": "Use z.infer<typeof schema> to extract the output TypeScript type of a Zod schema. Use z.input<typeof schema> when the input type differs from the output, for example after .transform or .default. Inferring types from the schema keeps runtime validation and compile-time types in sync so you do not maintain a parallel interface.",
+    "sourceUrl": "https://zod.dev/api",
+    "license": "MIT",
+    "retrievedAt": "2026-11-20"
+  }
+]
