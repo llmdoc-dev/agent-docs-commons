@@ -68,8 +68,8 @@ The MCP server speaks the Streamable stdio framing (`Content-Length`) and expose
 | Facilitator | `https://x402.org/facilitator` is the public **test** facilitator. `GET /supported` advertises Solana devnet. Coinbase CDP is not used (it would need API keys). |
 | Settlement in demo and tests | **Mocked.** Send `X-PAYMENT: mock:<solana-address>`. The demo does not hold a payer private key or devnet USDC, so it cannot sign a real x402 payload. |
 | Payout job | **Dry-run only.** It records what would be paid and never broadcasts a transfer. |
-| Mainnet | Disabled. The process refuses a mainnet network value. |
-| User wallets / private keys | Not used. `PAY_TO` is a throwaway public address generated for this prototype; no secret is stored in the repo. |
+| Mainnet | Disabled. The process refuses a mainnet network value. `MAINNET_PAY_TO_CANDIDATE` records the future site-treasury public address but is not used as `PAY_TO`. |
+| User wallets / private keys | Not used. Active `PAY_TO` is a throwaway devnet public address generated for this prototype; no secret is stored in the repo. |
 
 `npm run demo` probes the test facilitator and prints whether it was reachable, then states clearly that settlement is mocked.
 
@@ -88,7 +88,7 @@ House-seeded official facts (the starting catalog) send the contributor-pool sli
 Do not turn this on for real until these are in place. None of this should be done from this prototype directory without a review.
 
 1. **A public domain and HTTPS host** (for example Fly, Railway, or a VPS) so agents can reach `/llms.txt`, `/openapi.json`, and the MCP endpoint
-2. **A Solana mainnet receiving address you control** (your Phantom address). Put only the public address in config. Never paste a secret key into this project or into chat.
+2. **A Solana mainnet receiving address.** The site treasury public address is recorded as `MAINNET_PAY_TO_CANDIDATE` in `src/config.ts` (public key only). Do not switch `PAY_TO` or `X402_NETWORK` to mainnet in this prototype. Never paste a secret key into this project or into chat. Your personal Phantom address is separate and is where your share would be sent later.
 3. **A production x402 facilitator** (Coinbase CDP or equivalent) and a decision on whether to accept Base USDC as well as Solana
 4. **Legal / license review** of the excerpt policy and contributor terms (copyright, no FCRA / screening use)
 5. **A real payout sender** (a bot wallet you fund with USDC, with the secret stored in a proper secret manager — not in git) if you want automatic contributor payouts instead of dry-run
