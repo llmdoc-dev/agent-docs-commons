@@ -1,9 +1,8 @@
-import { createServer, type Server } from "node:http";
 import { mkdtempSync, writeFileSync, mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { loadConfig } from "../src/config.ts";
-import { openDb } from "../src/db.ts";
+import { openMigratedDb } from "../src/sqlite.ts";
 import { createApp } from "../src/app.ts";
 
 const AGENT_A = "BDkdaa5aHZZooaG2dRRMzBNe33PzTqZoZyQaBxVrdzi7";
@@ -45,16 +44,9 @@ async function main(): Promise<void> {
     dbPath,
     publicBaseUrl: "http://127.0.0.1",
   });
-  const db = openDb(dbPath);
-  const app = createApp(cfg, db);
-  const server: Server = createServer((req, res) => {
-    void app.handle(req, res);
-  });
-
-  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
-  const addr = server.address();
-  if (!addr || typeof addr === "string") throw new Error("no port");
-  const base = `http://127.0.0.1:${addr.port}`;
+  const db = await openMigratedDb(dbPath);
+  const app = await createApp({ ...cfg, publicBaseUrl: "http://127.0.0.1" }, db);
+  const base = "http://127.0.0.1";
 
   const steps: { name: string; status: number; body: unknown }[] = [];
 
@@ -63,7 +55,7 @@ async function main(): Promise<void> {
     path: string,
     init: RequestInit = {},
   ): Promise<{ status: number; body: unknown }> {
-    const res = await fetch(`${base}${path}`, init);
+    const res = await app.handle(new Request(`${base}${path}`, init));
     const text = await res.text();
     let body: unknown = text;
     try {
@@ -153,7 +145,6 @@ async function main(): Promise<void> {
   console.log(`\nWrote ${logPath}`);
   console.log("Done. No USDC was sent. No mainnet was used. No user wallet keys were involved.");
 
-  server.close();
 }
 
 main().catch((err) => {

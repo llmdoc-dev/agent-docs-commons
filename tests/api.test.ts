@@ -1,23 +1,22 @@
-import { createServer, type Server } from "node:http";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { loadConfig } from "../src/config.ts";
-import { openDb, getWallet, ledgerSummary, pendingPayouts } from "../src/db.ts";
-import { createApp, seedOfficialSnippets } from "../src/app.ts";
+import { beforeAll, describe, expect, it } from "vitest";
+import { loadConfig, USDC_MINT_DEVNET } from "../src/config.ts";
+import { getWallet, ledgerSummary, pendingPayouts } from "../src/db.ts";
+import { openMigratedDb } from "../src/sqlite.ts";
+import { createApp, type App } from "../src/app.ts";
 import { HOUSE_WALLET, TREASURY_WALLET } from "../src/payout.ts";
 
 const AGENT_A = "BDkdaa5aHZZooaG2dRRMzBNe33PzTqZoZyQaBxVrdzi7";
 const AGENT_B = "BtWTZbXWs9Zbpawja3NxC6Rj4E1HGPF8P6y1fvX9nXJx";
 const PAYER = "3fNDHnonA7xWsvLFkMoBmvSMCwcfvgjvT9PNdP6hLtGr";
 
-let server: Server;
-let base = "";
+let app: App;
 let dbPath = "";
 
 async function http(path: string, init: RequestInit = {}) {
-  const res = await fetch(`${base}${path}`, init);
+  const res = await app.handle(new Request(`http://127.0.0.1${path}`, init));
   const text = await res.text();
   let body: unknown = text;
   try {
@@ -36,21 +35,8 @@ beforeAll(async () => {
     dbPath,
     publicBaseUrl: "http://127.0.0.1",
   });
-  const db = openDb(dbPath);
-  const app = createApp(cfg, db);
-  server = createServer((req, res) => {
-    void app.handle(req, res);
-  });
-  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
-  const addr = server.address();
-  if (!addr || typeof addr === "string") throw new Error("no port");
-  base = `http://127.0.0.1:${addr.port}`;
-});
-
-afterAll(async () => {
-  await new Promise<void>((resolve, reject) =>
-    server.close((err) => (err ? reject(err) : resolve())),
-  );
+  const db = await openMigratedDb(dbPath);
+  app = await createApp(cfg, db);
 });
 
 describe("HTTP API", () => {
@@ -70,10 +56,11 @@ describe("HTTP API", () => {
   it("returns a Solana-devnet 402 challenge without payment", async () => {
     const res = await http("/v1/docs/lookup?library=react&q=useState");
     expect(res.status).toBe(402);
-    const body = res.body as { x402Version: number; accepts: Array<{ network: string; asset: string; payTo: string }> };
+    const body = res.body as { x402Version: number; accepts: Array<{ network: string; asset: string; payTo: string; amount: string }> };
     expect(body.x402Version).toBe(2);
     expect(body.accepts[0]!.network).toBe("solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1");
-    expect(body.accepts[0]!.asset).toBe("USDC");
+    expect(body.accepts[0]!.asset).toBe(USDC_MINT_DEVNET);
+    expect(body.accepts[0]!.amount).toBe("10000");
     expect(body.accepts[0]!.payTo).toBeTruthy();
   });
 
@@ -183,12 +170,12 @@ describe("HTTP API", () => {
     expect(would.some((w) => w.wallet === AGENT_B)).toBe(true);
     expect(would.some((w) => w.wallet === TREASURY_WALLET || w.wallet === HOUSE_WALLET)).toBe(false);
 
-    const db = openDb(dbPath);
-    expect(getWallet(db, AGENT_A)?.reputation).toBeGreaterThan(0);
-    expect(getWallet(db, AGENT_B)?.reputation).toBeGreaterThan(0);
-    const totals = ledgerSummary(db);
+    const db = await openMigratedDb(dbPath);
+    expect((await getWallet(db, AGENT_A))?.reputation).toBeGreaterThan(0);
+    expect((await getWallet(db, AGENT_B))?.reputation).toBeGreaterThan(0);
+    const totals = await ledgerSummary(db);
     expect(totals.treasuryMicros).toBeGreaterThan(0);
-    expect(pendingPayouts(db).every((p) => p.wallet !== TREASURY_WALLET && p.wallet !== HOUSE_WALLET)).toBe(
+    expect((await pendingPayouts(db)).every((p) => p.wallet !== TREASURY_WALLET && p.wallet !== HOUSE_WALLET)).toBe(
       true,
     );
   });
@@ -208,4 +195,16 @@ describe("HTTP API", () => {
     });
     expect(res.status).toBe(400);
   });
+  it("serves a landing page and x402 discovery document", async () => {
+    const home = await http("/");
+    expect(home.status).toBe(200);
+    expect(String(home.body)).toContain("llmdocs.dev");
+    const disc = await http("/.well-known/x402");
+    expect(disc.status).toBe(200);
+    const body = disc.body as { x402Version: number; accepts: Array<{ network: string; asset: string; amount: string }> };
+    expect(body.x402Version).toBe(2);
+    expect(body.accepts[0]!.amount).toBe("10000");
+    expect(body.accepts[0]!.asset).toBe(USDC_MINT_DEVNET);
+  });
+
 });

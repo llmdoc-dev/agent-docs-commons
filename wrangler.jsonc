@@ -1,0 +1,33 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "llmdocs",
+  "main": "src/worker.ts",
+  "compatibility_date": "2026-11-20",
+  "compatibility_flags": ["nodejs_compat"],
+  "account_id": "ed6d5bfd153f65bf6c2445c97f878a98",
+  "workers_dev": false,
+  "observability": {
+    "enabled": true,
+    "traces": { "enabled": true }
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "llmdocs",
+      "database_id": "b803d8fc-09a9-426a-acd1-ebdb731dd338"
+    }
+  ],
+  "routes": [
+    { "pattern": "llmdocs.dev", "custom_domain": true },
+    { "pattern": "www.llmdocs.dev", "custom_domain": true }
+  ],
+  "vars": {
+    "PAYMENT_MODE": "x402",
+    "PAY_TO": "EAJiExxSG5K3G4nnqeCZd1DmWMaK6CmisXi53yYa5SJJ",
+    "X402_NETWORK": "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
+    "FACILITATOR_URL": "https://x402.dexter.cash",
+    "PRICE_LOOKUP_USD": "0.01",
+    "PUBLIC_BASE_URL": "https://llmdocs.dev",
+    "OWNER_PAYOUT_ADDRESS": "7vUCMQL5U5RtyLskFrrW7L5i7YV4pTtqg72qG87BoxSB"
+  }
+}

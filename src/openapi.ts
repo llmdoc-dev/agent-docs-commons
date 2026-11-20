@@ -2,13 +2,13 @@ import type { AppConfig } from "./config.ts";
 
 export function buildOpenApi(cfg: AppConfig): Record<string, unknown> {
   const paymentHeader = {
-    name: "X-PAYMENT",
+    name: "PAYMENT-SIGNATURE",
     in: "header",
     required: true,
     description:
       cfg.paymentMode === "mock"
-        ? "Prototype mock settlement: mock:<solana-address>. A 402 response describes the real Solana-devnet x402 challenge."
-        : "x402 payment payload for Solana devnet USDC.",
+        ? "Local/test mock settlement: mock:<solana-address>. A 402 response describes the x402 v2 requirement."
+        : "x402 v2 PAYMENT-SIGNATURE (or X-PAYMENT) for Solana USDC.",
     schema: { type: "string" },
   };
   return {
@@ -17,12 +17,21 @@ export function buildOpenApi(cfg: AppConfig): Record<string, unknown> {
       title: "Agent Docs Commons",
       version: "0.1.0",
       description:
-        "Pay-per-call, cited, versioned documentation snippets for AI agents. Contributors earn 60% of each query fee when their accepted facts are used. Solana devnet / mock payments only.",
+        "Pay-per-call, cited, versioned documentation snippets for AI agents. Contributors earn 60% of each query fee when their accepted facts are used.",
     },
     servers: [{ url: cfg.publicBaseUrl }],
     paths: {
+      "/": {
+        get: { summary: "Human landing page", responses: { "200": { description: "HTML" } } },
+      },
       "/health": {
         get: { summary: "Liveness and payment mode", responses: { "200": { description: "OK" } } },
+      },
+      "/.well-known/x402": {
+        get: { summary: "x402 discovery document", responses: { "200": { description: "OK" } } },
+      },
+      "/mcp": {
+        post: { summary: "Remote MCP JSON-RPC endpoint", responses: { "200": { description: "JSON-RPC" } } },
       },
       "/llms.txt": {
         get: { summary: "Agent-oriented site index", responses: { "200": { description: "Markdown" } } },

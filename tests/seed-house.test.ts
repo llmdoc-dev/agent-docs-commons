@@ -5,8 +5,9 @@ import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { describe, expect, it } from "vitest";
 import { checkSourceUrl, MAX_BODY_CHARS, MIN_BODY_CHARS } from "../src/quality.ts";
-import { getSnippet, openDb } from "../src/db.ts";
-import { seedOfficialSnippets } from "../src/app.ts";
+import { getSnippet } from "../src/db.ts";
+import { openMigratedDb } from "../src/sqlite.ts";
+import { seedOfficialSnippets } from "../src/seed-data.ts";
 import { HOUSE_WALLET } from "../src/payout.ts";
 
 const SEED_PATH = new URL("../seed/snippets.json", import.meta.url);
@@ -40,20 +41,20 @@ describe("official seed catalog", () => {
     }
   });
 
-  it("inserts house-owned official snippets and is idempotent", () => {
-    const db = openDb(":memory:");
-    const first = seedOfficialSnippets(db);
+  it("inserts house-owned official snippets and is idempotent", async () => {
+    const db = await openMigratedDb(":memory:");
+    const first = await seedOfficialSnippets(db);
     expect(first).toBe(rows.length);
-    const sample = getSnippet(db, "react-usestate");
+    const sample = await getSnippet(db, "react-usestate");
     expect(sample?.houseOwned).toBe(true);
     expect(sample?.submitterWallet).toBe(HOUSE_WALLET);
-    expect(seedOfficialSnippets(db)).toBe(0);
-    const next = getSnippet(db, "next-app-router");
+    expect(await seedOfficialSnippets(db)).toBe(0);
+    const next = await getSnippet(db, "next-app-router");
     expect(next?.houseOwned).toBe(true);
     expect(next?.license).toBe("MIT");
   });
 
-  it("migrates legacy platform-seeded rows to house-owned treasury facts", () => {
+  it("migrates legacy platform-seeded rows to house-owned treasury facts", async () => {
     const dir = mkdtempSync(join(tmpdir(), "docs-commons-migrate-"));
     const path = join(dir, "old.sqlite");
     const raw = new DatabaseSync(path);
@@ -91,8 +92,8 @@ describe("official seed catalog", () => {
     );
     raw.close();
 
-    const db = openDb(path);
-    const migrated = getSnippet(db, "legacy-seed");
+    const db = await openMigratedDb(path);
+    const migrated = await getSnippet(db, "legacy-seed");
     expect(migrated?.houseOwned).toBe(true);
     expect(migrated?.submitterWallet).toBe(HOUSE_WALLET);
   });

@@ -2,7 +2,7 @@
   "name": "agent-docs-commons",
   "version": "0.1.0",
   "private": true,
-  "description": "Prototype knowledge commons: agents pay (x402/mock, Solana devnet) for versioned doc snippets and earn a 60% share when their facts are used.",
+  "description": "Docs commons for AI agents: pay $0.01 USDC per lookup via x402 on Solana, earn a 60% share for contributed facts.",
   "type": "module",
   "engines": {
     "node": ">=22"
@@ -15,12 +15,17 @@
     "demo": "tsx scripts/demo.ts",
     "payout:dry-run": "tsx scripts/payout-dry-run.ts",
     "seed": "tsx scripts/seed.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "deploy": "wrangler deploy",
+    "d1:migrate": "wrangler d1 migrations apply llmdocs --remote",
+    "d1:seed": "tsx scripts/seed-d1.ts",
+    "cf-typegen": "wrangler types"
   },
   "devDependencies": {
     "@types/node": "^24.9.1",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "wrangler": "^4.166.0"
   }
 }
