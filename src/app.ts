@@ -23,7 +23,7 @@ import {
   standingConfirmers,
 } from "./db.ts";
 import { formatUsd, usdToMicros } from "./money.ts";
-import { PLATFORM_WALLET, splitQueryFee, type FactForPayout } from "./payout.ts";
+import { HOUSE_WALLET, isInternalWallet, splitQueryFee, type FactForPayout } from "./payout.ts";
 import { requirePayment } from "./payment.ts";
 import { checkSnippetFields, checkSourceUrl, contentHash, isSolanaAddress } from "./quality.ts";
 import { rankSnippets, selectForAnswer } from "./search.ts";
@@ -74,7 +74,11 @@ export function createApp(cfg: AppConfig, db: DatabaseSync): App {
 }
 
 export function seedIfEmpty(db: DatabaseSync): number {
-  if (listSnippets(db).length > 0) return 0;
+  return seedOfficialSnippets(db);
+}
+
+/** Insert any official seed snippets that are not already in the database. */
+export function seedOfficialSnippets(db: DatabaseSync): number {
   const raw = JSON.parse(readFileSync(SEED_PATH, "utf8")) as Array<{
     id: string;
     library: string;
@@ -87,6 +91,7 @@ export function seedIfEmpty(db: DatabaseSync): number {
   }>;
   let n = 0;
   for (const row of raw) {
+    if (getSnippet(db, row.id)) continue;
     const hash = contentHash(row);
     if (getSnippetByHash(db, hash)) continue;
     insertSnippet(db, {
@@ -98,7 +103,8 @@ export function seedIfEmpty(db: DatabaseSync): number {
       sourceUrl: row.sourceUrl,
       license: row.license,
       contentHash: hash,
-      submitterWallet: PLATFORM_WALLET,
+      submitterWallet: HOUSE_WALLET,
+      houseOwned: true,
       status: "verified",
       retrievedAt: row.retrievedAt,
     });
@@ -216,6 +222,7 @@ async function lookupDocs(ctx: Ctx): Promise<void> {
       snippetId: snippet.id,
       submitterWallet: snippet.submitterWallet,
       verifierWallets: standingConfirmers(ctx.db, snippet.id),
+      houseOwned: snippet.houseOwned,
     });
   }
 
@@ -247,9 +254,10 @@ async function lookupDocs(ctx: Ctx): Promise<void> {
       snippetId: f.snippetId,
       submitterWallet: f.submitterWallet,
       verifierWallets: f.verifierWallets,
+      houseOwned: Boolean(f.houseOwned),
     })),
     payout: {
-      split: "60% contributor pool (70% submitter / 30% verifiers per fact), 30% platform, 10% reserve",
+      split: "60% contributor pool (70% submitter / 30% verifiers per fact; house-seeded submitter cut goes to the treasury), 30% platform, 10% reserve",
       lines: lines.map((l) => ({
         wallet: l.wallet,
         role: l.role,
@@ -262,11 +270,11 @@ async function lookupDocs(ctx: Ctx): Promise<void> {
 
 function applyUsageReputation(db: DatabaseSync, facts: FactForPayout[]): void {
   for (const fact of facts) {
-    if (fact.submitterWallet !== PLATFORM_WALLET) {
+    if (!isInternalWallet(fact.submitterWallet) && !fact.houseOwned) {
       bumpReputation(db, fact.submitterWallet, "fact_used_submitter");
     }
     for (const v of fact.verifierWallets) {
-      bumpReputation(db, v, "fact_used_verifier");
+      if (!isInternalWallet(v)) bumpReputation(db, v, "fact_used_verifier");
     }
   }
 }
@@ -365,7 +373,7 @@ async function verify(ctx: Ctx): Promise<void> {
     if (snippet.status !== "rejected") {
       status = "verified";
       setSnippetStatus(ctx.db, snippetId, "verified");
-      if (snippet.submitterWallet !== PLATFORM_WALLET) {
+      if (!isInternalWallet(snippet.submitterWallet)) {
         bumpReputation(ctx.db, snippet.submitterWallet, "contribution_verified");
       }
       bumpReputation(ctx.db, wallet, "verification_accepted");
@@ -373,7 +381,7 @@ async function verify(ctx: Ctx): Promise<void> {
   } else {
     status = "rejected";
     setSnippetStatus(ctx.db, snippetId, "rejected");
-    if (snippet.submitterWallet !== PLATFORM_WALLET) {
+    if (!isInternalWallet(snippet.submitterWallet)) {
       bumpReputation(ctx.db, snippet.submitterWallet, "snippet_rejected");
     }
   }
@@ -416,6 +424,7 @@ function publicSnippet(snippet: {
   license: string;
   contentHash: string;
   submitterWallet: string;
+  houseOwned?: boolean;
   status: string;
   retrievedAt: string;
   createdAt: string;
@@ -430,6 +439,7 @@ function publicSnippet(snippet: {
     license: snippet.license,
     contentHash: snippet.contentHash,
     submitterWallet: snippet.submitterWallet,
+    houseOwned: Boolean(snippet.houseOwned),
     status: snippet.status,
     retrievedAt: snippet.retrievedAt,
     createdAt: snippet.createdAt,

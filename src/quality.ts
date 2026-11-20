@@ -7,6 +7,28 @@ export const ALLOWED_SOURCE_HOSTS = new Set([
   "www.expressjs.com",
   "zod.dev",
   "v4.zod.dev",
+  "nextjs.org",
+  "www.nextjs.org",
+  "nodejs.org",
+  "www.nodejs.org",
+  "typescriptlang.org",
+  "www.typescriptlang.org",
+  "docs.python.org",
+  "fastapi.tiangolo.com",
+  "docs.djangoproject.com",
+  "pandas.pydata.org",
+  "numpy.org",
+  "www.numpy.org",
+  "prisma.io",
+  "www.prisma.io",
+  "vite.dev",
+  "vitejs.dev",
+  "requests.readthedocs.io",
+  "docs.pydantic.dev",
+  "flask.palletsprojects.com",
+  "www.postgresql.org",
+  "postgresql.org",
+  "docs.docker.com",
 ]);
 
 export const ALLOWED_GITHUB_REPOS = [
@@ -15,6 +37,21 @@ export const ALLOWED_GITHUB_REPOS = [
   "expressjs/express",
   "expressjs/expressjs.com",
   "colinhacks/zod",
+  "vercel/next.js",
+  "nodejs/node",
+  "microsoft/TypeScript-Website",
+  "python/cpython",
+  "tiangolo/fastapi",
+  "django/django",
+  "pandas-dev/pandas",
+  "numpy/numpy",
+  "prisma/prisma",
+  "vitejs/vite",
+  "psf/requests",
+  "pydantic/pydantic",
+  "pallets/flask",
+  "postgres/postgres",
+  "docker/docs",
 ];
 
 export const MAX_BODY_CHARS = 1500;
@@ -87,7 +124,7 @@ export function checkSnippetFields(input: {
   body: string;
   sourceUrl: string;
 }): { ok: true } | { ok: false; error: string } {
-  if (!isSolanaAddress(input.wallet) && input.wallet !== "platform") {
+  if (!isSolanaAddress(input.wallet) && input.wallet !== "platform" && input.wallet !== "house") {
     return { ok: false, error: "wallet must be a Solana address" };
   }
   if (!/^[a-z0-9][a-z0-9-]{0,63}$/.test(input.library)) {

@@ -98,5 +98,435 @@
     "sourceUrl": "https://zod.dev/api",
     "license": "MIT",
     "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "next-app-router",
+    "library": "nextjs",
+    "libraryVersion": "15.0.0",
+    "title": "App Router uses the app directory",
+    "body": "The Next.js App Router is defined by files in the app/ directory. page.tsx is a route's UI, layout.tsx wraps segments and preserves state on navigation, loading.tsx and error.tsx define fallback UI, and route.ts defines a Route Handler. Folders name the URL segment. This is a short excerpt for agents, not a substitute for the full App Router reference.",
+    "sourceUrl": "https://nextjs.org/docs/app/building-your-application/routing",
+    "license": "MIT",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "next-server-actions",
+    "library": "nextjs",
+    "libraryVersion": "15.0.0",
+    "title": "Server Actions run on the server from a form or call",
+    "body": "A Server Action is an async function marked with the 'use server' directive. You can pass it to a form action or call it from a Client Component. Next.js creates a POST endpoint for the action and treats the returned data as a mutation so the router can refresh cached data. Validate arguments on the server; do not trust client input. This is a short excerpt for agents, not a substitute for the full reference.",
+    "sourceUrl": "https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations",
+    "license": "MIT",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "next-generate-metadata",
+    "library": "nextjs",
+    "libraryVersion": "15.0.0",
+    "title": "generateMetadata sets per-route title and Open Graph tags",
+    "body": "Export generateMetadata from a page or layout to set a route's <title>, description, and Open Graph fields. The function can be async and receives the route params and searchParams. Returned fields are shallow-merged with parent layouts. Use the metadata object instead when the values are static. This is a short excerpt for agents, not a substitute for the full Metadata API.",
+    "sourceUrl": "https://nextjs.org/docs/app/api-reference/functions/generate-metadata",
+    "license": "MIT",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "node-fs-promises",
+    "library": "nodejs",
+    "libraryVersion": "22.x",
+    "title": "fs/promises is the async file API",
+    "body": "import { readFile, writeFile, mkdir } from 'node:fs/promises' returns Promises instead of using callbacks. readFile(path, 'utf8') resolves to a string. writeFile overwrites by default; use the flag option to append. Paths may be strings or URL file: objects. Prefer this module over fs.promises in new ESM code. This is a short excerpt for agents, not a substitute for the full Node.js API.",
+    "sourceUrl": "https://nodejs.org/docs/latest-v22.x/api/fs.html#promises-api",
+    "license": "MIT",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "node-fetch",
+    "library": "nodejs",
+    "libraryVersion": "22.x",
+    "title": "fetch is a global HTTP client in Node.js",
+    "body": "Node.js provides a global fetch() that follows the WHATWG Fetch Standard, plus Request, Response, Headers, and FormData. await fetch(url) returns a Response; call response.json() or response.text() to read the body. For a POST, pass { method: 'POST', headers, body }. Undici implements this API. This is a short excerpt for agents, not a substitute for the full Node.js API.",
+    "sourceUrl": "https://nodejs.org/docs/latest-v22.x/api/globals.html#fetch",
+    "license": "MIT",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "node-path",
+    "library": "nodejs",
+    "libraryVersion": "22.x",
+    "title": "path.join and path.extname build portable file paths",
+    "body": "import path from 'node:path'. path.join('src', 'index.ts') joins segments with the platform separator and normalizes '.' and '..'. path.extname('a.ts') returns '.ts'. path.resolve starts from the current directory unless given an absolute segment. On Windows, path.win32 and path.posix expose explicit variants. This is a short excerpt for agents, not a substitute for the full Node.js API.",
+    "sourceUrl": "https://nodejs.org/docs/latest-v22.x/api/path.html",
+    "license": "MIT",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "ts-strict",
+    "library": "typescript",
+    "libraryVersion": "5.x",
+    "title": "strict turns on the recommended type-checking suite",
+    "body": "Setting \"strict\": true in tsconfig.json enables strictNullChecks, noImplicitAny, strictFunctionTypes, strictBindCallApply, strictPropertyInitialization, and useUnknownInCatchVariables. Under strictNullChecks, string | null is not assignable to string without a narrowing check. Prefer enabling strict in new projects rather than toggling flags one by one. This is a short excerpt for agents, not a substitute for the TypeScript Handbook.",
+    "sourceUrl": "https://www.typescriptlang.org/tsconfig/#strict",
+    "license": "CC-BY-4.0",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "ts-utility-types",
+    "library": "typescript",
+    "libraryVersion": "5.x",
+    "title": "Partial, Pick, Omit, and Record are built-in utility types",
+    "body": "TypeScript ships utility types that transform other types. Partial<T> makes every property optional. Required<T> makes them required. Pick<T, K> keeps a key set, Omit<T, K> drops a key set, and Record<K, T> builds an object type from keys K to values T. ReturnType<F> and Parameters<F> extract a function's return and parameter types. This is a short excerpt for agents, not a substitute for the TypeScript Handbook.",
+    "sourceUrl": "https://www.typescriptlang.org/docs/handbook/utility-types.html",
+    "license": "CC-BY-4.0",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "ts-satisfies",
+    "library": "typescript",
+    "libraryVersion": "5.x",
+    "title": "satisfies checks a value against a type without widening it",
+    "body": "The satisfies operator validates that an expression matches a type while keeping the expression's more specific inferred type. For example, const palette = { red: [255, 0, 0], green: '#00ff00' } satisfies Record<string, string | number[]> still lets you use palette.red.map because red stays a number array. Use it when as would hide mistakes or when an annotation would widen literals. This is a short excerpt for agents, not a substitute for the TypeScript Handbook.",
+    "sourceUrl": "https://www.typescriptlang.org/docs/handbook/release-notes/typescript-4-9.html#the-satisfies-operator",
+    "license": "CC-BY-4.0",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "py-pathlib",
+    "library": "python",
+    "libraryVersion": "3.13",
+    "title": "pathlib.Path is the object-oriented path API",
+    "body": "from pathlib import Path. Path('src') / 'app.py' joins paths in a portable way. Path.read_text() and Path.write_text() handle encoding, Path.iterdir() lists a directory, Path.glob('**/*.py') searches recursively, and Path.exists() / Path.is_file() test the filesystem. Prefer Path over os.path in new code. This is a short excerpt for agents, not a substitute for the Python standard library docs.",
+    "sourceUrl": "https://docs.python.org/3/library/pathlib.html",
+    "license": "PSF-2.0",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "py-dataclasses",
+    "library": "python",
+    "libraryVersion": "3.13",
+    "title": "dataclasses generate __init__ and comparison methods",
+    "body": "from dataclasses import dataclass, field. @dataclass on a class synthesizes __init__, __repr__, and comparison methods from annotated fields. Use field(default_factory=list) for mutable defaults. @dataclass(frozen=True, slots=True) makes instances immutable and uses __slots__. keyword-only fields can be marked with kw_only=True. This is a short excerpt for agents, not a substitute for the Python standard library docs.",
+    "sourceUrl": "https://docs.python.org/3/library/dataclasses.html",
+    "license": "PSF-2.0",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "py-asyncio",
+    "library": "python",
+    "libraryVersion": "3.13",
+    "title": "asyncio.run and TaskGroup drive async programs",
+    "body": "asyncio.run(main()) starts an event loop, runs the coroutine, and shuts the loop down. Inside async functions, await asyncio.sleep(n) yields, and asyncio.gather(*coros) waits for many tasks. In 3.11+, async with asyncio.TaskGroup() as tg: tg.create_task(...) is the preferred way to run tasks and cancel the rest if one fails. This is a short excerpt for agents, not a substitute for the Python standard library docs.",
+    "sourceUrl": "https://docs.python.org/3/library/asyncio-task.html",
+    "license": "PSF-2.0",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "fastapi-path-query",
+    "library": "fastapi",
+    "libraryVersion": "0.115",
+    "title": "Path and query parameters are declared in the function signature",
+    "body": "In FastAPI, @app.get('/items/{item_id}') def read_item(item_id: int, q: str | None = None) treats item_id as a path parameter and q as an optional query parameter. Types are validated and documented in OpenAPI automatically. Use Query(), Path(), and Field() for constraints such as ge, le, min_length, and descriptions. This is a short excerpt for agents, not a substitute for the FastAPI tutorial.",
+    "sourceUrl": "https://fastapi.tiangolo.com/tutorial/path-params/",
+    "license": "MIT",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "fastapi-depends",
+    "library": "fastapi",
+    "libraryVersion": "0.115",
+    "title": "Depends injects shared dependencies into a path operation",
+    "body": "Declare a parameter as dep: Annotated[Type, Depends(provider)] so FastAPI calls provider, caches the result for the request, and injects it. Common uses are database sessions, current-user auth, and shared query parameters. A dependency can itself depend on others. Yield-based dependencies can run cleanup after the response. This is a short excerpt for agents, not a substitute for the FastAPI tutorial.",
+    "sourceUrl": "https://fastapi.tiangolo.com/tutorial/dependencies/",
+    "license": "MIT",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "fastapi-body-model",
+    "library": "fastapi",
+    "libraryVersion": "0.115",
+    "title": "Pydantic models declare request and response bodies",
+    "body": "Define a class Item(BaseModel) with typed fields and use it as a parameter (item: Item) to parse and validate the JSON request body, or as response_model to filter the response. Nested models and lists work as fields. Use model_config or Field() for examples and constraints. FastAPI generates the OpenAPI schema from the same models. This is a short excerpt for agents, not a substitute for the FastAPI tutorial.",
+    "sourceUrl": "https://fastapi.tiangolo.com/tutorial/body/",
+    "license": "MIT",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "django-models",
+    "library": "django",
+    "libraryVersion": "5.2",
+    "title": "A Model maps a Python class to a database table",
+    "body": "class Book(models.Model) with fields such as models.CharField(max_length=200), ForeignKey, and ManyToManyField defines a table. Each model has an implicit AutoField primary key named id unless you set primary_key=True. makemigrations and migrate create and apply schema changes. Meta.ordering, db_table, and unique_together (or UniqueConstraint) configure the model. This is a short excerpt for agents, not a substitute for the Django docs.",
+    "sourceUrl": "https://docs.djangoproject.com/en/5.2/topics/db/models/",
+    "license": "BSD-3-Clause",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "django-queryset",
+    "library": "django",
+    "libraryVersion": "5.2",
+    "title": "QuerySets are lazy until you evaluate them",
+    "body": "Book.objects.filter(title__icontains='x').exclude(published=False) returns a QuerySet that does not hit the database until you iterate it, slice it, or call list(), count(), or exists(). Use get() for a single row (it raises DoesNotExist or MultipleObjectsReturned). select_related and prefetch_related reduce JOIN/query counts. update() and delete() act in bulk. This is a short excerpt for agents, not a substitute for the Django docs.",
+    "sourceUrl": "https://docs.djangoproject.com/en/5.2/topics/db/queries/",
+    "license": "BSD-3-Clause",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "django-urls",
+    "library": "django",
+    "libraryVersion": "5.2",
+    "title": "path() connects a URL pattern to a view",
+    "body": "In urls.py, urlpatterns = [path('articles/<int:pk>/', views.article_detail, name='article-detail')] captures typed path converters and passes them as view kwargs. include() mounts another URLconf. A view is a function or class-based view (as_view()) that takes a request and returns an HttpResponse. reverse('article-detail', args=[pk]) or the {% url %} tag builds a URL from the name. This is a short excerpt for agents, not a substitute for the Django docs.",
+    "sourceUrl": "https://docs.djangoproject.com/en/5.2/topics/http/urls/",
+    "license": "BSD-3-Clause",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "pandas-dataframe",
+    "library": "pandas",
+    "libraryVersion": "2.2",
+    "title": "A DataFrame is a labeled two-dimensional table",
+    "body": "pd.DataFrame(data, columns=..., index=...) builds a table of Series aligned on an index. df['col'] selects a column, df.loc[labels] selects by label, and df.iloc[i] selects by position. read_csv, read_parquet, and to_csv / to_parquet are the usual I/O entry points. Use assign and copy when you need a new object; many operations return a copy rather than modifying in place. This is a short excerpt for agents, not a substitute for the pandas user guide.",
+    "sourceUrl": "https://pandas.pydata.org/docs/user_guide/dsintro.html",
+    "license": "BSD-3-Clause",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "pandas-groupby",
+    "library": "pandas",
+    "libraryVersion": "2.2",
+    "title": "groupby splits, applies, and combines",
+    "body": "df.groupby('key').agg({'value': 'sum'}) splits rows by key, applies an aggregation, and combines the result with the group keys as the index. Use as_index=False to keep keys as columns. groupby also supports .sum(), .mean(), .size(), .transform() (same shape as the input), and .apply(). Passing a list of keys creates a MultiIndex. This is a short excerpt for agents, not a substitute for the pandas user guide.",
+    "sourceUrl": "https://pandas.pydata.org/docs/user_guide/groupby.html",
+    "license": "BSD-3-Clause",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "pandas-merge",
+    "library": "pandas",
+    "libraryVersion": "2.2",
+    "title": "merge joins DataFrames on columns or indexes",
+    "body": "pd.merge(left, right, on='id', how='inner') performs SQL-style joins. how can be 'inner', 'left', 'right', or 'outer'. Use left_on and right_on when the key names differ, and suffixes when overlapping column names need renaming. concat stacks objects along an axis; join is a convenient index-based merge on the caller. This is a short excerpt for agents, not a substitute for the pandas user guide.",
+    "sourceUrl": "https://pandas.pydata.org/docs/user_guide/merging.html",
+    "license": "BSD-3-Clause",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "numpy-ndarray",
+    "library": "numpy",
+    "libraryVersion": "2.1",
+    "title": "ndarray is a typed, fixed-shape N-dimensional array",
+    "body": "np.array([[1, 2], [3, 4]], dtype=np.float64) builds an ndarray. arr.shape, arr.dtype, and arr.ndim describe it. np.zeros, np.ones, np.arange, and np.linspace construct new arrays. Vectorized operators and ufuncs (np.sin, np.sum, np.mean) run over the whole array without Python loops. This is a short excerpt for agents, not a substitute for the NumPy user guide.",
+    "sourceUrl": "https://numpy.org/doc/stable/user/basics.html",
+    "license": "BSD-3-Clause",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "numpy-broadcasting",
+    "library": "numpy",
+    "libraryVersion": "2.1",
+    "title": "Broadcasting aligns array shapes for elementwise ops",
+    "body": "NumPy compares shapes from the trailing dimension forward. Dimensions are compatible if they are equal or one of them is 1; a missing dimension is treated as 1. So a (3, 1) array plus a (1, 4) array yields a (3, 4) result. Use arr[:, None] or np.newaxis to insert a length-1 axis. Broadcasting avoids explicit tiles and copies when it can. This is a short excerpt for agents, not a substitute for the NumPy user guide.",
+    "sourceUrl": "https://numpy.org/doc/stable/user/basics.broadcasting.html",
+    "license": "BSD-3-Clause",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "numpy-indexing",
+    "library": "numpy",
+    "libraryVersion": "2.1",
+    "title": "Integer, slice, and boolean indexing select arrays",
+    "body": "arr[0, :3] uses basic slicing and returns a view when possible. Integer array indexing and boolean masks (arr[arr > 0]) produce copies. arr[..., 0] uses an ellipsis to fill missing axes. Combine slices with np.ix_ or mesh-style indexing to take a sub-grid. Prefer views for large data when you do not need a copy. This is a short excerpt for agents, not a substitute for the NumPy user guide.",
+    "sourceUrl": "https://numpy.org/doc/stable/user/basics.indexing.html",
+    "license": "BSD-3-Clause",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "prisma-schema-model",
+    "library": "prisma",
+    "libraryVersion": "6.x",
+    "title": "models in schema.prisma define tables and relations",
+    "body": "A Prisma model is declared in schema.prisma: model User { id String @id @default(cuid()) email String @unique posts Post[] }. Relations use typed fields plus @relation on the foreign-key side. Run prisma migrate dev to create SQL migrations and prisma generate to refresh Prisma Client. Scalar types include String, Int, Boolean, DateTime, Json, and Decimal. This is a short excerpt for agents, not a substitute for the Prisma docs.",
+    "sourceUrl": "https://www.prisma.io/docs/orm/prisma-schema/data-model/models",
+    "license": "Apache-2.0",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "prisma-crud",
+    "library": "prisma",
+    "libraryVersion": "6.x",
+    "title": "Prisma Client findMany, create, and update are typed CRUD helpers",
+    "body": "const users = await prisma.user.findMany({ where: { email: { contains: '@' } }, include: { posts: true }, orderBy: { createdAt: 'desc' }, take: 20 }) returns typed objects. create, update, upsert, and delete accept a data object. findUnique requires a unique field. select and include control the returned shape. This is a short excerpt for agents, not a substitute for the Prisma docs.",
+    "sourceUrl": "https://www.prisma.io/docs/orm/prisma-client/queries/crud",
+    "license": "Apache-2.0",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "prisma-transactions",
+    "library": "prisma",
+    "libraryVersion": "6.x",
+    "title": "interactive transactions run several writes atomically",
+    "body": "await prisma.$transaction(async (tx) => { ... }) starts an interactive transaction. Use the tx client for every query inside the callback so they share one database transaction; throwing rolls it back. For a known list of operations, prisma.$transaction([prisma.user.create(...), prisma.post.update(...)]) is the sequential (batch) form. Set isolationLevel when you need a stricter isolation mode. This is a short excerpt for agents, not a substitute for the Prisma docs.",
+    "sourceUrl": "https://www.prisma.io/docs/orm/prisma-client/queries/transactions",
+    "license": "Apache-2.0",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "vite-define-config",
+    "library": "vite",
+    "libraryVersion": "6.x",
+    "title": "defineConfig types the Vite config object",
+    "body": "vite.config.ts typically export default defineConfig({ plugins: [react()], root, build: { outDir, target }, server: { port, proxy } }). defineConfig provides TypeScript hints and can receive a function ({ command, mode }) so the config can change between serve and build. ESM is the default config format. This is a short excerpt for agents, not a substitute for the Vite guide.",
+    "sourceUrl": "https://vite.dev/config/",
+    "license": "MIT",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "vite-env",
+    "library": "vite",
+    "libraryVersion": "6.x",
+    "title": "only VITE_ prefixed env vars are exposed to client code",
+    "body": "Vite loads .env, .env.local, .env.[mode], and .env.[mode].local. Only variables prefixed with VITE_ are exposed to source as import.meta.env.VITE_*. Other keys stay on the server side of the config and must not be inlined into the client bundle. import.meta.env.MODE, BASE_URL, PROD, and DEV are always available. This is a short excerpt for agents, not a substitute for the Vite guide.",
+    "sourceUrl": "https://vite.dev/guide/env-and-mode.html",
+    "license": "MIT",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "vite-plugins",
+    "library": "vite",
+    "libraryVersion": "6.x",
+    "title": "Vite plugins hook into serve, build, and HMR",
+    "body": "A Vite plugin is a Rollup-compatible plugin plus Vite-specific hooks such as config, configureServer, transformIndexHtml, and handleHotUpdate. Put plugins in the plugins array of the config. Official plugins include @vitejs/plugin-react and @vitejs/plugin-vue. Plugin order matters; enforce: 'pre' | 'post' controls when a hook runs. This is a short excerpt for agents, not a substitute for the Vite guide.",
+    "sourceUrl": "https://vite.dev/guide/api-plugin.html",
+    "license": "MIT",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "requests-get",
+    "library": "requests",
+    "libraryVersion": "2.32",
+    "title": "requests.get sends an HTTP GET and decodes the response",
+    "body": "import requests; r = requests.get(url, params={'q': 'x'}, timeout=10). r.status_code, r.headers, r.text, and r.json() read the result. r.raise_for_status() throws HTTPError for 4xx/5xx. Pass json= or data= on post/put to send a body, and headers= for custom headers. Always set a timeout. This is a short excerpt for agents, not a substitute for the Requests user guide.",
+    "sourceUrl": "https://requests.readthedocs.io/en/latest/user/quickstart/",
+    "license": "Apache-2.0",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "requests-session",
+    "library": "requests",
+    "libraryVersion": "2.32",
+    "title": "a Session persists cookies and connection pooling",
+    "body": "with requests.Session() as s: s.headers.update({'User-Agent': '...'}); s.get(url) reuses TCP connections via urllib3 and persists cookies across requests. Set s.auth, s.proxies, or s.verify on the session so every request inherits them. A session is the right default when you call an API more than once. This is a short excerpt for agents, not a substitute for the Requests user guide.",
+    "sourceUrl": "https://requests.readthedocs.io/en/latest/user/advanced/",
+    "license": "Apache-2.0",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "pydantic-basemodel",
+    "library": "pydantic",
+    "libraryVersion": "2.10",
+    "title": "BaseModel validates and serializes typed data",
+    "body": "class User(BaseModel): name: str; age: int = Field(ge=0). User(name='Ada', age=12) validates types and constraints and raises ValidationError on failure. model_dump() returns a dict; model_dump_json() returns JSON. model_config = ConfigDict(extra='forbid') rejects unknown fields. Use Field() for aliases, defaults, and descriptions. This is a short excerpt for agents, not a substitute for the Pydantic docs.",
+    "sourceUrl": "https://docs.pydantic.dev/latest/concepts/models/",
+    "license": "MIT",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "pydantic-model-validate",
+    "library": "pydantic",
+    "libraryVersion": "2.10",
+    "title": "model_validate parses objects; model_validate_json parses strings",
+    "body": "In Pydantic v2, Model.model_validate(data) validates a dict or object, and Model.model_validate_json(s) validates a JSON string. Use TypeAdapter(list[Model]).validate_python(items) for types that are not a BaseModel subclass. The v1 parse_obj / parse_raw aliases still exist for compatibility but model_validate is the v2 API. This is a short excerpt for agents, not a substitute for the Pydantic docs.",
+    "sourceUrl": "https://docs.pydantic.dev/latest/concepts/models/",
+    "license": "MIT",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "pydantic-field-validator",
+    "library": "pydantic",
+    "libraryVersion": "2.10",
+    "title": "field_validator and model_validator customize checks",
+    "body": "@field_validator('email') classmethod def check_email(cls, v: str) -> str: runs after type coercion for that field. @model_validator(mode='after') def check(self): can compare fields on the already-built model; mode='before' receives the raw input. Annotated[..., AfterValidator(fn)] attaches a validator without a method. This is a short excerpt for agents, not a substitute for the Pydantic docs.",
+    "sourceUrl": "https://docs.pydantic.dev/latest/concepts/validators/",
+    "license": "MIT",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "flask-routing",
+    "library": "flask",
+    "libraryVersion": "3.1",
+    "title": "app.route binds a URL to a view function",
+    "body": "app = Flask(__name__); @app.route('/user/<int:id>') def user(id): return ... registers a view. Variable rules support string, int, float, path, and uuid converters. methods=['POST'] allows other verbs. request.args, request.form, request.get_json(), and request.files read the incoming request. jsonify() or a string becomes the response. This is a short excerpt for agents, not a substitute for the Flask docs.",
+    "sourceUrl": "https://flask.palletsprojects.com/en/stable/quickstart/",
+    "license": "BSD-3-Clause",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "flask-blueprints",
+    "library": "flask",
+    "libraryVersion": "3.1",
+    "title": "Blueprints split an app into reusable route groups",
+    "body": "bp = Blueprint('auth', __name__, url_prefix='/auth') then @bp.route('/login') defines routes that stay unregistered until app.register_blueprint(bp). Blueprints can have their own templates, static folders, and error handlers. They are the usual way to split a Flask project into packages. This is a short excerpt for agents, not a substitute for the Flask docs.",
+    "sourceUrl": "https://flask.palletsprojects.com/en/stable/blueprints/",
+    "license": "BSD-3-Clause",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "pg-jsonb",
+    "library": "postgresql",
+    "libraryVersion": "17",
+    "title": "jsonb stores JSON in a decomposed binary form",
+    "body": "PostgreSQL jsonb is a binary JSON type that supports indexing and operators: doc -> 'key' returns JSON, doc ->> 'key' returns text, and doc @> '{\"a\": 1}'::jsonb tests containment. GIN indexes on jsonb_path_ops or jsonb_ops speed containment queries. jsonb_set, jsonb_build_object, and jsonb_array_elements are common helpers. Prefer jsonb over json when you will query inside the document. This is a short excerpt for agents, not a substitute for the PostgreSQL docs.",
+    "sourceUrl": "https://www.postgresql.org/docs/current/datatype-json.html",
+    "license": "PostgreSQL",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "pg-cte",
+    "library": "postgresql",
+    "libraryVersion": "17",
+    "title": "WITH clauses define common table expressions",
+    "body": "WITH regional AS (SELECT ... FROM sales GROUP BY region) SELECT * FROM regional WHERE total > 1000 names a subquery you can reference later in the same statement. WITH RECURSIVE walks a tree or graph. INSERT/UPDATE/DELETE can appear in a CTE and return rows to the main statement. MATERIALIZED / NOT MATERIALIZED controls whether the CTE is computed once. This is a short excerpt for agents, not a substitute for the PostgreSQL docs.",
+    "sourceUrl": "https://www.postgresql.org/docs/current/queries-with.html",
+    "license": "PostgreSQL",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "pg-indexes",
+    "library": "postgresql",
+    "libraryVersion": "17",
+    "title": "B-tree is the default index; GIN and GiST cover other types",
+    "body": "CREATE INDEX ON table (col) builds a B-tree, which is the right default for equality and range comparisons. Use UNIQUE, INCLUDE (covering columns), and partial indexes (WHERE ...) when they shrink the index. GIN is typical for jsonb, arrays, and full-text; GiST for geometric and range types; BRIN for very large append-mostly tables. EXPLAIN ANALYZE shows whether a query uses an index. This is a short excerpt for agents, not a substitute for the PostgreSQL docs.",
+    "sourceUrl": "https://www.postgresql.org/docs/current/indexes-intro.html",
+    "license": "PostgreSQL",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "docker-dockerfile",
+    "library": "docker",
+    "libraryVersion": "docs-2026-11",
+    "title": "FROM, RUN, COPY, and CMD are the core Dockerfile instructions",
+    "body": "A Dockerfile starts with FROM <image> and then layers RUN (execute a command), COPY or ADD (add files), WORKDIR, ENV, EXPOSE, USER, ENTRYPOINT, and CMD. Each RUN creates a layer, so combine related commands and put frequently changing COPY steps later to improve cache hits. CMD is the default command; ENTRYPOINT is the executable. This is a short excerpt for agents, not a substitute for the Docker docs.",
+    "sourceUrl": "https://docs.docker.com/reference/dockerfile/",
+    "license": "Apache-2.0",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "docker-multistage",
+    "library": "docker",
+    "libraryVersion": "docs-2026-11",
+    "title": "Multi-stage builds copy artifacts from a builder image",
+    "body": "A multi-stage Dockerfile uses several FROM lines, optionally named with AS builder. Later stages can COPY --from=builder /app/bin /usr/local/bin so compilers, caches, and dev dependencies never land in the final image. You can also COPY --from=anotherimage or --from=0 (the first stage). This is the usual way to ship a small runtime image. This is a short excerpt for agents, not a substitute for the Docker docs.",
+    "sourceUrl": "https://docs.docker.com/build/building/multi-stage/",
+    "license": "Apache-2.0",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "docker-compose",
+    "library": "docker",
+    "libraryVersion": "docs-2026-11",
+    "title": "Compose YAML defines services, networks, and volumes",
+    "body": "A compose.yaml file lists services under services:, each with an image or build context, ports, environment, volumes, and depends_on. docker compose up starts the project; down stops and removes it. Named volumes persist data; networks isolate service DNS (the service name is the hostname). Use profiles and multiple compose files to vary environments. This is a short excerpt for agents, not a substitute for the Docker docs.",
+    "sourceUrl": "https://docs.docker.com/compose/",
+    "license": "Apache-2.0",
+    "retrievedAt": "2026-11-20"
   }
 ]

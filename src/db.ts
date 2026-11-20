@@ -2,7 +2,7 @@ import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { randomUUID } from "node:crypto";
-import { PLATFORM_WALLET } from "./payout.ts";
+import { HOUSE_WALLET, isInternalWallet } from "./payout.ts";
 import { reputationDelta, type ReputationEvent } from "./quality.ts";
 
 export type SnippetStatus = "pending" | "verified" | "rejected";
@@ -17,6 +17,7 @@ export type Snippet = {
   license: string;
   contentHash: string;
   submitterWallet: string;
+  houseOwned: boolean;
   status: SnippetStatus;
   createdAt: string;
   retrievedAt: string;
@@ -62,6 +63,7 @@ function migrate(db: DatabaseSync): void {
       license TEXT NOT NULL,
       content_hash TEXT NOT NULL UNIQUE,
       submitter_wallet TEXT NOT NULL,
+      house_owned INTEGER NOT NULL DEFAULT 0,
       status TEXT NOT NULL,
       created_at TEXT NOT NULL,
       retrieved_at TEXT NOT NULL
@@ -119,6 +121,15 @@ function migrate(db: DatabaseSync): void {
     CREATE INDEX IF NOT EXISTS idx_snippets_library ON snippets(library);
     CREATE INDEX IF NOT EXISTS idx_ledger_wallet ON ledger_entries(wallet);
   `);
+  const cols = db.prepare("PRAGMA table_info(snippets)").all() as Array<{ name: string }>;
+  if (!cols.some((c) => c.name === "house_owned")) {
+    db.exec("ALTER TABLE snippets ADD COLUMN house_owned INTEGER NOT NULL DEFAULT 0");
+  }
+  db.exec(
+    `UPDATE snippets
+     SET house_owned = 1, submitter_wallet = '${HOUSE_WALLET}'
+     WHERE submitter_wallet IN ('platform', 'house')`,
+  );
 }
 
 function nowIso(): string {
@@ -136,6 +147,7 @@ function mapSnippet(row: Record<string, unknown>): Snippet {
     license: String(row.license),
     contentHash: String(row.content_hash),
     submitterWallet: String(row.submitter_wallet),
+    houseOwned: Number(row.house_owned ?? 0) === 1,
     status: String(row.status) as SnippetStatus,
     createdAt: String(row.created_at),
     retrievedAt: String(row.retrieved_at),
@@ -151,7 +163,7 @@ export function upsertWallet(db: DatabaseSync, address: string): void {
 }
 
 export function bumpReputation(db: DatabaseSync, address: string, event: ReputationEvent): void {
-  if (address === PLATFORM_WALLET || address === "reserve") return;
+  if (isInternalWallet(address)) return;
   upsertWallet(db, address);
   const delta = reputationDelta(event);
   db.prepare(`UPDATE wallets SET reputation = reputation + ? WHERE address = ?`).run(delta, address);
@@ -173,15 +185,17 @@ export function getWallet(db: DatabaseSync, address: string): WalletRow | null {
 
 export function insertSnippet(
   db: DatabaseSync,
-  snippet: Omit<Snippet, "id" | "createdAt"> & { id?: string },
+  snippet: Omit<Snippet, "id" | "createdAt" | "houseOwned"> & { id?: string; houseOwned?: boolean },
 ): Snippet {
   const id = snippet.id ?? randomUUID();
   const createdAt = nowIso();
+  const houseOwned = snippet.houseOwned === true || isInternalWallet(snippet.submitterWallet);
+  const submitter = houseOwned ? HOUSE_WALLET : snippet.submitterWallet;
   db.prepare(
     `INSERT INTO snippets (
       id, library, library_version, title, body, source_url, license,
-      content_hash, submitter_wallet, status, created_at, retrieved_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      content_hash, submitter_wallet, house_owned, status, created_at, retrieved_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   ).run(
     id,
     snippet.library,
@@ -191,15 +205,16 @@ export function insertSnippet(
     snippet.sourceUrl,
     snippet.license,
     snippet.contentHash,
-    snippet.submitterWallet,
+    submitter,
+    houseOwned ? 1 : 0,
     snippet.status,
     createdAt,
     snippet.retrievedAt,
   );
-  if (snippet.submitterWallet !== PLATFORM_WALLET) {
-    upsertWallet(db, snippet.submitterWallet);
+  if (!isInternalWallet(submitter)) {
+    upsertWallet(db, submitter);
     db.prepare(`UPDATE wallets SET contributions = contributions + 1 WHERE address = ?`).run(
-      snippet.submitterWallet,
+      submitter,
     );
   }
   return getSnippet(db, id)!;
@@ -346,7 +361,7 @@ export function pendingPayouts(db: DatabaseSync): PendingPayout[] {
   const rows = db.prepare(
     `SELECT wallet, SUM(amount_micros) AS amount_micros, GROUP_CONCAT(DISTINCT role) AS roles, COUNT(*) AS entry_count
      FROM ledger_entries
-     WHERE status = 'pending' AND wallet NOT IN ('platform', 'reserve')
+     WHERE status = 'pending' AND wallet NOT IN ('platform', 'reserve', 'house', 'treasury')
      GROUP BY wallet
      ORDER BY amount_micros DESC`,
   ).all() as Record<string, unknown>[];
@@ -362,13 +377,15 @@ export function ledgerSummary(db: DatabaseSync): {
   pendingMicros: number;
   platformMicros: number;
   reserveMicros: number;
+  treasuryMicros: number;
   entryCount: number;
 } {
   const row = db.prepare(
     `SELECT
-       COALESCE(SUM(CASE WHEN wallet NOT IN ('platform','reserve') AND status='pending' THEN amount_micros END), 0) AS pending_micros,
+       COALESCE(SUM(CASE WHEN wallet NOT IN ('platform','reserve','house','treasury') AND status='pending' THEN amount_micros END), 0) AS pending_micros,
        COALESCE(SUM(CASE WHEN wallet='platform' THEN amount_micros END), 0) AS platform_micros,
        COALESCE(SUM(CASE WHEN wallet='reserve' THEN amount_micros END), 0) AS reserve_micros,
+       COALESCE(SUM(CASE WHEN wallet IN ('house','treasury') THEN amount_micros END), 0) AS treasury_micros,
        COUNT(*) AS entry_count
      FROM ledger_entries`,
   ).get() as Record<string, unknown>;
@@ -376,6 +393,7 @@ export function ledgerSummary(db: DatabaseSync): {
     pendingMicros: Number(row.pending_micros),
     platformMicros: Number(row.platform_micros),
     reserveMicros: Number(row.reserve_micros),
+    treasuryMicros: Number(row.treasury_micros),
     entryCount: Number(row.entry_count),
   };
 }

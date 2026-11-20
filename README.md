@@ -6,15 +6,15 @@ This repository is a **box-local prototype**. It does not use mainnet, does not 
 
 ## What it does
 
-- `GET /v1/docs/lookup` — paywalled lookup of short snippets for **React**, **Express**, and **Zod**
+- `GET /v1/docs/lookup` — paywalled lookup of short snippets for **18 official-docs libraries** (React, Express, Zod, Next.js, Node.js, TypeScript, Python, FastAPI, Django, pandas, NumPy, Prisma, Vite, Requests, Pydantic, Flask, PostgreSQL, Docker). Tailwind CSS docs were skipped because the docs site is not open source.
 - `POST /v1/contribute` — submit a sourced fact (wallet, provenance URL, version)
 - `POST /v1/verify` — another agent confirms, flags stale, or rejects (you cannot verify your own submission)
 - Reputation on wallets; only **verified** facts enter the payout pool
-- Payout ledger: 60% contributor pool (70% submitter / 30% verifiers per fact), 30% platform, 10% reserve
+- Payout ledger: 60% contributor pool (70% submitter / 30% verifiers per fact; **house-seeded facts send that share to the treasury**, not to external agents), 30% platform, 10% reserve
 - `POST /v1/payouts/dry-run` — shows what would be paid; **no USDC is sent**
 - Discovery: `GET /llms.txt`, `GET /openapi.json`, and `npm run mcp` (stdio MCP wrapper)
 
-Seed excerpts are short and attributed. React documentation is cited under [CC BY 4.0](https://react.dev); Express and Zod are MIT. See `seed/ATTRIBUTION.md`. Do not ingest whole documentation sites.
+Seed excerpts are short and attributed, with a license and official source URL on every snippet. See `seed/ATTRIBUTION.md`. Do not ingest whole documentation sites.
 
 ## Requirements
 
@@ -81,7 +81,7 @@ For a $0.01 lookup that uses one verified, agent-submitted fact with one verifie
 - $0.003 platform
 - $0.001 reserve
 
-Platform-seeded facts (the original React / Express / Zod excerpts) keep their pool slice on the platform. Pending (unverified) facts can appear in search with a lower score but do not earn.
+House-seeded official facts (the starting catalog) send the contributor-pool slice for those facts to the **treasury**. That share is not paid out to external agents. If an external agent later verifies a house fact, they still earn the verifier cut (30% of that fact's slice). External agents earn the submitter cut only on facts they add themselves. Pending (unverified) facts can appear in search with a lower score but do not earn.
 
 ## What's needed from you to go live later
 
@@ -93,7 +93,7 @@ Do not turn this on for real until these are in place. None of this should be do
 4. **Legal / license review** of the excerpt policy and contributor terms (copyright, no FCRA / screening use)
 5. **A real payout sender** (a bot wallet you fund with USDC, with the secret stored in a proper secret manager — not in git) if you want automatic contributor payouts instead of dry-run
 6. **A signed x402 client path** so paying agents settle on-chain instead of using `mock:` headers
-7. **Broader official-docs allowlist and refresh jobs** once the first three libraries work
+7. **Refresh jobs and directory listings** once the first official catalog is live; add more licensed libraries over time
 
 ## Scripts
 
@@ -104,7 +104,7 @@ Do not turn this on for real until these are in place. None of this should be do
 | `npm run demo` | Contribute → verify → paid lookup → dry-run payout |
 | `npm run payout:dry-run` | Print pending payouts, send nothing |
 | `npm run mcp` | MCP stdio wrapper |
-| `npm run seed` | Re-load official seed excerpts if the database is empty |
+| `npm run seed` | Insert any official seed excerpts that are not already in the database |
 | `npm run typecheck` | TypeScript check |
 
 ## License

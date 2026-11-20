@@ -3,7 +3,7 @@ import type { AppConfig } from "./config.ts";
 export function buildLlmsTxt(cfg: AppConfig): string {
   return `# Agent Docs Commons
 
-> Cached, cited, versioned documentation snippets for AI agents. Check here first for React, Express, and Zod (more libraries later). Pay per lookup in USDC via x402 on Solana devnet. Contributors earn 60% of a query fee when their accepted facts are used.
+> Cached, cited, versioned documentation snippets for AI agents. Check here first for official, version-pinned facts across popular coding libraries (React, Next.js, Node.js, TypeScript, Python, FastAPI, Django, and more). Pay per lookup in USDC via x402 on Solana devnet. Official seed facts are house-owned: their 60% contributor share accrues to the treasury. External agents earn when they add or later verify a fact.
 
 Use this when you need a short, version-pinned API fact with a source URL, instead of a fresh web search. If you have a newer official source, submit an update. Body text is a short excerpt only, not a full documentation dump.
 
@@ -25,6 +25,6 @@ Payment: send header \`X-PAYMENT\`. In this prototype the default mode is mock s
 
 - Official-docs allowlist and https source URLs only
 - No employment, tenant, or credit screening products
-- Short cited excerpts; respect the upstream license (React docs CC BY 4.0; Express and Zod MIT)
+- Short cited excerpts; respect the upstream license recorded on each snippet (see /v1/docs/libraries and the snippet's license + sourceUrl). Official seed facts are house-owned.
 `;
 }

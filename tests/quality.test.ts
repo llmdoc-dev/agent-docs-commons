@@ -12,6 +12,12 @@ describe("quality checks", () => {
     expect(checkSourceUrl("https://react.dev/reference/react/useState").ok).toBe(true);
     expect(checkSourceUrl("https://expressjs.com/en/guide/using-middleware.html").ok).toBe(true);
     expect(checkSourceUrl("https://zod.dev/api").ok).toBe(true);
+    expect(checkSourceUrl("https://nextjs.org/docs/app/building-your-application/routing").ok).toBe(true);
+    expect(checkSourceUrl("https://nodejs.org/docs/latest-v22.x/api/fs.html").ok).toBe(true);
+    expect(checkSourceUrl("https://www.typescriptlang.org/docs/handbook/utility-types.html").ok).toBe(true);
+    expect(checkSourceUrl("https://docs.python.org/3/library/pathlib.html").ok).toBe(true);
+    expect(checkSourceUrl("https://docs.docker.com/reference/dockerfile/").ok).toBe(true);
+    expect(checkSourceUrl("https://tailwindcss.com/docs/installation").ok).toBe(false);
   });
 
   it("rejects http, unknown hosts, and unofficial GitHub repos", () => {

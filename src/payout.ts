@@ -5,20 +5,38 @@ export const PLATFORM_BPS = 3000; // 30%
 export const RESERVE_BPS = 1000; // 10%
 export const SUBMITTER_BPS = 7000; // 70% of a fact slice
 export const VERIFIER_BPS = 3000; // 30% of a fact slice
+
+/** Identity of the site as a contributor of official seed facts. */
+export const HOUSE_WALLET = "house";
+/** Where the house contributor share accrues. Not paid out to external agents. */
+export const TREASURY_WALLET = "treasury";
 export const PLATFORM_WALLET = "platform";
 export const RESERVE_WALLET = "reserve";
+
+const INTERNAL_WALLETS = new Set([HOUSE_WALLET, TREASURY_WALLET, PLATFORM_WALLET, RESERVE_WALLET]);
+
+export function isInternalWallet(wallet: string): boolean {
+  return INTERNAL_WALLETS.has(wallet);
+}
+
+export function isHouseOwnedFact(fact: Pick<FactForPayout, "houseOwned" | "submitterWallet">): boolean {
+  return fact.houseOwned === true || isInternalWallet(fact.submitterWallet);
+}
 
 export type FactForPayout = {
   snippetId: string;
   submitterWallet: string;
   verifierWallets: string[];
+  /** Official site-seeded facts. The submitter cut goes to the treasury, not to external agents. */
+  houseOwned?: boolean;
 };
 
 export type LedgerLine = {
   wallet: string;
-  role: "submitter" | "verifier" | "platform" | "reserve";
+  role: "submitter" | "verifier" | "platform" | "reserve" | "house";
   snippetId: string | null;
   amountMicros: number;
+  houseOwned?: boolean;
 };
 
 function bps(amount: number, basisPoints: number): number {
@@ -27,7 +45,8 @@ function bps(amount: number, basisPoints: number): number {
 
 /**
  * Split a query fee across the accepted facts used in the answer.
- * Platform-ingested facts (submitter === "platform") keep their pool slice on the platform.
+ * House-owned (site-seeded) facts send the submitter cut of the 60% pool to the treasury.
+ * External agents earn only on facts they submitted, or on the verifier cut if they later verified a fact.
  * Remainder micros after integer division go to the reserve so the lines sum to the fee.
  */
 export function splitQueryFee(feeUsd: number, facts: FactForPayout[]): LedgerLine[] {
@@ -53,8 +72,13 @@ export function splitQueryFee(feeUsd: number, facts: FactForPayout[]): LedgerLin
   });
 
   if (facts.length === 0) {
-    // No attributed facts: the whole contributor pool stays with the platform.
-    lines[0]!.amountMicros += pool;
+    lines.push({
+      wallet: TREASURY_WALLET,
+      role: "house",
+      snippetId: null,
+      amountMicros: pool,
+      houseOwned: true,
+    });
     return lines;
   }
 
@@ -67,40 +91,61 @@ export function splitQueryFee(feeUsd: number, facts: FactForPayout[]): LedgerLin
       slice += 1;
       leftover -= 1;
     }
-    const isPlatformOwned =
-      fact.submitterWallet === PLATFORM_WALLET || fact.submitterWallet === "platform";
-    if (isPlatformOwned) {
-      lines.push({
-        wallet: PLATFORM_WALLET,
-        role: "platform",
-        snippetId: fact.snippetId,
-        amountMicros: slice,
-      });
-      continue;
-    }
+    const house = isHouseOwnedFact(fact);
     const submitterAmt = bps(slice, SUBMITTER_BPS);
     let verifierPool = slice - submitterAmt;
-    lines.push({
-      wallet: fact.submitterWallet,
-      role: "submitter",
-      snippetId: fact.snippetId,
-      amountMicros: submitterAmt,
-    });
-    const verifiers = [...new Set(fact.verifierWallets.filter((w) => w && w !== fact.submitterWallet))];
+    const verifiers = [
+      ...new Set(
+        fact.verifierWallets.filter((w) => w && w !== fact.submitterWallet && !isInternalWallet(w)),
+      ),
+    ];
+
+    if (house) {
+      lines.push({
+        wallet: TREASURY_WALLET,
+        role: "house",
+        snippetId: fact.snippetId,
+        amountMicros: submitterAmt,
+        houseOwned: true,
+      });
+    } else {
+      lines.push({
+        wallet: fact.submitterWallet,
+        role: "submitter",
+        snippetId: fact.snippetId,
+        amountMicros: submitterAmt,
+      });
+    }
+
     if (verifiers.length === 0) {
-      // No standing verifiers: leftover verifier cut stays in the reserve.
-      const reserve = lines.find((l) => l.role === "reserve" && l.snippetId === null);
-      if (reserve) reserve.amountMicros += verifierPool;
-      else lines.push({ wallet: RESERVE_WALLET, role: "reserve", snippetId: fact.snippetId, amountMicros: verifierPool });
+      // No external verifiers: leftover verifier cut stays with the treasury for house facts, else the reserve.
+      if (house) {
+        const houseLine = lines.find((l) => l.role === "house" && l.snippetId === fact.snippetId);
+        if (houseLine) houseLine.amountMicros += verifierPool;
+        else {
+          lines.push({
+            wallet: TREASURY_WALLET,
+            role: "house",
+            snippetId: fact.snippetId,
+            amountMicros: verifierPool,
+            houseOwned: true,
+          });
+        }
+      } else {
+        const reserve = lines.find((l) => l.role === "reserve" && l.snippetId === null);
+        if (reserve) reserve.amountMicros += verifierPool;
+        else lines.push({ wallet: RESERVE_WALLET, role: "reserve", snippetId: fact.snippetId, amountMicros: verifierPool });
+      }
       continue;
     }
+
     const each = Math.floor(verifierPool / verifiers.length);
-    leftover = verifierPool - each * verifiers.length;
+    let vLeft = verifierPool - each * verifiers.length;
     for (const wallet of verifiers) {
       let amt = each;
-      if (leftover > 0) {
+      if (vLeft > 0) {
         amt += 1;
-        leftover -= 1;
+        vLeft -= 1;
       }
       lines.push({
         wallet,
@@ -125,4 +170,8 @@ export function totalsByWallet(lines: LedgerLine[]): Map<string, number> {
     map.set(line.wallet, (map.get(line.wallet) ?? 0) + line.amountMicros);
   }
   return map;
+}
+
+export function externalPayoutLines(lines: LedgerLine[]): LedgerLine[] {
+  return lines.filter((l) => !isInternalWallet(l.wallet));
 }

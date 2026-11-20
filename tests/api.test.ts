@@ -4,8 +4,9 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { loadConfig } from "../src/config.ts";
-import { openDb, getWallet } from "../src/db.ts";
-import { createApp } from "../src/app.ts";
+import { openDb, getWallet, ledgerSummary, pendingPayouts } from "../src/db.ts";
+import { createApp, seedOfficialSnippets } from "../src/app.ts";
+import { HOUSE_WALLET, TREASURY_WALLET } from "../src/payout.ts";
 
 const AGENT_A = "BDkdaa5aHZZooaG2dRRMzBNe33PzTqZoZyQaBxVrdzi7";
 const AGENT_B = "BtWTZbXWs9Zbpawja3NxC6Rj4E1HGPF8P6y1fvX9nXJx";
@@ -82,13 +83,52 @@ describe("HTTP API", () => {
     });
     expect(res.status).toBe(200);
     const body = res.body as {
-      results: Array<{ title: string; sourceUrl: string; license: string }>;
+      results: Array<{ title: string; sourceUrl: string; license: string; houseOwned: boolean; submitterWallet: string }>;
       payment: { mode: string; feeUsd: number };
     };
     expect(body.payment.mode).toBe("mock");
     expect(body.results.length).toBeGreaterThan(0);
     expect(body.results[0]!.sourceUrl).toMatch(/^https:\/\/react\.dev\//);
     expect(body.results[0]!.license).toBe("CC-BY-4.0");
+    expect(body.results[0]!.houseOwned).toBe(true);
+    expect(body.results[0]!.submitterWallet).toBe(HOUSE_WALLET);
+    const payout = (
+      res.body as { payout: { lines: Array<{ wallet: string; role: string }> } }
+    ).payout.lines;
+    expect(payout.some((l) => l.wallet === TREASURY_WALLET && l.role === "house")).toBe(true);
+    expect(payout.some((l) => l.role === "submitter")).toBe(false);
+  });
+
+  it("lists the official seeded libraries", async () => {
+    const res = await http("/v1/docs/libraries");
+    expect(res.status).toBe(200);
+    const libraries = (res.body as { libraries: Array<{ library: string; count: number }> }).libraries;
+    const names = libraries.map((l) => l.library);
+    expect(names).toEqual(
+      expect.arrayContaining([
+        "react",
+        "express",
+        "zod",
+        "nextjs",
+        "nodejs",
+        "typescript",
+        "python",
+        "fastapi",
+        "django",
+        "pandas",
+        "numpy",
+        "prisma",
+        "vite",
+        "requests",
+        "pydantic",
+        "flask",
+        "postgresql",
+        "docker",
+      ]),
+    );
+    expect(names).not.toContain("tailwind");
+    expect(libraries).toHaveLength(18);
+    expect(libraries.reduce((s, l) => s + l.count, 0)).toBe(53);
   });
 
   it("accepts a contribution, blocks self-verify, then verifies and pays out on use", async () => {
@@ -141,10 +181,16 @@ describe("HTTP API", () => {
     const would = (dry.body as { wouldPay: Array<{ wallet: string }> }).wouldPay;
     expect(would.some((w) => w.wallet === AGENT_A)).toBe(true);
     expect(would.some((w) => w.wallet === AGENT_B)).toBe(true);
+    expect(would.some((w) => w.wallet === TREASURY_WALLET || w.wallet === HOUSE_WALLET)).toBe(false);
 
     const db = openDb(dbPath);
     expect(getWallet(db, AGENT_A)?.reputation).toBeGreaterThan(0);
     expect(getWallet(db, AGENT_B)?.reputation).toBeGreaterThan(0);
+    const totals = ledgerSummary(db);
+    expect(totals.treasuryMicros).toBeGreaterThan(0);
+    expect(pendingPayouts(db).every((p) => p.wallet !== TREASURY_WALLET && p.wallet !== HOUSE_WALLET)).toBe(
+      true,
+    );
   });
 
   it("rejects a contribution from a host that is not on the allowlist", async () => {
