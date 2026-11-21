@@ -56,6 +56,7 @@ Public usage stats and a Cloudflare traffic snapshot (OAuth token is read from t
 ```bash
 curl https://llmdocs.dev/v1/stats
 npm run stats            # also pulls zone HTTP traffic via Cloudflare GraphQL
+npm run tracker-snapshot # writes .tracker-snapshot.json for the usage tracker Page
 ```
 
 Payouts (reads remote D1; sends USDC from the main site wallet):

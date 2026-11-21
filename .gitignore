@@ -16,3 +16,6 @@ payout-logs/*.jsonl
 
 # Local stats snapshots may include public traffic numbers.
 stats-snapshots/
+
+# Combined tracker snapshot used to refresh the usage Page.
+.tracker-snapshot.json
