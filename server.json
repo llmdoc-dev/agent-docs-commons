@@ -1,0 +1,14 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "dev.llmdocs/docs",
+  "title": "llmdocs.dev",
+  "description": "Remote MCP for short, versioned developer-docs answers. $0.01 USDC via x402 on Solana, no API key.",
+  "version": "0.1.0",
+  "websiteUrl": "https://llmdocs.dev",
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://llmdocs.dev/mcp"
+    }
+  ]
+}
