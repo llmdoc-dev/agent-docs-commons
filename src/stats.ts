@@ -10,7 +10,11 @@ const PHOENIX_OFFSET = "-7 hours";
 /** SQLite expression that buckets an ISO timestamp into an America/Phoenix calendar day. */
 export const PHOENIX_DAY_SQL = `date(replace(substr(created_at, 1, 19), 'T', ' '), '${PHOENIX_OFFSET}')`;
 
-const SOLANA_RPC = "https://api.mainnet-beta.solana.com";
+const SOLANA_RPCS = [
+  "https://solana-rpc.publicnode.com",
+  "https://rpc.ankr.com/solana",
+  "https://api.mainnet-beta.solana.com",
+];
 const WALLET_CACHE_MS = 60_000;
 
 export type StatsDirectory = {
@@ -428,65 +432,77 @@ export function skippedWallet(address: string, reason: string): WalletBalances {
 
 let walletCache: { key: string; value: WalletBalances; at: number } | null = null;
 
+async function fetchBalancesFromRpc(rpc: string, address: string): Promise<WalletBalances> {
+  const signal = AbortSignal.timeout(4000);
+  const headers = { "Content-Type": "application/json", "User-Agent": "llmdocs.dev/stats" };
+  const [solRes, tokenRes] = await Promise.all([
+    fetch(rpc, {
+      method: "POST",
+      headers,
+      signal,
+      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "getBalance", params: [address] }),
+    }),
+    fetch(rpc, {
+      method: "POST",
+      headers,
+      signal,
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        id: 2,
+        method: "getTokenAccountsByOwner",
+        params: [address, { mint: USDC_MINT_MAINNET }, { encoding: "jsonParsed" }],
+      }),
+    }),
+  ]);
+  if (!solRes.ok || !tokenRes.ok) {
+    return skippedWallet(address, `rpc_http_${solRes.status}_${tokenRes.status}`);
+  }
+  const solBody = (await solRes.json()) as { result?: { value?: number }; error?: { message?: string } };
+  const tokenBody = (await tokenRes.json()) as {
+    result?: { value?: Array<{ account?: { data?: { parsed?: { info?: { tokenAmount?: { amount: string; decimals: number } } } } } }> };
+    error?: { message?: string };
+  };
+  if (solBody.error || tokenBody.error) {
+    return skippedWallet(address, solBody.error?.message ?? tokenBody.error?.message ?? "rpc_error");
+  }
+  const lamports = solBody.result?.value ?? 0;
+  let usdc = 0;
+  for (const account of tokenBody.result?.value ?? []) {
+    const tokenAmount = account.account?.data?.parsed?.info?.tokenAmount;
+    if (!tokenAmount) continue;
+    usdc += Number(tokenAmount.amount) / 10 ** Number(tokenAmount.decimals);
+  }
+  return {
+    address,
+    sol: lamports / 1_000_000_000,
+    usdc,
+    source: rpc,
+    fetchedAt: new Date().toISOString(),
+    error: null,
+  };
+}
+
 export async function fetchMainWalletBalances(address: string): Promise<WalletBalances> {
   const now = Date.now();
   if (walletCache && walletCache.key === address && now - walletCache.at < WALLET_CACHE_MS) {
     return walletCache.value;
   }
-  try {
-    const signal = AbortSignal.timeout(4000);
-    const headers = { "Content-Type": "application/json" };
-    const [solRes, tokenRes] = await Promise.all([
-      fetch(SOLANA_RPC, {
-        method: "POST",
-        headers,
-        signal,
-        body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "getBalance", params: [address] }),
-      }),
-      fetch(SOLANA_RPC, {
-        method: "POST",
-        headers,
-        signal,
-        body: JSON.stringify({
-          jsonrpc: "2.0",
-          id: 2,
-          method: "getTokenAccountsByOwner",
-          params: [address, { mint: USDC_MINT_MAINNET }, { encoding: "jsonParsed" }],
-        }),
-      }),
-    ]);
-    if (!solRes.ok || !tokenRes.ok) {
-      return skippedWallet(address, `rpc_http_${solRes.status}_${tokenRes.status}`);
+  const errors: string[] = [];
+  for (const rpc of SOLANA_RPCS) {
+    try {
+      const value = await fetchBalancesFromRpc(rpc, address);
+      if (value.error) {
+        errors.push(`${rpc}: ${value.error}`);
+        continue;
+      }
+      walletCache = { key: address, value, at: now };
+      return value;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "rpc_unavailable";
+      errors.push(`${rpc}: ${message}`);
     }
-    const solBody = (await solRes.json()) as { result?: { value?: number }; error?: { message?: string } };
-    const tokenBody = (await tokenRes.json()) as {
-      result?: { value?: Array<{ account?: { data?: { parsed?: { info?: { tokenAmount?: { amount: string; decimals: number } } } } } }> };
-      error?: { message?: string };
-    };
-    if (solBody.error || tokenBody.error) {
-      return skippedWallet(address, solBody.error?.message ?? tokenBody.error?.message ?? "rpc_error");
-    }
-    const lamports = solBody.result?.value ?? 0;
-    let usdc = 0;
-    for (const account of tokenBody.result?.value ?? []) {
-      const tokenAmount = account.account?.data?.parsed?.info?.tokenAmount;
-      if (!tokenAmount) continue;
-      usdc += Number(tokenAmount.amount) / 10 ** Number(tokenAmount.decimals);
-    }
-    const value: WalletBalances = {
-      address,
-      sol: lamports / 1_000_000_000,
-      usdc,
-      source: SOLANA_RPC,
-      fetchedAt: new Date().toISOString(),
-      error: null,
-    };
-    walletCache = { key: address, value, at: now };
-    return value;
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "rpc_unavailable";
-    return skippedWallet(address, message);
   }
+  return skippedWallet(address, errors.join("; ") || "rpc_unavailable");
 }
 
 export async function walletForConfig(cfg: AppConfig): Promise<WalletBalances> {
