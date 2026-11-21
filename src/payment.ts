@@ -1,6 +1,7 @@
 import type { AppConfig } from "./config.ts";
 import { usdToMicros } from "./money.ts";
 import { isSolanaAddress } from "./quality.ts";
+import { lookupBazaarExtension } from "./bazaar.ts";
 
 export const MOCK_PAYMENT_PREFIX = "mock:";
 
@@ -110,7 +111,7 @@ export async function buildChallenge(
     error,
     resource,
     accepts,
-    extensions: {},
+    extensions: lookupBazaarExtension(),
     facilitator: { url: cfg.facilitatorUrl },
   };
   if (cfg.paymentMode === "mock") {
@@ -416,7 +417,7 @@ export function paymentCorsHeaders(): Record<string, string> {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Accept, PAYMENT-SIGNATURE, X-PAYMENT, PAYMENT-REQUIRED, PAYMENT-RESPONSE",
-    "Access-Control-Expose-Headers": "PAYMENT-REQUIRED, PAYMENT-RESPONSE, X-PAYMENT-RESPONSE",
+    "Access-Control-Expose-Headers": "PAYMENT-REQUIRED, PAYMENT-RESPONSE, X-PAYMENT-RESPONSE, EXTENSION-RESPONSES",
   };
 }
 

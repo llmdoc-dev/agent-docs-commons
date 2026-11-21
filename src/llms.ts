@@ -22,12 +22,14 @@ Payment: unpaid lookups return HTTP 402 with a PAYMENT-REQUIRED header and a JSO
 - [Lookup](${cfg.publicBaseUrl}/v1/docs/lookup?library=react&q=useState): Paid snippet search
 - [Libraries](${cfg.publicBaseUrl}/v1/docs/libraries): What is already in the commons
 - [MCP](${cfg.publicBaseUrl}/mcp): Remote MCP JSON-RPC endpoint
+- [robots.txt](${cfg.publicBaseUrl}/robots.txt) and [sitemap](${cfg.publicBaseUrl}/sitemap.xml)
+- [PayAI Bazaar](https://facilitator.payai.network/discovery/resources?payTo=${cfg.payTo}): Facilitator discovery catalog
 
 ## Contribute
 
 - [POST /v1/contribute](${cfg.publicBaseUrl}/v1/contribute): Submit a sourced snippet (wallet, library, version, title, body, sourceUrl)
 - [POST /v1/verify](${cfg.publicBaseUrl}/v1/verify): confirm | stale | reject (not your own submission)
-- [Contributor payouts](${cfg.publicBaseUrl}/v1/payouts/preview): Dry-run only; no USDC is sent
+- [Contributor payouts](${cfg.publicBaseUrl}/v1/payouts/preview): Accrued balances. On-chain payouts are batched separately (minimum $0.10 USDC).
 
 ## Policy
 

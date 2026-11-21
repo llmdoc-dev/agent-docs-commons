@@ -40,7 +40,7 @@ beforeAll(async () => {
 });
 
 describe("HTTP API", () => {
-  it("serves health, llms.txt, and OpenAPI", async () => {
+  it("serves health, llms.txt, OpenAPI, robots.txt, and sitemap", async () => {
     const health = await http("/health");
     expect(health.status).toBe(200);
     expect((health.body as { paymentMode: string }).paymentMode).toBe("mock");
@@ -51,17 +51,37 @@ describe("HTTP API", () => {
     const spec = await http("/openapi.json");
     expect(spec.status).toBe(200);
     expect((spec.body as { openapi: string }).openapi).toBe("3.1.0");
+    const robots = await http("/robots.txt");
+    expect(robots.status).toBe(200);
+    expect(String(robots.body)).toContain("Allow: /");
+    expect(String(robots.body)).toContain("Sitemap:");
+    const sitemap = await http("/sitemap.xml");
+    expect(sitemap.status).toBe(200);
+    expect(String(sitemap.body)).toContain("/llms.txt");
+    expect(String(sitemap.body)).toContain("/.well-known/x402");
   });
 
   it("returns a Solana-devnet 402 challenge without payment", async () => {
     const res = await http("/v1/docs/lookup?library=react&q=useState");
     expect(res.status).toBe(402);
-    const body = res.body as { x402Version: number; accepts: Array<{ network: string; asset: string; payTo: string; amount: string }> };
+    const body = res.body as { x402Version: number; resource?: { url?: string }; extensions?: { bazaar?: { info?: { input?: { method?: string } } } }; accepts: Array<{ network: string; asset: string; payTo: string; amount: string }> };
     expect(body.x402Version).toBe(2);
     expect(body.accepts[0]!.network).toBe("solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1");
     expect(body.accepts[0]!.asset).toBe(USDC_MINT_DEVNET);
     expect(body.accepts[0]!.amount).toBe("10000");
     expect(body.accepts[0]!.payTo).toBeTruthy();
+    expect(body.resource?.url).toBe("http://127.0.0.1/v1/docs/lookup");
+    expect(body.extensions?.bazaar?.info?.input?.method).toBe("GET");
+  });
+
+  it("returns 402 on the canonical lookup URL even when q is missing", async () => {
+    const unpaid = await http("/v1/docs/lookup");
+    expect(unpaid.status).toBe(402);
+    const head = await app.handle(new Request("http://127.0.0.1/v1/docs/lookup", { method: "HEAD" }));
+    expect(head.status).toBe(402);
+    const paid = await http("/v1/docs/lookup", { headers: { "X-PAYMENT": `mock:${PAYER}` } });
+    expect(paid.status).toBe(400);
+    expect((paid.body as { error: string }).error).toBe("q is required");
   });
 
   it("returns cited React snippets after a mock payment", async () => {

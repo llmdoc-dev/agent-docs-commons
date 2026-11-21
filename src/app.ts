@@ -38,6 +38,7 @@ import { buildLlmsTxt } from "./llms.ts";
 import { landingHtml } from "./landing.ts";
 import { handleMcp } from "./mcp-http.ts";
 import { seedIfEmpty, seedOfficialSnippets } from "./seed-data.ts";
+import { lookupResourceUrl, robotsTxt, sitemapXml } from "./bazaar.ts";
 
 export { seedIfEmpty, seedOfficialSnippets };
 
@@ -89,6 +90,12 @@ async function route(cfg: AppConfig, db: Db, req: Request, url: URL): Promise<Re
   if (method === "GET" && path === "/llms.txt") {
     return textResponse(200, "text/plain; charset=utf-8", buildLlmsTxt(cfg));
   }
+  if (method === "GET" && path === "/robots.txt") {
+    return textResponse(200, "text/plain; charset=utf-8", robotsTxt(cfg.publicBaseUrl));
+  }
+  if (method === "GET" && path === "/sitemap.xml") {
+    return textResponse(200, "application/xml; charset=utf-8", sitemapXml(cfg.publicBaseUrl));
+  }
   if (method === "GET" && (path === "/openapi.json" || path === "/openapi")) {
     return jsonResponse(200, buildOpenApi(cfg));
   }
@@ -103,7 +110,7 @@ async function route(cfg: AppConfig, db: Db, req: Request, url: URL): Promise<Re
   if (method === "GET" && path === "/v1/docs/libraries") {
     return jsonResponse(200, { libraries: await listLibraries(db) });
   }
-  if (method === "GET" && path === "/v1/docs/lookup") {
+  if ((method === "GET" || method === "HEAD") && path === "/v1/docs/lookup") {
     return lookupDocs(cfg, db, req, url);
   }
   if (method === "GET" && path.startsWith("/v1/records/")) {
@@ -175,15 +182,19 @@ async function lookupDocs(cfg: AppConfig, db: Db, req: Request, url: URL): Promi
   const q = (url.searchParams.get("q") ?? "").trim();
   const library = (url.searchParams.get("library") ?? "").trim() || undefined;
   const version = (url.searchParams.get("version") ?? "").trim() || undefined;
-  if (!q) return jsonResponse(400, { error: "q is required" });
-
-  const resourceUrl = `${cfg.publicBaseUrl}${url.pathname}${url.search}`;
+  // Require payment even when `q` is missing so facilitator discovery probes
+  // to the canonical resource URL see HTTP 402, not 400.
+  const resourceUrl = lookupResourceUrl(cfg.publicBaseUrl);
   const gate = await requirePayment(cfg, req, {
     resourceUrl,
-    description: `Documentation lookup: ${q}`,
+    description: q ? `Documentation lookup: ${q}` : "Documentation lookup",
     priceUsd: cfg.priceLookupUsd,
   });
   if (!gate.ok) return gate.response;
+  if (!q) return jsonResponse(400, { error: "q is required" }, gate.responseHeaders);
+  if (req.method === "HEAD") {
+    return new Response(null, { status: 200, headers: gate.responseHeaders });
+  }
 
   if (gate.payment.mode === "x402" && gate.payment.paymentId) {
     const prior = await findSettledPayment(db, gate.payment.paymentId);

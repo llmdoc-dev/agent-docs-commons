@@ -102,6 +102,9 @@ CREATE TABLE IF NOT EXISTS ledger_entries (
   amount_micros INTEGER NOT NULL,
   status TEXT NOT NULL,
   created_at TEXT NOT NULL,
+  payout_tx TEXT,
+  payout_run_id TEXT,
+  paid_at TEXT,
   FOREIGN KEY (query_id) REFERENCES queries(id)
 );
 CREATE TABLE IF NOT EXISTS payout_runs (
@@ -130,6 +133,13 @@ export async function migrate(db: Db): Promise<void> {
   if (qcols.length > 0 && !qcols.some((c) => String(c.name) === "settlement_tx")) {
     await db.exec("ALTER TABLE queries ADD COLUMN settlement_tx TEXT");
   }
+  const lcols = await db.all(`PRAGMA table_info(ledger_entries)`);
+  for (const col of ["payout_tx", "payout_run_id", "paid_at"]) {
+    if (lcols.length > 0 && !lcols.some((c) => String(c.name) === col)) {
+      await db.exec(`ALTER TABLE ledger_entries ADD COLUMN ${col} TEXT`);
+    }
+  }
+  await db.exec("CREATE INDEX IF NOT EXISTS idx_ledger_status ON ledger_entries(status)");
   await db.exec(
     `UPDATE snippets
      SET house_owned = 1, submitter_wallet = '${HOUSE_WALLET}'
@@ -442,5 +452,83 @@ export async function recordSettledPayment(
     input.payerWallet,
     input.transactionSig,
     nowIso(),
+  );
+}
+
+export type LedgerEntryRow = {
+  id: string;
+  queryId: string;
+  snippetId: string | null;
+  wallet: string;
+  role: string;
+  amountMicros: number;
+  status: string;
+  createdAt: string;
+  payoutTx: string | null;
+  payoutRunId: string | null;
+  paidAt: string | null;
+};
+
+function mapLedgerRow(row: Record<string, unknown>): LedgerEntryRow {
+  return {
+    id: String(row.id),
+    queryId: String(row.query_id),
+    snippetId: row.snippet_id == null ? null : String(row.snippet_id),
+    wallet: String(row.wallet),
+    role: String(row.role),
+    amountMicros: Number(row.amount_micros),
+    status: String(row.status),
+    createdAt: String(row.created_at),
+    payoutTx: row.payout_tx == null ? null : String(row.payout_tx),
+    payoutRunId: row.payout_run_id == null ? null : String(row.payout_run_id),
+    paidAt: row.paid_at == null ? null : String(row.paid_at),
+  };
+}
+
+export async function listPendingLedgerEntries(db: Db): Promise<LedgerEntryRow[]> {
+  const rows = await db.all(`SELECT * FROM ledger_entries WHERE status = 'pending' ORDER BY created_at ASC, id ASC`);
+  return rows.map(mapLedgerRow);
+}
+
+export async function markLedgerEntries(
+  db: Db,
+  ids: string[],
+  update: { status: string; payoutTx: string | null; payoutRunId: string; paidAt: string },
+): Promise<number> {
+  if (ids.length === 0) return 0;
+  const unique = [...new Set(ids)];
+  const placeholders = unique.map(() => "?").join(", ");
+  // Count eligible rows first so a partial match cannot silently mark a mixed set.
+  const eligible = await db.get(
+    `SELECT COUNT(*) AS n FROM ledger_entries WHERE status = 'pending' AND id IN (${placeholders})`,
+    ...unique,
+  );
+  const n = Number(eligible?.n ?? 0);
+  if (n !== unique.length) {
+    throw new Error(`ledger mark expected ${unique.length} pending rows, found ${n}`);
+  }
+  await db.run(
+    `UPDATE ledger_entries
+     SET status = ?, payout_tx = ?, payout_run_id = ?, paid_at = ?
+     WHERE status = 'pending' AND id IN (${placeholders})`,
+    update.status,
+    update.payoutTx,
+    update.payoutRunId,
+    update.paidAt,
+    ...unique,
+  );
+  return n;
+}
+
+export async function recordPayoutRun(
+  db: Db,
+  input: { id: string; mode: string; summary: unknown },
+): Promise<void> {
+  await db.run(
+    `INSERT INTO payout_runs (id, mode, created_at, summary_json) VALUES (?, ?, ?, ?)`,
+    input.id,
+    input.mode,
+    nowIso(),
+    JSON.stringify(input.summary, null, 2),
   );
 }

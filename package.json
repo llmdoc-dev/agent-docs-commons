@@ -13,7 +13,8 @@
     "mcp": "tsx src/mcp.ts",
     "test": "vitest run",
     "demo": "tsx scripts/demo.ts",
-    "payout:dry-run": "tsx scripts/payout-dry-run.ts",
+    "payout": "tsx scripts/payout.ts",
+    "payout:dry-run": "tsx scripts/payout.ts --dry-run",
     "seed": "tsx scripts/seed.ts",
     "typecheck": "tsc --noEmit",
     "deploy": "wrangler deploy",
@@ -22,6 +23,8 @@
     "cf-typegen": "wrangler types"
   },
   "devDependencies": {
+    "@solana/spl-token": "^0.4.15",
+    "@solana/web3.js": "^1.99.0",
     "@types/node": "^24.9.1",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",

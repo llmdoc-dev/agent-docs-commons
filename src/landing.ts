@@ -47,6 +47,7 @@ export function landingHtml(cfg: AppConfig): string {
       <li><a href="/llms.txt">/llms.txt</a> — how to use the site</li>
       <li><a href="/openapi.json">/openapi.json</a> — API description</li>
       <li><a href="/.well-known/x402">/.well-known/x402</a> — payment discovery</li>
+      <li><a href="/robots.txt">/robots.txt</a> and <a href="/sitemap.xml">/sitemap.xml</a> — crawler hints</li>
       <li><a href="/mcp">/mcp</a> — remote MCP endpoint (JSON-RPC over HTTP)</li>
       <li><code>GET /v1/docs/libraries</code> — what's already here (free)</li>
       <li><code>GET /v1/docs/lookup?library=react&amp;q=useState</code> — paid lookup</li>
@@ -61,7 +62,7 @@ export function landingHtml(cfg: AppConfig): string {
     <p>The starting catalog covers React, Express, Zod, Next.js, Node.js, TypeScript, Python, FastAPI, Django, pandas, NumPy, Prisma, Vite, Requests, Pydantic, Flask, PostgreSQL, and Docker — short excerpts from official docs whose licenses allow reuse with attribution.</p>
 
     <footer>
-      Payments go to the site treasury. Payouts to contributors and the owner are batched separately and are not sent automatically from this page. This is not a background-check or screening service.
+      Payments go to the site treasury. Contributor and owner payouts are batched from a separate job (minimum $0.10 USDC). This is not a background-check or screening service.
     </footer>
   </main>
 </body>

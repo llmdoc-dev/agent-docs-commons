@@ -18,6 +18,9 @@ export function buildOpenApi(cfg: AppConfig): Record<string, unknown> {
       version: "0.1.0",
       description:
         "Pay-per-call, cited, versioned documentation snippets for AI agents. Contributors earn 60% of each query fee when their accepted facts are used.",
+      contact: { email: "dyvnkcxp@mail.grokbot.com", url: cfg.publicBaseUrl },
+      "x-guidance":
+        "Start at /llms.txt. Unpaid GET /v1/docs/lookup returns HTTP 402 (x402 v2 exact USDC on Solana). Retry with a PAYMENT-SIGNATURE header. Contribute and verify are free. No API keys.",
     },
     servers: [{ url: cfg.publicBaseUrl }],
     paths: {
@@ -36,6 +39,12 @@ export function buildOpenApi(cfg: AppConfig): Record<string, unknown> {
       "/llms.txt": {
         get: { summary: "Agent-oriented site index", responses: { "200": { description: "Markdown" } } },
       },
+      "/robots.txt": {
+        get: { summary: "Crawler rules and content signals", responses: { "200": { description: "text" } } },
+      },
+      "/sitemap.xml": {
+        get: { summary: "Public URL list", responses: { "200": { description: "XML" } } },
+      },
       "/v1/docs/libraries": {
         get: { summary: "List seeded and contributed libraries", responses: { "200": { description: "OK" } } },
       },
@@ -48,9 +57,26 @@ export function buildOpenApi(cfg: AppConfig): Record<string, unknown> {
             { name: "library", in: "query", required: false, schema: { type: "string", examples: ["react", "express", "zod"] } },
             { name: "version", in: "query", required: false, schema: { type: "string" } },
           ],
+          "x-payment-info": {
+            protocols: [
+              {
+                name: "x402",
+                version: 2,
+                scheme: "exact",
+                network: cfg.network,
+                asset: cfg.asset,
+                payTo: cfg.payTo,
+                amount: String(Math.round(cfg.priceLookupUsd * 1_000_000)),
+                currency: "USDC",
+                facilitator: cfg.facilitatorUrl,
+              },
+            ],
+            fixed: cfg.priceLookupUsd,
+            currency: "USDC",
+          },
           responses: {
             "200": { description: "Snippets plus payout attribution" },
-            "402": { description: "Payment required (x402 challenge)" },
+            "402": { description: "Payment required (x402 challenge with PAYMENT-REQUIRED header)" },
           },
         },
       },
