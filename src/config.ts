@@ -8,10 +8,12 @@ export const USDC_MINT_DEVNET = "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU";
 /** Public test facilitator (Solana devnet only). */
 export const DEFAULT_FACILITATOR = "https://x402.org/facilitator";
 /**
- * Production facilitator: Dexter (`https://x402.dexter.cash`).
- * Supports x402 v2 exact on Solana mainnet, no account or API key, advertised $0 facilitator fee.
+ * Production facilitator: PayAI (`https://facilitator.payai.network`).
+ * Supports x402 v2 exact on Solana mainnet without an account or API key for ordinary exact payments.
+ * Dexter also lists Solana mainnet, but its advertised fee payer was too close to
+ * the rent-exempt floor to settle when we tested (InsufficientFundsForRent).
  */
-export const PRODUCTION_FACILITATOR = "https://x402.dexter.cash";
+export const PRODUCTION_FACILITATOR = "https://facilitator.payai.network";
 
 /** Throwaway devnet address generated for the prototype. No secret is in the repo. */
 export const DEFAULT_PAY_TO = "Gm3Ae1UTwJsLj5NKHhznJccYiGLMMdfJiZUJ39hLAsoH";

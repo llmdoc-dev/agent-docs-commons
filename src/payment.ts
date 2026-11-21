@@ -229,6 +229,15 @@ type FacilitatorResult = {
   raw: Record<string, unknown>;
 };
 
+function facilitatorErrorMessage(body: Record<string, unknown>, fallback: string): string {
+  const reason = body.invalidReason ?? body.error ?? body.message;
+  if (typeof reason === "string" && reason.trim()) {
+    const cleaned = reason.replace(/\s+/g, " ").trim();
+    return `${fallback}: ${cleaned.slice(0, 240)}`;
+  }
+  return fallback;
+}
+
 function readFacilitatorResult(body: Record<string, unknown>): FacilitatorResult {
   const payer =
     (typeof body.payer === "string" && body.payer) ||
@@ -343,12 +352,22 @@ export async function requirePayment(
   try {
     const verified = await callFacilitator(cfg, "/verify", payload, expected);
     if (!verified.ok) {
-      const challenge = await buildChallenge(cfg, resource, opts.priceUsd, "Payment verification failed");
+      const challenge = await buildChallenge(
+        cfg,
+        resource,
+        opts.priceUsd,
+        facilitatorErrorMessage(verified.raw, "Payment verification failed"),
+      );
       return { ok: false, response: paymentRequiredResponse(challenge, corsHeaders) };
     }
     const settled = await callFacilitator(cfg, "/settle", payload, expected);
     if (!settled.ok) {
-      const challenge = await buildChallenge(cfg, resource, opts.priceUsd, "Payment settlement failed");
+      const challenge = await buildChallenge(
+        cfg,
+        resource,
+        opts.priceUsd,
+        facilitatorErrorMessage(settled.raw, "Payment settlement failed"),
+      );
       return { ok: false, response: paymentRequiredResponse(challenge, corsHeaders) };
     }
     const transaction = settled.transaction;

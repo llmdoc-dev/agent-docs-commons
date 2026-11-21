@@ -25,7 +25,7 @@
     "PAYMENT_MODE": "x402",
     "PAY_TO": "EAJiExxSG5K3G4nnqeCZd1DmWMaK6CmisXi53yYa5SJJ",
     "X402_NETWORK": "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
-    "FACILITATOR_URL": "https://x402.dexter.cash",
+    "FACILITATOR_URL": "https://facilitator.payai.network",
     "PRICE_LOOKUP_USD": "0.01",
     "PUBLIC_BASE_URL": "https://llmdocs.dev",
     "OWNER_PAYOUT_ADDRESS": "7vUCMQL5U5RtyLskFrrW7L5i7YV4pTtqg72qG87BoxSB"
