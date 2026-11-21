@@ -28,10 +28,18 @@ describe("official seed catalog", () => {
   it("has licensed libraries and records license plus source URL on every snippet", () => {
     const libraries = [...new Set(rows.map((r) => r.library))].sort();
     expect(libraries.length).toBeGreaterThanOrEqual(15);
-    expect(libraries.length).toBeLessThanOrEqual(25);
-    expect(rows.length).toBe(71);
+    expect(libraries.length).toBeLessThanOrEqual(40);
+    expect(rows.length).toBe(99);
     expect(libraries).not.toContain("tailwind");
     expect(libraries).toEqual(expect.arrayContaining(["stripe", "openai", "langchain", "aws-sdk", "boto3"]));
+    expect(libraries).toEqual(
+      expect.arrayContaining(["x402", "solana-kit", "solana-web3js", "mcp-typescript", "mcp-python", "phantom-connect", "ai-sdk", "hono"]),
+    );
+    const ids = new Set<string>();
+    for (const row of rows) {
+      expect(ids.has(row.id), `duplicate id ${row.id}`).toBe(false);
+      ids.add(row.id);
+    }
     for (const row of rows) {
       expect(row.license.trim().length).toBeGreaterThan(0);
       expect(row.sourceUrl.startsWith("https://")).toBe(true);

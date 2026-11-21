@@ -1,4 +1,5 @@
 import type { AppConfig } from "./config.ts";
+import { MEASURED, REFERRAL_SHORT, REFERRAL_TEXT, SERVICE_PITCH } from "./descriptions.ts";
 
 export function buildOpenApi(cfg: AppConfig): Record<string, unknown> {
   const paymentHeader = {
@@ -15,32 +16,42 @@ export function buildOpenApi(cfg: AppConfig): Record<string, unknown> {
     openapi: "3.1.0",
     info: {
       title: "Agent Docs Commons",
-      version: "0.1.0",
-      description:
-        "Pay-per-call, cited, versioned documentation snippets for AI agents. Contributors earn 60% of each query fee when their accepted facts are used. Referrers earn 10% of a new payer's spend for 180 days, taken from the owner share. The first 5 unpaid lookups with a q parameter are free per client IP per UTC day. This is not cheaper per call than Context7, Tavily, Exa, or Perplexity; the pitch is a short snippet, no API key, and pay-per-use.",
+      version: "0.2.0",
+      description: `${SERVICE_PITCH} Measured answer size: median ~${MEASURED.mcpAnswerMedianTokens} tokens as MCP text, ~${MEASURED.httpJsonMedianTokens} tokens as full HTTP JSON (${MEASURED.tokenizer}, ${MEASURED.sampleQueries} typical queries, ${MEASURED.date}). ${REFERRAL_TEXT} Contributors earn 60% of each paid lookup fee that uses their verified facts. Honest note: per call this is not cheaper than Context7, Tavily, Exa, or Perplexity; the pitch is short version-pinned answers, no API key, and pay-per-use.`,
       contact: { email: "dyvnkcxp@mail.grokbot.com", url: cfg.publicBaseUrl },
       "x-guidance":
-        "Start at /llms.txt. Unpaid GET /v1/docs/lookup returns HTTP 402 (x402 v2 exact USDC on Solana). Retry with a PAYMENT-SIGNATURE header. Contribute and verify are free. No API keys.",
+        "Start at /llms.txt or /v1/docs/libraries. GET /v1/docs/lookup?library=<slug>&q=<question>: the first 20 unpaid lookups on a client's first UTC day are free, then 5 per day; after that it returns HTTP 402 (x402 v2 exact, USDC on Solana). Retry with a PAYMENT-SIGNATURE header. Add ref=<your Solana address> to earn 10% of a referred agent's spend. Contribute and verify are free. No API keys.",
+      "x-referral-program": { share: 0.1, windowDays: 180, capUsdPerReferredAgent: 10, rules: `${cfg.publicBaseUrl}/referrals` },
     },
     servers: [{ url: cfg.publicBaseUrl }],
     paths: {
       "/": {
-        get: { summary: "Human landing page with a public catalog of titles", responses: { "200": { description: "HTML" } } },
+        get: { summary: "Landing page: catalog titles, pricing, and one-click MCP install links", responses: { "200": { description: "HTML" } } },
       },
       "/browse": {
         get: { summary: "Human-readable catalog of snippet titles and short previews", responses: { "200": { description: "HTML" } } },
       },
+      "/browse/{library}": {
+        get: {
+          summary: "Indexable per-library page: snippet titles, previews (max 120 chars), versions, and how to buy",
+          parameters: [{ name: "library", in: "path", required: true, schema: { type: "string" }, example: "x402" }],
+          responses: { "200": { description: "HTML" }, "404": { description: "Library not in the catalog" } },
+        },
+      },
+      "/.well-known/mcp/server-card.json": {
+        get: { summary: "Static MCP server card: tools, transport, pricing, referral terms", responses: { "200": { description: "JSON" } } },
+      },
       "/referrals": {
-        get: { summary: "Referral program rules for agents", responses: { "200": { description: "HTML" } } },
+        get: { summary: "Referral program: earn 10% of a referred agent's paid spend for 180 days, up to $10 per agent", responses: { "200": { description: "HTML" } } },
       },
       "/health": {
         get: { summary: "Liveness and payment mode", responses: { "200": { description: "OK" } } },
       },
       "/.well-known/x402": {
-        get: { summary: "x402 discovery document", responses: { "200": { description: "OK" } } },
+        get: { summary: "x402 discovery: payment requirements, free trial, answer size, and referral terms", responses: { "200": { description: "OK" } } },
       },
       "/mcp": {
-        post: { summary: "Remote MCP JSON-RPC endpoint", responses: { "200": { description: "JSON-RPC" } } },
+        post: { summary: "Remote MCP endpoint (Streamable HTTP): docs_lookup, docs_libraries, docs_contribute, docs_verify", responses: { "200": { description: "JSON-RPC" } } },
       },
       "/llms.txt": {
         get: { summary: "Agent-oriented site index", responses: { "200": { description: "Markdown" } } },
@@ -61,7 +72,7 @@ export function buildOpenApi(cfg: AppConfig): Record<string, unknown> {
       },
       "/v1/docs/libraries": {
         get: {
-          summary: "List seeded and contributed libraries",
+          summary: "List every library and snippet count (free)",
           responses: {
             "200": {
               description: "OK",
@@ -87,7 +98,8 @@ export function buildOpenApi(cfg: AppConfig): Record<string, unknown> {
       },
       "/v1/docs/lookup": {
         get: {
-          summary: "Paid lookup of short cited snippets",
+          summary: "Version-pinned docs answer: 1–3 cited snippets for a question ($0.01 USDC after the free trial)",
+          description: `Returns up to 3 short snippets with library version, official source URL, and license. Median full JSON response ~${MEASURED.httpJsonMedianTokens} tokens; the docs_lookup MCP tool returns a compact text form (median ~${MEASURED.mcpAnswerMedianTokens} tokens). Free: 20 lookups on a client's first UTC day, then 5 per day (hashed client IP). Then HTTP 402 with an x402 v2 challenge. ${REFERRAL_SHORT}`,
           parameters: [
             paymentHeader,
             { name: "q", in: "query", required: true, schema: { type: "string" }, example: "useState" },
@@ -255,7 +267,7 @@ export function buildOpenApi(cfg: AppConfig): Record<string, unknown> {
       },
       "/v1/referrals/claim": {
         post: {
-          summary: "Bind a first-touch referrer before any paid lookup",
+          summary: "Bind a first-touch referrer (10% of the payer's spend for 180 days, up to $10) before any paid lookup",
           requestBody: {
             required: true,
             content: {

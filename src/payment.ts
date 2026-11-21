@@ -2,6 +2,7 @@ import type { AppConfig } from "./config.ts";
 import { usdToMicros } from "./money.ts";
 import { isSolanaAddress } from "./quality.ts";
 import { lookupBazaarExtension } from "./bazaar.ts";
+import { BAZAAR_DESCRIPTION } from "./descriptions.ts";
 
 export const MOCK_PAYMENT_PREFIX = "mock:";
 
@@ -126,10 +127,10 @@ export async function buildChallenge(
 export function lookupResource(cfg: AppConfig, resourceUrl: string): ResourceInfo {
   return {
     url: resourceUrl,
-    description: "Cited, versioned documentation snippet lookup",
+    description: BAZAAR_DESCRIPTION,
     mimeType: "application/json",
     serviceName: "llmdocs",
-    tags: ["docs", "developers", "x402"],
+    tags: ["docs", "developer-docs", "coding-agents", "mcp", "solana", "x402", "referrals"],
   };
 }
 
@@ -436,6 +437,18 @@ export function paymentRequiredResponse(challenge: PaymentRequired, extraHeaders
 
 export function jsonResponse(status: number, body: unknown, extraHeaders: Record<string, string> = {}): Response {
   return new Response(JSON.stringify(body, null, 2), {
+    status,
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      ...paymentCorsHeaders(),
+      ...extraHeaders,
+    },
+  });
+}
+
+/** Single-line JSON for agent-facing answers: same fields, fewer tokens than pretty-printed JSON. */
+export function compactJsonResponse(status: number, body: unknown, extraHeaders: Record<string, string> = {}): Response {
+  return new Response(JSON.stringify(body), {
     status,
     headers: {
       "Content-Type": "application/json; charset=utf-8",

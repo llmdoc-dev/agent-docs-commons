@@ -38,6 +38,16 @@ export const ALLOWED_SOURCE_HOSTS = new Set([
   "js.langchain.com",
   "docs.aws.amazon.com",
   "boto3.amazonaws.com",
+  "docs.x402.org",
+  "www.solanakit.com",
+  "solanakit.com",
+  "solana.com",
+  "ts.sdk.modelcontextprotocol.io",
+  "py.sdk.modelcontextprotocol.io",
+  "modelcontextprotocol.io",
+  "docs.phantom.com",
+  "ai-sdk.dev",
+  "hono.dev",
 ]);
 
 export const ALLOWED_GITHUB_REPOS = [
@@ -69,6 +79,15 @@ export const ALLOWED_GITHUB_REPOS = [
   "langchain-ai/langchainjs",
   "aws/aws-sdk-js-v3",
   "boto/boto3",
+  "x402-foundation/x402",
+  "coinbase/x402",
+  "anza-xyz/kit",
+  "solana-foundation/solana-web3.js",
+  "modelcontextprotocol/typescript-sdk",
+  "modelcontextprotocol/python-sdk",
+  "vercel/ai",
+  "honojs/hono",
+  "honojs/website",
 ];
 
 export const MAX_BODY_CHARS = 1500;

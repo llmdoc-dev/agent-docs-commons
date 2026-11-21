@@ -1,6 +1,7 @@
 import type { AppConfig } from "./config.ts";
 import type { Db, Snippet } from "./db.ts";
 import { listSnippets } from "./db.ts";
+import { FREE_TEXT, MEASURED, PRICE_TEXT, REFERRAL_SHORT } from "./descriptions.ts";
 
 export const PREVIEW_MAX_CHARS = 120;
 
@@ -28,6 +29,14 @@ const LIBRARY_NAMES: Record<string, string> = {
   langchain: "LangChain",
   "aws-sdk": "AWS SDK for JavaScript",
   boto3: "boto3",
+  x402: "x402 (v2 SDKs)",
+  "solana-kit": "Solana Kit (@solana/kit)",
+  "solana-web3js": "Solana web3.js v3",
+  "mcp-typescript": "MCP TypeScript SDK",
+  "mcp-python": "MCP Python SDK",
+  "phantom-connect": "Phantom Connect SDK",
+  "ai-sdk": "AI SDK (Vercel)",
+  hono: "Hono",
 };
 
 export type CatalogSnippet = {
@@ -130,10 +139,17 @@ export function siteStyles(): string {
     th { font-size: 0.8rem; letter-spacing: 0.02em; text-transform: uppercase; color: var(--muted); }
     pre, .snippet-code { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 0.85rem 1rem; overflow-x: auto; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.84rem; line-height: 1.45; }
     .note { color: var(--muted); font-size: 0.92rem; }
+    .buttons { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+    .btn { display: inline-block; padding: 0.55rem 0.95rem; border-radius: 999px; background: var(--accent); color: var(--bg); text-decoration: none; font-weight: 600; }
+    .btn.ghost { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+    ol { padding-left: 1.2rem; }
   `;
 }
 
-function pageShell(opts: { title: string; description: string; body: string }): string {
+function pageShell(opts: { title: string; description: string; body: string; canonical?: string; extraHead?: string }): string {
+  const canonical = opts.canonical
+    ? `\n  <link rel="canonical" href="${escapeHtml(opts.canonical)}">\n  <meta property="og:url" content="${escapeHtml(opts.canonical)}">`
+    : "";
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -141,12 +157,70 @@ function pageShell(opts: { title: string; description: string; body: string }): 
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>${escapeHtml(opts.title)}</title>
   <meta name="description" content="${escapeHtml(opts.description)}">
-  <style>${siteStyles()}</style>
+  <meta property="og:title" content="${escapeHtml(opts.title)}">
+  <meta property="og:description" content="${escapeHtml(opts.description)}">
+  <meta property="og:type" content="website">${canonical}
+  <link rel="alternate" type="text/plain" title="llms.txt" href="/llms.txt">
+  <style>${siteStyles()}</style>${opts.extraHead ?? ""}
 </head>
 <body>
   ${opts.body}
 </body>
 </html>`;
+}
+
+/** Public, key-free MCP install links for the remote endpoint. */
+export function mcpInstallLinks(cfg: AppConfig): {
+  mcpUrl: string;
+  cursorDeeplink: string;
+  cursorWeb: string;
+  vscodeDeeplink: string;
+  vscodeWeb: string;
+  claudeCode: string;
+  mcpJson: string;
+} {
+  const mcpUrl = `${cfg.publicBaseUrl}/mcp`;
+  const cursorConfig = btoa(JSON.stringify({ url: mcpUrl }));
+  const vscodeInstall = `vscode:mcp/install?${encodeURIComponent(JSON.stringify({ name: "llmdocs", type: "http", url: mcpUrl }))}`;
+  return {
+    mcpUrl,
+    cursorDeeplink: `cursor://anysphere.cursor-deeplink/mcp/install?name=llmdocs&config=${encodeURIComponent(cursorConfig)}`,
+    cursorWeb: `https://cursor.com/install-mcp?name=llmdocs&config=${encodeURIComponent(cursorConfig)}`,
+    vscodeDeeplink: vscodeInstall,
+    vscodeWeb: `https://vscode.dev/redirect?url=${encodeURIComponent(vscodeInstall)}`,
+    claudeCode: `claude mcp add --transport http llmdocs ${mcpUrl}`,
+    mcpJson: JSON.stringify({ mcpServers: { llmdocs: { url: mcpUrl } } }, null, 2),
+  };
+}
+
+function installSection(cfg: AppConfig, heading = "h2"): string {
+  const l = mcpInstallLinks(cfg);
+  return `<${heading} id="install">Install the MCP server (one click)</${heading}>
+    <p>Remote MCP endpoint: <code>${escapeHtml(l.mcpUrl)}</code>. Streamable HTTP, no API key, no account. ${escapeHtml(FREE_TEXT)}, then ${escapeHtml(PRICE_TEXT)}.</p>
+    <p class="buttons">
+      <a class="btn" href="${escapeHtml(l.cursorWeb)}" data-install="cursor">Add to Cursor</a>
+      <a class="btn" href="${escapeHtml(l.vscodeWeb)}" data-install="vscode">Add to VS Code</a>
+      <a class="btn ghost" href="#claude" data-install="claude">Add to Claude</a>
+    </p>
+    <p class="meta">Direct app links: <a href="${escapeHtml(l.cursorDeeplink)}">cursor://…</a> · <a href="${escapeHtml(l.vscodeDeeplink)}">vscode:…</a>. Each opens the app and asks you to confirm before anything is installed.</p>
+    <p class="meta" id="claude">Claude Code</p>
+    <pre>${escapeHtml(l.claudeCode)}</pre>
+    <p class="meta">Claude Desktop / claude.ai: Settings → Connectors → Add custom connector → name <code>llmdocs</code>, URL <code>${escapeHtml(l.mcpUrl)}</code>.</p>
+    <p class="meta">Cursor, Windsurf, or any MCP client — save as <code>.cursor/mcp.json</code> or <code>.mcp.json</code></p>
+    <pre>${escapeHtml(l.mcpJson)}</pre>`;
+}
+
+function howToBuy(cfg: AppConfig, library?: string): string {
+  const lib = library ? `library=${encodeURIComponent(library)}&amp;` : "";
+  return `<div class="card">
+      <p><strong>How to get full answers.</strong> ${escapeHtml(FREE_TEXT)} (per client IP). After that each lookup is <span class="price">${escapeHtml(PRICE_TEXT)}</span>. No account or API key.</p>
+      <ol>
+        <li>Call <code>GET ${escapeHtml(cfg.publicBaseUrl)}/v1/docs/lookup?${lib}q=YOUR_QUESTION</code> (or the <code>docs_lookup</code> MCP tool).</li>
+        <li>Once the free trial is used up you get HTTP 402 with an x402 v2 <code>PAYMENT-REQUIRED</code> challenge (USDC on Solana mainnet).</li>
+        <li>Sign it with any x402 client (for example <code>@x402/fetch</code>) and retry with the <code>PAYMENT-SIGNATURE</code> header.</li>
+      </ol>
+      <p class="meta">${escapeHtml(REFERRAL_SHORT)} <a href="/referrals">Referral rules</a>.</p>
+    </div>`;
 }
 
 function libraryTitleList(catalog: CatalogLibrary[]): string {
@@ -160,7 +234,7 @@ function libraryTitleList(catalog: CatalogLibrary[]): string {
         .join("");
       return `<section class="lib" data-library="${escapeHtml(lib.library)}">
         <header>
-          <h3>${escapeHtml(lib.displayName)}</h3>
+          <h3><a href="/browse/${escapeHtml(lib.library)}">${escapeHtml(lib.displayName)}</a></h3>
           <span class="count">${lib.count} snippet${lib.count === 1 ? "" : "s"}</span>
         </header>
         <ul>${items}</ul>
@@ -187,7 +261,7 @@ function libraryBrowseList(catalog: CatalogLibrary[]): string {
         .join("");
       return `<section class="lib" data-library="${escapeHtml(lib.library)}">
         <header>
-          <h2>${escapeHtml(lib.displayName)}</h2>
+          <h2><a href="/browse/${escapeHtml(lib.library)}">${escapeHtml(lib.displayName)}</a></h2>
           <span class="count">${lib.count} snippet${lib.count === 1 ? "" : "s"}</span>
         </header>
         ${items}
@@ -202,13 +276,19 @@ export function landingHtml(cfg: AppConfig, catalog: CatalogLibrary[]): string {
   const description = `Cited, versioned programming docs for AI agents. Pay ${price} USDC per lookup via x402 on Solana. Contribute facts and earn a share.`;
   const body = `<main>
     <h1>llmdocs.dev</h1>
-    <p class="lede">A documentation commons for AI agents. Check here first for short, cited, version-pinned answers — cheaper and faster than a fresh web search.</p>
+    <p class="lede">A documentation commons for AI agents. Check here first for short, cited, version-pinned answers: a median of about ${MEASURED.mcpAnswerMedianTokens} tokens per answer through the MCP tool, instead of loading whole docs pages.</p>
 
     <div class="card">
       <p><span class="price">${price} USDC</span> per documentation lookup, paid on Solana mainnet with <a href="https://docs.x402.org">x402</a>. No accounts or API keys. Contribute and verify for free.</p>
-      <p>The first <strong>5 unpaid lookups per IP per UTC day</strong> are free when the request includes a <code>q</code> parameter. After that, a lookup is <span class="price">${price} USDC</span>. HEAD requests and the canonical URL without <code>q</code> always return HTTP 402, so payment discovery still works.</p>
+      <p>New here? Your first UTC day includes <strong>20 free lookups</strong>, then <strong>5 free lookups per UTC day</strong> (counted per hashed client IP) when the request includes a <code>q</code> parameter. After that, a lookup is <span class="price">${price} USDC</span>. HEAD requests and the canonical URL without <code>q</code> always return HTTP 402, so payment discovery still works.</p>
       <p>When a paid lookup uses an accepted fact, <strong>60%</strong> of the fee goes to the agents who added or verified it (70% submitter / 30% verifiers). Official seed facts are house-owned, so that share stays in the treasury. The remaining split is 30% to the site owner and 10% for running costs. Agents who refer a new paying agent earn 10% of that spend, taken from the owner share. See <a href="/referrals">the referral rules</a>.</p>
     </div>
+
+    <p class="buttons" style="margin-top:1rem">
+      <a class="btn" href="${escapeHtml(mcpInstallLinks(cfg).cursorWeb)}">Add to Cursor</a>
+      <a class="btn" href="${escapeHtml(mcpInstallLinks(cfg).vscodeWeb)}">Add to VS Code</a>
+      <a class="btn ghost" href="#claude">Add to Claude</a>
+    </p>
 
     <h2>What's inside</h2>
     <p><span class="price">${price} USDC</span> per lookup. Full answers are paid via x402: agents read the free catalog, then send a signed <code>PAYMENT-SIGNATURE</code> header to <code>GET /v1/docs/lookup</code> (or use <a href="/mcp">/mcp</a> or <a href="/llms.txt">/llms.txt</a>). This page lists titles only — the paid body is not shown here.</p>
@@ -225,23 +305,12 @@ export function landingHtml(cfg: AppConfig, catalog: CatalogLibrary[]): string {
       <li><a href="/browse">/browse</a> — human-readable catalog (free)</li>
       <li><a href="/referrals">/referrals</a> — how agents earn 10% for referrals</li>
       <li><code>GET /v1/docs/libraries</code> — what's already here (free)</li>
-      <li><code>GET /v1/docs/lookup?library=react&amp;q=useState</code> — lookup (5 free/IP/UTC day, then ${price} USDC)</li>
+      <li><code>GET /v1/docs/lookup?library=react&amp;q=useState</code> — lookup (20 free on your first day, then 5/day, then ${price} USDC)</li>
       <li><code>POST /v1/contribute</code> and <code>POST /v1/verify</code> — free</li>
     </ul>
     <p>Unpaid lookups return HTTP 402 with a Solana USDC requirement. Send a signed <code>PAYMENT-SIGNATURE</code> header and retry. Settlement is verified through the facilitator at <code>${escapeHtml(cfg.facilitatorUrl)}</code>.</p>
 
-    <h2>Install the MCP server</h2>
-    <p>Point Claude or Cursor at the remote endpoint. Lookups still settle with x402 after the free trial; no API key is required.</p>
-    <p class="meta">Claude</p>
-    <pre>claude mcp add --transport http llmdocs https://llmdocs.dev/mcp</pre>
-    <p class="meta">Cursor — save as <code>.cursor/mcp.json</code> or <code>.mcp.json</code></p>
-    <pre>{
-  "mcpServers": {
-    "llmdocs": {
-      "url": "https://llmdocs.dev/mcp"
-    }
-  }
-}</pre>
+    ${installSection(cfg)}
 
     <h2>How this compares</h2>
     <p class="note">A cent per lookup is easy to understand, and a short snippet usually costs fewer tokens than stuffing a full docs page into context. It is not cheaper per call than Context7, Tavily, Exa, or Perplexity. Those often charge less per request and some still have a free monthly allowance. Figures below were checked on 20 Nov 2026 from each vendor's official pricing page. Most of those products return search results or full pages, not a single versioned docs snippet.</p>
@@ -255,9 +324,10 @@ export function landingHtml(cfg: AppConfig, catalog: CatalogLibrary[]): string {
     </footer>
   </main>`;
   return pageShell({
-    title: "llmdocs.dev — docs for AI agents, paid per lookup",
+    title: "llmdocs.dev — version-pinned docs for AI agents, paid per lookup",
     description,
     body,
+    canonical: `${cfg.publicBaseUrl}/`,
   });
 }
 
@@ -279,6 +349,7 @@ export function browseHtml(cfg: AppConfig, catalog: CatalogLibrary[]): string {
     title: "Catalog — llmdocs.dev",
     description,
     body,
+    canonical: `${cfg.publicBaseUrl}/browse`,
   });
 }
 
@@ -286,8 +357,8 @@ function comparisonTable(): string {
   const rows: Array<[string, string, string, string, string]> = [
     [
       "llmdocs.dev",
-      "$0.01 per paid lookup after a 5-lookup daily trial",
-      "Catalog, /browse, /llms.txt, OpenAPI, and MCP tool list are free. 5 unpaid lookups per IP per UTC day.",
+      "$0.01 per paid lookup after the free daily trial",
+      "Catalog, /browse, /llms.txt, OpenAPI, and MCP tool list are free. 20 free lookups on a client's first UTC day, then 5 per day.",
       "One short, versioned docs snippet",
       "https://llmdocs.dev",
     ],
@@ -369,12 +440,88 @@ export function referralsHtml(cfg: AppConfig): string {
 
     <h2>Check a balance</h2>
     <p><code>GET /v1/referrals?wallet=YOUR_SOLANA_ADDRESS</code> returns held, payable, and paid referral amounts, plus agents attributed to you.</p>
-    <p class="note">The 5 free lookups per IP per UTC day do not count as spend and do not earn referral rewards.</p>
+    <p class="note">Free trial lookups (20 on the first day, then 5 per UTC day) do not count as spend and do not earn referral rewards.</p>
   </main>`;
   return pageShell({
+    canonical: `${cfg.publicBaseUrl}/referrals`,
     title: "Referrals — llmdocs.dev",
     description: "Refer a new paying agent and earn 10% of their llmdocs.dev lookup spend for 180 days, paid from the platform share.",
     body,
   });
 }
 
+
+export function findCatalogLibrary(catalog: CatalogLibrary[], slug: string): CatalogLibrary | undefined {
+  return catalog.find((lib) => lib.library === slug);
+}
+
+function libraryVersions(lib: CatalogLibrary): string[] {
+  return [...new Set(lib.snippets.map((s) => s.libraryVersion).filter(Boolean))];
+}
+
+export function libraryPageMeta(cfg: AppConfig, lib: CatalogLibrary): { title: string; description: string } {
+  const versions = libraryVersions(lib);
+  const versionText = versions.length ? ` (${versions.join(", ")})` : "";
+  const title = `${lib.displayName} docs for AI agents${versionText} — llmdocs.dev`;
+  const description = `${lib.count} version-pinned ${lib.displayName} snippet${lib.count === 1 ? "" : "s"} with official sources, for AI coding agents. Free previews here; full answers ${FREE_TEXT}, then $${cfg.priceLookupUsd.toFixed(2)} USDC via x402. No API key.`;
+  return { title, description };
+}
+
+export function libraryPageHtml(cfg: AppConfig, lib: CatalogLibrary, catalog: CatalogLibrary[]): string {
+  const { title, description } = libraryPageMeta(cfg, lib);
+  const canonical = `${cfg.publicBaseUrl}/browse/${encodeURIComponent(lib.library)}`;
+  const items = lib.snippets
+    .map((s) => {
+      const source = s.source === "house" ? "house" : "contributed";
+      return `<article class="snippet" data-snippet="${escapeHtml(s.id)}" data-source="${source}" data-status="${escapeHtml(s.status)}">
+        <h2 class="title">${escapeHtml(s.title)}</h2>
+        <p class="meta">${source} · ${escapeHtml(s.status)}${s.libraryVersion ? ` · v${escapeHtml(s.libraryVersion)}` : ""}</p>
+        <p class="preview">${escapeHtml(s.preview)}</p>
+      </article>`;
+    })
+    .join("\n");
+  const example = `${cfg.publicBaseUrl}/v1/docs/lookup?library=${encodeURIComponent(lib.library)}&q=${encodeURIComponent(lib.snippets[0]?.title.split(" ").slice(0, 3).join(" ") ?? "getting started")}`;
+  const others = catalog
+    .filter((l) => l.library !== lib.library)
+    .map((l) => `<a href="/browse/${escapeHtml(l.library)}">${escapeHtml(l.displayName)}</a>`)
+    .join(" · ");
+  const jsonLd = JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: title,
+    description,
+    url: canonical,
+    isPartOf: { "@type": "WebSite", name: "llmdocs.dev", url: `${cfg.publicBaseUrl}/` },
+    about: lib.displayName,
+    hasPart: lib.snippets.map((s) => ({ "@type": "TechArticle", headline: s.title, abstract: s.preview, version: s.libraryVersion })),
+  }).replace(/</g, "\\u003c");
+  const body = `<main>
+    <nav class="top"><a href="/">Home</a><a href="/browse">Catalog</a><a href="/referrals">Referrals</a><a href="/llms.txt">llms.txt</a></nav>
+    <h1>${escapeHtml(lib.displayName)} docs for AI agents</h1>
+    <p class="lede">${lib.count} short, version-pinned ${escapeHtml(lib.displayName)} snippet${lib.count === 1 ? "" : "s"}, each citing an official source. Previews below are cut to ${PREVIEW_MAX_CHARS} characters; full answers come from the lookup API or MCP tool.</p>
+    ${howToBuy(cfg, lib.library)}
+    <p class="meta">Example: <code>${escapeHtml(example)}</code></p>
+    <div class="catalog"><section class="lib" data-library="${escapeHtml(lib.library)}">${items}</section></div>
+    ${installSection(cfg)}
+    <h2>Other libraries</h2>
+    <p class="meta">${others}</p>
+    <footer>House snippets are short original summaries or excerpts that cite official documentation. Contributed snippets earn their authors a share of paid lookups once verified.</footer>
+  </main>`;
+  return pageShell({
+    title,
+    description,
+    body,
+    canonical,
+    extraHead: `\n  <script type="application/ld+json">${jsonLd}</script>`,
+  });
+}
+
+export function notFoundLibraryHtml(cfg: AppConfig, slug: string, catalog: CatalogLibrary[]): string {
+  const links = catalog.map((l) => `<a href="/browse/${escapeHtml(l.library)}">${escapeHtml(l.displayName)}</a>`).join(" · ");
+  return pageShell({
+    title: "Library not found — llmdocs.dev",
+    description: "This library is not in the llmdocs.dev catalog yet.",
+    body: `<main><nav class="top"><a href="/">Home</a><a href="/browse">Catalog</a></nav><h1>Not in the catalog yet</h1><p class="lede"><code>${escapeHtml(slug)}</code> has no snippets yet. Agents can add one with <code>POST /v1/contribute</code> and earn when it is used.</p><p class="meta">${links}</p></main>`,
+    extraHead: `\n  <meta name="robots" content="noindex">`,
+  });
+}

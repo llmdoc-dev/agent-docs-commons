@@ -708,5 +708,285 @@
     "sourceUrl": "https://docs.aws.amazon.com/boto3/latest/reference/core/session.html",
     "license": "Apache-2.0",
     "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "x402-v2-payment-headers",
+    "library": "x402",
+    "libraryVersion": "2.32",
+    "title": "x402 v2 uses PAYMENT-REQUIRED, PAYMENT-SIGNATURE, and PAYMENT-RESPONSE headers",
+    "body": "In x402 v2 a server answers an unpaid request with HTTP 402 and a PAYMENT-REQUIRED header holding a base64-encoded PaymentRequired object (accepted schemes, price, network, payTo). The client retries with a PAYMENT-SIGNATURE header holding a base64-encoded PaymentPayload. After settlement the server returns a PAYMENT-RESPONSE header with a base64-encoded SettlementResponse, whether settlement succeeded or failed. All three header values are base64 JSON. The exact and upto schemes usually settle in the same round trip; batch-settlement redeems later. This is a short original summary for agents, not a substitute for the official API reference.",
+    "sourceUrl": "https://docs.x402.org/core-concepts/http-402",
+    "license": "Apache-2.0",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "x402-v2-fetch-client-solana",
+    "library": "x402",
+    "libraryVersion": "2.32",
+    "title": "Pay x402 endpoints from Node with @x402/fetch and a Solana signer",
+    "body": "Install @x402/fetch plus @x402/svm (and @x402/evm for Base). Create a signer with createKeyPairSignerFromBytes from @solana/kit using a 64-byte secret key loaded from the environment, then: const client = new x402Client(); client.register(\"solana:*\", new ExactSvmScheme(svmSigner)); const fetchWithPayment = wrapFetchWithPayment(fetch, client). x402Client comes from @x402/core/client and ExactSvmScheme from @x402/svm/exact/client. fetchWithPayment handles the 402, signs, and retries. new x402HTTPClient(client).processResponse(res) reports paymentStatus (settled or settle_failed). By default the client only pays USD-pegged assets such as USDC and caps each payment at $1. This is a short original summary for agents, not a substitute for the official API reference.",
+    "sourceUrl": "https://docs.x402.org/getting-started/quickstart-for-buyers",
+    "license": "Apache-2.0",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "x402-v2-express-seller",
+    "library": "x402",
+    "libraryVersion": "2.32",
+    "title": "Protect an Express route with x402 v2 paymentMiddleware",
+    "body": "Install @x402/express, @x402/core, and the mechanism packages you accept (@x402/evm, @x402/svm). Build new HTTPFacilitatorClient({ url }) from @x402/core/server, then app.use(paymentMiddleware({ \"GET /weather\": { accepts: [{ scheme: \"exact\", price: \"$0.001\", network: \"solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1\", payTo: svmAddress }], description, mimeType: \"application/json\" } }, new x402ResourceServer(facilitatorClient).register(\"solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1\", new ExactSvmScheme()))). ExactSvmScheme here is imported from @x402/svm/exact/server. Hono, Next.js (paymentProxy or withX402), and Fastify packages follow the same shape. This is a short original summary for agents, not a substitute for the official API reference.",
+    "sourceUrl": "https://docs.x402.org/getting-started/quickstart-for-sellers",
+    "license": "Apache-2.0",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "x402-v2-mainnet-networks",
+    "library": "x402",
+    "libraryVersion": "2.32",
+    "title": "x402 v2 network ids (CAIP-2) and mainnet facilitators",
+    "body": "x402 v2 names networks in CAIP-2 form: Base mainnet eip155:8453, Base Sepolia eip155:84532, Solana mainnet solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp, Solana devnet solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1. The x402.org facilitator (https://x402.org/facilitator) is for testnets only; do not use it for mainnet routes. For mainnet, point HTTPFacilitatorClient at a production facilitator such as the Coinbase CDP URL or PayAI (https://facilitator.payai.network), switch the network ids, and use a real mainnet payTo address. Test with small amounts first. This is a short original summary for agents, not a substitute for the official API reference.",
+    "sourceUrl": "https://docs.x402.org/getting-started/quickstart-for-sellers",
+    "license": "Apache-2.0",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "x402-v2-python-httpx",
+    "library": "x402",
+    "libraryVersion": "2.29 (Python)",
+    "title": "Pay x402 endpoints from Python with x402HttpxClient",
+    "body": "Install pip install \"x402[httpx]\" and add \"x402[svm]\" for Solana. Create client = x402Client() (from x402), register a scheme such as register_exact_svm_client(client, KeypairSigner.from_base58(os.getenv(\"SVM_PRIVATE_KEY\"))) from x402.mechanisms.svm, or register_exact_evm_client with an EthAccountSigner for EVM. Then async with x402HttpxClient(client) as http: response = await http.get(url). The client handles the 402 challenge and retry. x402HTTPClient(client).get_payment_settle_response(lambda name: response.headers.get(name)) decodes the settlement header. A requests-based client exists for sync code via \"x402[requests]\". This is a short original summary for agents, not a substitute for the official API reference.",
+    "sourceUrl": "https://docs.x402.org/getting-started/quickstart-for-buyers",
+    "license": "Apache-2.0",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "solana-kit-create-client",
+    "library": "solana-kit",
+    "libraryVersion": "8.6",
+    "title": "Create a Solana Kit client with RPC, signer, and program plugins",
+    "body": "Kit is the JavaScript SDK for Solana apps on Node, web, and React Native. Install @solana/kit with @solana/kit-plugin-rpc and @solana/kit-plugin-signer, plus program plugins like @solana-program/system and @solana-program/token. Build a client by chaining plugins: await createClient().use(signerFromFile(\"~/.config/solana/id.json\")).use(solanaMainnetRpc({ rpcUrl: \"https://api.mainnet.solana.com\" })).use(systemProgram()).use(tokenProgram()). The client then exposes client.rpc.getBalance(address).send(), client.system.instructions.transferSol(...), client.token.accounts.mint.fetch(address), and client.sendTransaction(instructions). A no-client mode imports only the functions you need for maximum tree-shaking. This is a short original summary for agents, not a substitute for the official API reference.",
+    "sourceUrl": "https://www.solanakit.com/docs",
+    "license": "MIT",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "solana-kit-rpc-and-address",
+    "library": "solana-kit",
+    "libraryVersion": "8.6",
+    "title": "Solana Kit RPC calls return a request you must .send()",
+    "body": "In @solana/kit, createSolanaRpc(url) returns an RPC object and createSolanaRpcSubscriptions(wsUrl) a subscriptions object. Cluster helpers like devnet(url) brand the URL for a cluster. Addresses are branded strings made with address(\"...base58...\"), and SOL amounts use lamports(10_000_000n) bigints. Each RPC method builds a request that runs only when you call .send(), for example await rpc.getBalance(address(\"...\")).send(). airdropFactory({ rpc, rpcSubscriptions }) returns an airdrop function that works only on test clusters. This is a short original summary for agents, not a substitute for the official API reference.",
+    "sourceUrl": "https://github.com/anza-xyz/kit/tree/main/packages/kit",
+    "license": "MIT",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "solana-kit-send-and-confirm",
+    "library": "solana-kit",
+    "libraryVersion": "8.6",
+    "title": "Send and confirm a transaction with sendAndConfirmTransactionFactory",
+    "body": "sendAndConfirmTransactionFactory({ rpc, rpcSubscriptions }) from @solana/kit returns a function that sends a blockhash-based transaction and waits for confirmation: await sendAndConfirmTransaction(transaction, { commitment: \"confirmed\" }). Catch expiry with isSolanaError(e, SOLANA_ERROR__BLOCK_HEIGHT_EXCEEDED), which means the blockhash expired. Use sendAndConfirmDurableNonceTransactionFactory for nonce-based transactions and sendTransactionWithoutConfirmingFactory when you do not want to wait. This is a short original summary for agents, not a substitute for the official API reference.",
+    "sourceUrl": "https://github.com/anza-xyz/kit/tree/main/packages/kit",
+    "license": "MIT",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "solana-kit-compute-unit-limit",
+    "library": "solana-kit",
+    "libraryVersion": "8.6",
+    "title": "Estimate and set a compute unit limit in Solana Kit",
+    "body": "Without an explicit compute unit limit, validators assume 200K CU per instruction, and tight limits make inclusion more likely. In @solana/kit, estimateComputeUnitLimitFactory({ rpc }) returns an estimator that simulates the message (temporarily at the 1,400,000 max) and returns units consumed; apply it with setTransactionMessageComputeUnitLimit(estimate, message). estimateAndSetComputeUnitLimitFactory(estimator) sets it in one step and leaves explicit limits unchanged; pair it with fillTransactionMessageProvisoryComputeUnitLimit to reserve space during construction. Estimates can be off, so consider adding a margin. For unsigned transactions headed to a wallet, the wallet may set the limit. This is a short original summary for agents, not a substitute for the official API reference.",
+    "sourceUrl": "https://github.com/anza-xyz/kit/tree/main/packages/kit",
+    "license": "MIT",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "solana-web3js-v3-overview",
+    "library": "solana-web3js",
+    "libraryVersion": "3.2",
+    "title": "@solana/web3.js v3 keeps the class API but is rebuilt on Solana Kit",
+    "body": "@solana/web3.js v3 (latest on npm) keeps the familiar class-based API (Connection, PublicKey, Keypair, Transaction), updates it for current RPC methods, and rebuilds internals on Solana Kit. v1.x lives on the maintenance/v1.x branch and gets critical fixes only. v3 has breaking changes: async Keypair and signing flows, bigint amounts, Uint8Array instead of Buffer, readonly RPC results, and removed APIs. The maintainers ask agents not to downgrade to v1 and to read the v1-to-v3 migration guide first. Node 20.18.0 or newer is supported. This is a short original summary for agents, not a substitute for the official API reference.",
+    "sourceUrl": "https://github.com/solana-foundation/solana-web3.js",
+    "license": "MIT",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "solana-web3js-v3-async-keys",
+    "library": "solana-web3js",
+    "libraryVersion": "3.2",
+    "title": "web3.js v3: Keypair, PDA, and signing calls are async",
+    "body": "In @solana/web3.js v3 the Keypair constructor is no longer public. Use await Keypair.generate(), await Keypair.fromSecretKey(bytes), or await Keypair.fromSeed(seed). PDA helpers are async too: await PublicKey.findProgramAddress(...) and await PublicKey.createProgramAddress(...). Transaction signing is async: await transaction.sign(...), await transaction.partialSign(...), await versionedTransaction.sign(...). Mark callers async and move code that reads signatures or .publicKey after the awaited call. PublicKey.unique(), Account, and fee-calculator methods such as getRecentBlockhash were removed. This is a short original summary for agents, not a substitute for the official API reference.",
+    "sourceUrl": "https://github.com/solana-foundation/solana-web3.js/blob/main/docs/web3js-v1-to-v3-migration.md",
+    "license": "MIT",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "solana-web3js-v3-connection-bigint",
+    "library": "solana-web3js",
+    "libraryVersion": "3.2",
+    "title": "web3.js v3 Connection defaults to confirmed and returns bigint numerics",
+    "body": "In @solana/web3.js v3, an omitted commitment defaults to confirmed rather than finalized, so set finalized explicitly if you need it. Many RPC numeric fields (lamports, slots, block heights, epochs) are bigint, and JSON.stringify throws on raw bigint without a replacer. Account data is Uint8Array, often wrapped in Readonly with space: bigint. RPC arrays are readonly, so clone before .sort() or .push(). Since v3.1.0, Connection implements Kit client interfaces, so you can pass a Connection to Kit APIs that take a client. PublicKey implements HasAddress for @solana-program/* clients, and toBase58() returns Kit's branded Address string. This is a short original summary for agents, not a substitute for the official API reference.",
+    "sourceUrl": "https://github.com/solana-foundation/solana-web3.js/blob/main/docs/web3js-v1-to-v3-migration.md",
+    "license": "MIT",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "mcp-ts-v2-packages",
+    "library": "mcp-typescript",
+    "libraryVersion": "2.4",
+    "title": "MCP TypeScript SDK v2 splits into @modelcontextprotocol/server and /client",
+    "body": "The main branch of the MCP TypeScript SDK is v2, the stable line, implementing the 2026-07-28 MCP spec. It publishes @modelcontextprotocol/server and @modelcontextprotocol/client, plus thin middleware packages @modelcontextprotocol/node, /express, /fastify, and /hono. v1 ships as @modelcontextprotocol/sdk on the v1.x branch and gets bug and security fixes for at least six months after the v2 release on 2026-07-27. Tool schemas use Standard Schema, so Zod v4, Valibot, or ArkType all work. It runs on Node.js, Bun, and Deno. This is a short original summary for agents, not a substitute for the official API reference.",
+    "sourceUrl": "https://github.com/modelcontextprotocol/typescript-sdk",
+    "license": "Apache-2.0",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "mcp-ts-v2-register-tool",
+    "library": "mcp-typescript",
+    "libraryVersion": "2.4",
+    "title": "Register a tool on an McpServer with the v2 TypeScript SDK",
+    "body": "With @modelcontextprotocol/server: const server = new McpServer({ name: \"greeting-server\", version: \"1.0.0\" }); server.registerTool(\"greet\", { description: \"Greet someone by name\", inputSchema: z.object({ name: z.string() }) }, async ({ name }) => ({ content: [{ type: \"text\", text: `Hello, ${name}!` }] })). Import z from \"zod/v4\". For stdio, connect with new StdioServerTransport() from @modelcontextprotocol/server/stdio: await server.connect(transport). This is a short original summary for agents, not a substitute for the official API reference.",
+    "sourceUrl": "https://github.com/modelcontextprotocol/typescript-sdk",
+    "license": "Apache-2.0",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "mcp-ts-v2-web-standard",
+    "library": "mcp-typescript",
+    "libraryVersion": "2.4",
+    "title": "Serve an MCP server on Cloudflare Workers, Deno, or Bun with createMcpHandler",
+    "body": "createMcpHandler(() => { const server = new McpServer(...); server.registerTool(...); return server; }) from @modelcontextprotocol/server returns a { fetch } object, so export default handler mounts it on Cloudflare Workers, Deno, or Bun. The factory runs once per request. The handler does no Host or Origin validation, so guard it against DNS rebinding with hostHeaderValidationResponse(request, [hosts]) and originValidationResponse(request, [origins]) before calling handler.fetch(request). Pass verified auth as handler.fetch(request, { authInfo }); tools read it as ctx.http.authInfo. This is a short original summary for agents, not a substitute for the official API reference.",
+    "sourceUrl": "https://github.com/modelcontextprotocol/typescript-sdk/blob/main/docs/serving/web-standard.md",
+    "license": "Apache-2.0",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "mcp-ts-v2-client-connect",
+    "library": "mcp-typescript",
+    "libraryVersion": "2.4",
+    "title": "Connect an MCP client over Streamable HTTP with the v2 SDK",
+    "body": "With @modelcontextprotocol/client: const client = new Client({ name: \"my-client\", version: \"1.0.0\" }); await client.connect(new StreamableHTTPClientTransport(new URL(\"https://host/mcp\"))). For a local process use StdioClientTransport({ command, args }) from @modelcontextprotocol/client/stdio. For servers that predate Streamable HTTP, catch the failure and retry with SSEClientTransport on a fresh Client. After connect, getServerVersion(), getServerCapabilities(), and getInstructions() return what the server declared. Coming from v1, only the import paths moved. This is a short original summary for agents, not a substitute for the official API reference.",
+    "sourceUrl": "https://github.com/modelcontextprotocol/typescript-sdk/blob/main/docs/clients/connect.md",
+    "license": "Apache-2.0",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "mcp-python-v2-mcpserver",
+    "library": "mcp-python",
+    "libraryVersion": "2.3",
+    "title": "MCP Python SDK v2: FastMCP is now MCPServer",
+    "body": "In MCP Python SDK v2 the high-level server class is MCPServer: from mcp.server import MCPServer; mcp = MCPServer(\"Demo\"). The v1 import from mcp.server.fastmcp import FastMCP is gone, not deprecated. @mcp.tool(), @mcp.resource(), and @mcp.prompt() still work, and input schemas still come from type hints. Modules under mcp.server.fastmcp.* moved to mcp.server.mcpserver.*, ctx.fastmcp became ctx.mcp_server, get_context() was removed (declare a ctx: Context parameter), and FastMCPError is now MCPServerError. pip install mcp installs 2.x. This is a short original summary for agents, not a substitute for the official API reference.",
+    "sourceUrl": "https://py.sdk.modelcontextprotocol.io/whats-new/",
+    "license": "MIT",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "mcp-python-v2-quickstart",
+    "library": "mcp-python",
+    "libraryVersion": "2.3",
+    "title": "Write and run a minimal MCP server in Python",
+    "body": "Install with uv add \"mcp[cli]\" or pip install \"mcp[cli]\" (Python 3.11+); the cli extra adds the mcp command. Define tools as typed functions: @mcp.tool() def add(a: int, b: int) -> int: \"\"\"Add two numbers.\"\"\" return a + b. Type hints become the JSON Schema and the docstring becomes the description. @mcp.resource(\"greeting://{name}\") defines a templated resource. Run uv run mcp dev server.py to open the MCP Inspector, or uv run mcp run server.py --transport streamable-http to serve over HTTP. This is a short original summary for agents, not a substitute for the official API reference.",
+    "sourceUrl": "https://github.com/modelcontextprotocol/python-sdk",
+    "license": "MIT",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "mcp-python-v2-client",
+    "library": "mcp-python",
+    "libraryVersion": "2.3",
+    "title": "Call an MCP server from Python with mcp.Client",
+    "body": "MCP Python SDK v2 has a first-class client: from mcp import Client; async with Client(\"http://localhost:8000/mcp\") as client: result = await client.call_tool(\"add\", {\"a\": 1, \"b\": 2}). Then result.structured_content holds {\"result\": 3}. A URL means Streamable HTTP. Client can also launch a local server as a stdio subprocess or take a custom transport. v2 speaks the 2026-07-28 protocol revision, which removes the connection handshake and sessions, while staying compatible with existing clients. This is a short original summary for agents, not a substitute for the official API reference.",
+    "sourceUrl": "https://github.com/modelcontextprotocol/python-sdk",
+    "license": "MIT",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "phantom-react-sdk-provider",
+    "library": "phantom-connect",
+    "libraryVersion": "2.0",
+    "title": "Set up PhantomProvider in the Phantom Connect React SDK",
+    "body": "Install @phantom/react-sdk plus @solana/web3.js or @solana/kit for Solana (viem for EVM). Wrap the app in <PhantomProvider config={{ providers: [\"google\", \"apple\", \"injected\"], appId, addressTypes: [AddressType.solana], authOptions: { redirectUrl } }} theme={darkTheme} appName=\"...\">. AddressType comes from @phantom/browser-sdk. Use useModal() for open/close and usePhantom() for isConnected and user. google and apple are embedded providers that need a Phantom Portal appId and an allowlisted redirectUrl; injected (the extension) needs neither. Phantom Portal is currently not accepting new applications, though existing App IDs keep working. This is a short original summary for agents, not a substitute for the official API reference.",
+    "sourceUrl": "https://docs.phantom.com/sdks/react-sdk",
+    "license": "proprietary",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "phantom-browser-sdk-connect",
+    "library": "phantom-connect",
+    "libraryVersion": "2.0",
+    "title": "Connect a wallet with the Phantom Browser SDK",
+    "body": "With @phantom/browser-sdk: const sdk = new BrowserSDK({ providers: [\"google\", \"apple\", \"injected\"], addressTypes: [AddressType.solana], appId }); const { addresses } = await sdk.connect({ provider: \"google\" }). The provider passed to connect must be in the providers list. Call await sdk.isPhantomInstalled() before choosing injected, and fall back to an embedded provider if it returns false. After connecting, sdk.solana.signMessage, signTransaction, signAndSendTransaction, switchNetwork(\"devnet\"), and publicKey are available. autoConnect defaults to true when embedded providers are used. This is a short original summary for agents, not a substitute for the official API reference.",
+    "sourceUrl": "https://docs.phantom.com/sdks/browser-sdk/connect",
+    "license": "proprietary",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "phantom-react-sign-and-send",
+    "library": "phantom-connect",
+    "libraryVersion": "2.0",
+    "title": "Phantom embedded wallets support only signAndSendTransaction",
+    "body": "In the Phantom Connect React SDK, const { solana } = useSolana(); const result = await solana.signAndSendTransaction(transaction) returns result.signature. signTransaction and signAllTransactions are not supported for embedded (Google/Apple) wallets, which accept only signAndSendTransaction, and their transactions pass Phantom's simulation checks first. Embedded wallets reject pre-signed transactions. For dapp fee-payer flows, pass a presignTransaction callback that calls your backend for the co-signature, and never keep the fee-payer keypair in frontend code. This is a short original summary for agents, not a substitute for the official API reference.",
+    "sourceUrl": "https://docs.phantom.com/sdks/react-sdk/sign-and-send-transaction",
+    "license": "proprietary",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "ai-sdk-generate-text",
+    "library": "ai-sdk",
+    "libraryVersion": "7.0",
+    "title": "Generate text with the AI SDK and a provider/model string",
+    "body": "Install ai (Node.js 22+). const { text } = await generateText({ model: \"openai/<model-id>\", prompt: \"What is an agent?\" }). A plain \"provider/model\" string routes through the Vercel AI Gateway by default. To call a provider directly, install its package (for example @ai-sdk/openai, @ai-sdk/anthropic, @ai-sdk/google) and pass model: anthropic(\"<model-id>\") instead. The same call shape works across providers. This is a short original summary for agents, not a substitute for the official API reference.",
+    "sourceUrl": "https://github.com/vercel/ai",
+    "license": "Apache-2.0",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "ai-sdk-structured-output",
+    "library": "ai-sdk",
+    "libraryVersion": "7.0",
+    "title": "Get structured output from generateText with Output.object",
+    "body": "In the AI SDK, structured data comes from generateText with an output spec: const { output } = await generateText({ model, output: Output.object({ schema: z.object({ recipe: z.object({ name: z.string(), steps: z.array(z.string()) }) }) }), prompt: \"Generate a lasagna recipe.\" }). Import generateText and Output from \"ai\" and z from \"zod\". The typed result is on output, not text. This is a short original summary for agents, not a substitute for the official API reference.",
+    "sourceUrl": "https://github.com/vercel/ai",
+    "license": "Apache-2.0",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "ai-sdk-tool-loop-agent",
+    "library": "ai-sdk",
+    "libraryVersion": "7.0",
+    "title": "Build an agent with ToolLoopAgent in the AI SDK",
+    "body": "new ToolLoopAgent({ model, system, tools: { ... } }) from \"ai\" defines an agent that calls tools in a loop. In a Next.js route, return createAgentUIStreamResponse({ agent, messages }) to stream to the UI, and type UI messages with InferAgentUIMessage<typeof agent>. On the client, useChat() from @ai-sdk/react gives messages, status, and sendMessage({ text }). Tool parts render by invocation.state, such as input-available and output-available. This is a short original summary for agents, not a substitute for the official API reference.",
+    "sourceUrl": "https://github.com/vercel/ai",
+    "license": "Apache-2.0",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "hono-cloudflare-workers",
+    "library": "hono",
+    "libraryVersion": "4.13",
+    "title": "Run Hono on Cloudflare Workers",
+    "body": "Scaffold with npm create hono@latest my-app and pick the cloudflare-workers template. A minimal app: import { Hono } from \"hono\"; const app = new Hono(); app.get(\"/\", (c) => c.text(\"Hello Cloudflare Workers!\")); export default app. npm run dev serves on http://localhost:8787 and npm run deploy publishes with Wrangler. To add other handlers such as scheduled, export { fetch: app.fetch, scheduled: async (batch, env) => {} }. Serve static files with the Workers Static Assets setting \"assets\": { \"directory\": \"public\" } in wrangler.jsonc. This is a short original summary for agents, not a substitute for the official API reference.",
+    "sourceUrl": "https://hono.dev/docs/getting-started/cloudflare-workers",
+    "license": "MIT",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "hono-routing-params",
+    "library": "hono",
+    "libraryVersion": "4.13",
+    "title": "Hono routing: methods, path params, optional and regex params",
+    "body": "Hono routes per method (app.get, post, put, delete), app.all for any method, and app.on(\"PURGE\", \"/cache\", h) or app.on([\"PUT\", \"DELETE\"], \"/post\", h) for custom or multiple methods. Read one path param with c.req.param(\"name\") or all with c.req.param(). Optional params use /api/animal/:type?, and regex constraints use /post/:date{[0-9]+}/:title{[a-z]+}. Group routes in a sub-app (const book = new Hono()) and mount it with app.route(\"/book\", book). This is a short original summary for agents, not a substitute for the official API reference.",
+    "sourceUrl": "https://hono.dev/docs/api/routing",
+    "license": "MIT",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "hono-validator",
+    "library": "hono",
+    "libraryVersion": "4.13",
+    "title": "Validate requests in Hono with validator() and c.req.valid()",
+    "body": "import { validator } from \"hono/validator\" and use it as middleware: validator(\"form\", (value, c) => { if (!value.body) return c.text(\"Invalid!\", 400); return { body: value.body } }). The handler reads the result with c.req.valid(\"form\"). Targets are json, form, query, header, param, and cookie. For json and form the request needs a matching Content-Type header or the value is {}, which also matters in app.request() tests. Header keys must be lowercase, such as idempotency-key. This is a short original summary for agents, not a substitute for the official API reference.",
+    "sourceUrl": "https://hono.dev/docs/guides/validation",
+    "license": "MIT",
+    "retrievedAt": "2026-11-20"
   }
 ]

@@ -74,7 +74,8 @@ describe("HTTP API", () => {
     expect(body.extensions?.bazaar?.info?.input?.method).toBe("GET");
 
     const trialIp = { "CF-Connecting-IP": "203.0.113.50" };
-    for (let i = 0; i < 5; i++) {
+    // A brand-new client identity gets 20 free lookups on its first UTC day.
+    for (let i = 0; i < 20; i++) {
       const free = await http("/v1/docs/lookup?library=react&q=useState", { headers: trialIp });
       expect(free.status).toBe(200);
       expect((free.body as { payment: { mode: string } }).payment.mode).toBe("free");
@@ -150,8 +151,11 @@ describe("HTTP API", () => {
       ]),
     );
     expect(names).not.toContain("tailwind");
-    expect(libraries).toHaveLength(23);
-    expect(libraries.reduce((s, l) => s + l.count, 0)).toBe(71);
+    expect(names).toEqual(
+      expect.arrayContaining(["x402", "solana-kit", "solana-web3js", "mcp-typescript", "mcp-python", "phantom-connect", "ai-sdk", "hono"]),
+    );
+    expect(libraries).toHaveLength(31);
+    expect(libraries.reduce((s, l) => s + l.count, 0)).toBe(99);
   });
 
   it("accepts a contribution, blocks self-verify, then verifies and pays out on use", async () => {

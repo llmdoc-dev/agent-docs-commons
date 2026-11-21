@@ -2,9 +2,10 @@
 export function lookupBazaarExtension(): Record<string, unknown> {
   const inputSchema = {
     properties: {
-      q: { type: "string", description: "The question or API symbol to look up, e.g. useState" },
-      library: { type: "string", description: "Library id, e.g. react, express, zod, nextjs" },
-      version: { type: "string", description: "Optional library version pin" },
+      q: { type: "string", description: "Short question or API symbol, e.g. useState or registerTool" },
+      library: { type: "string", description: "Library slug from /v1/docs/libraries, e.g. react, nextjs, x402, solana-kit, mcp-typescript, mcp-python, stripe" },
+      version: { type: "string", description: "Optional library version prefix to pin" },
+      ref: { type: "string", description: "Optional referrer Solana address (referrer earns 10% of this payer's spend for 180 days, up to $10)" },
     },
     required: ["q"],
   };
@@ -71,6 +72,8 @@ export function robotsTxt(publicBaseUrl: string): string {
   return `# llmdocs.dev is meant to be read by humans, search engines, and AI agents.
 User-agent: *
 Allow: /
+Allow: /browse/
+Disallow: /v1/payouts/
 
 # Content signals (search index and query-time model input are welcome).
 Content-signal: search=yes, ai-input=yes
@@ -79,18 +82,17 @@ Sitemap: ${origin}/sitemap.xml
 `;
 }
 
-export function sitemapXml(publicBaseUrl: string): string {
+export function sitemapXml(publicBaseUrl: string, catalog: Array<{ library: string }> = []): string {
   const origin = publicBaseUrl.replace(/\/+$/, "");
   const urls = [
     "/",
     "/browse",
+    ...catalog.map((lib) => `/browse/${encodeURIComponent(lib.library)}`),
     "/referrals",
     "/llms.txt",
     "/openapi.json",
     "/.well-known/x402",
-    "/robots.txt",
-    "/v1/docs/libraries",
-    "/mcp",
+    "/.well-known/mcp/server-card.json",
   ];
   const body = urls
     .map((path) => `  <url><loc>${origin}${path}</loc></url>`)

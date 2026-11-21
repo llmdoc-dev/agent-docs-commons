@@ -2,6 +2,13 @@ import type { AppConfig } from "./config.ts";
 import type { Db } from "./db.ts";
 import { jsonResponse, paymentCorsHeaders, textResponse } from "./payment.ts";
 import { listLibraries } from "./db.ts";
+import {
+  CONTRIBUTE_TOOL_DESCRIPTION,
+  LIBRARIES_TOOL_DESCRIPTION,
+  LOOKUP_TOOL_DESCRIPTION,
+  MCP_INSTRUCTIONS,
+  VERIFY_TOOL_DESCRIPTION,
+} from "./descriptions.ts";
 
 /**
  * Minimal Streamable HTTP MCP endpoint.
@@ -10,53 +17,61 @@ import { listLibraries } from "./db.ts";
  */
 const PROTOCOL_VERSION = "2025-03-26";
 
-const TOOLS = [
-  {
-    name: "docs_libraries",
-    description: "List libraries already in the llmdocs.dev commons.",
-    inputSchema: { type: "object", properties: {} },
-  },
+export const MCP_SERVER_VERSION = "0.2.0";
+
+export const TOOLS = [
   {
     name: "docs_lookup",
-    description:
-      "Look up a short, cited, versioned documentation snippet. The first 5 unpaid lookups per client IP per UTC day are free; after that this is a paid tool ($0.01 USDC on Solana via x402). Pass paymentSignature if you already have a signed payment; otherwise the result includes the 402 payment requirement. Optional ref (a Solana address) attributes the payer so the referrer can earn 10% of this agent's paid spend for 180 days, taken from the platform share.",
+    title: "Look up version-pinned docs",
+    description: LOOKUP_TOOL_DESCRIPTION,
+    annotations: { readOnlyHint: true, openWorldHint: false },
     inputSchema: {
       type: "object",
       required: ["q"],
       properties: {
-        q: { type: "string", description: "The question or API name" },
-        library: { type: "string" },
-        version: { type: "string" },
-        ref: { type: "string", description: "Referrer Solana address. First touch on a new payer sticks." },
-        paymentSignature: { type: "string", description: "PAYMENT-SIGNATURE value from a prior x402 payment" },
+        q: { type: "string", description: "Short question or API symbol, e.g. 'useState initializer' or 'registerTool inputSchema'" },
+        library: { type: "string", description: "Library slug from docs_libraries, e.g. react, nextjs, x402, solana-kit, mcp-typescript, mcp-python, stripe" },
+        version: { type: "string", description: "Optional version prefix to pin, e.g. 19 or 2.4" },
+        ref: { type: "string", description: "Optional: Solana address of the agent that referred you. First touch on a new payer sticks." },
+        paymentSignature: { type: "string", description: "x402 v2 PAYMENT-SIGNATURE value that pays the 402 challenge from a previous call" },
+        format: { type: "string", enum: ["text", "json"], description: "text (default, compact) or json (full HTTP response with attribution and payout lines)" },
       },
     },
   },
   {
+    name: "docs_libraries",
+    title: "List libraries",
+    description: LIBRARIES_TOOL_DESCRIPTION,
+    annotations: { readOnlyHint: true, openWorldHint: false },
+    inputSchema: { type: "object", properties: {} },
+  },
+  {
     name: "docs_contribute",
-    description: "Submit a sourced documentation snippet. Free. It stays pending until another agent verifies it.",
+    title: "Contribute a snippet",
+    description: CONTRIBUTE_TOOL_DESCRIPTION,
     inputSchema: {
       type: "object",
       required: ["wallet", "library", "libraryVersion", "title", "body", "sourceUrl"],
       properties: {
-        wallet: { type: "string" },
-        library: { type: "string" },
+        wallet: { type: "string", description: "Your Solana address (receives USDC earnings)" },
+        library: { type: "string", description: "Lowercase library slug" },
         libraryVersion: { type: "string" },
         title: { type: "string" },
-        body: { type: "string" },
-        sourceUrl: { type: "string" },
+        body: { type: "string", description: "40–1500 characters, short cited excerpt or summary" },
+        sourceUrl: { type: "string", description: "https URL on an official-docs host" },
         license: { type: "string" },
       },
     },
   },
   {
     name: "docs_verify",
-    description: "Confirm, flag stale, or reject a snippet. You cannot verify your own submission. Free.",
+    title: "Verify a snippet",
+    description: VERIFY_TOOL_DESCRIPTION,
     inputSchema: {
       type: "object",
       required: ["wallet", "snippetId", "verdict"],
       properties: {
-        wallet: { type: "string" },
+        wallet: { type: "string", description: "Your Solana address" },
         snippetId: { type: "string" },
         verdict: { type: "string", enum: ["confirm", "stale", "reject"] },
         note: { type: "string" },
@@ -76,7 +91,7 @@ export async function handleMcp(
     return textResponse(
       200,
       "text/plain; charset=utf-8",
-      "llmdocs MCP endpoint. POST JSON-RPC 2.0 (protocol 2025-03-26) to this URL. Tools: docs_libraries, docs_lookup, docs_contribute, docs_verify.\n",
+      `llmdocs MCP endpoint (Streamable HTTP, JSON responses). POST JSON-RPC 2.0 to this URL. Tools: docs_lookup, docs_libraries, docs_contribute, docs_verify.\n\n${MCP_INSTRUCTIONS}\n\nInstall: claude mcp add --transport http llmdocs ${cfg.publicBaseUrl}/mcp  |  Cursor/VS Code: see ${cfg.publicBaseUrl}/#install\n`,
     );
   }
   if (req.method !== "POST") {
@@ -96,7 +111,8 @@ export async function handleMcp(
     return mcpMessage(id, {
       protocolVersion: PROTOCOL_VERSION,
       capabilities: { tools: {} },
-      serverInfo: { name: "llmdocs", version: "0.1.0" },
+      serverInfo: { name: "llmdocs", title: "llmdocs.dev", version: MCP_SERVER_VERSION, websiteUrl: cfg.publicBaseUrl },
+      instructions: MCP_INSTRUCTIONS,
     });
   }
   if (method === "notifications/initialized" || method === "initialized") {
@@ -147,11 +163,18 @@ async function callTool(
     if (payment) headers["PAYMENT-SIGNATURE"] = payment;
     const incomingRef = incoming.headers.get("X-Llmdocs-Ref");
     if (incomingRef) headers["X-Llmdocs-Ref"] = incomingRef;
+    // Keep the caller's client IP on the internal request so the free trial is
+    // counted per MCP client, not shared by every MCP user.
+    for (const name of ["CF-Connecting-IP", "True-Client-IP", "X-Forwarded-For"]) {
+      const value = incoming.headers.get(name);
+      if (value) headers[name] = value;
+    }
     const lookupReq = new Request(`${origin}/v1/docs/lookup?q=${q}${library}${version}${ref}`, { headers });
     const res = dispatch ? await dispatch(lookupReq) : await fetch(lookupReq);
     const text = await res.text();
+    const wantJson = String(args.format ?? "text") === "json";
     return {
-      content: [{ type: "text", text }],
+      content: [{ type: "text", text: wantJson ? text : renderLookupText(res.status, text, cfg.publicBaseUrl) }],
       isError: res.status >= 400 && res.status !== 402,
     };
   }
@@ -176,4 +199,40 @@ function mcpMessage(
 ): Response {
   const body = error ? { jsonrpc: "2.0", id, error } : { jsonrpc: "2.0", id, result };
   return jsonResponse(200, body);
+}
+
+type LookupJson = {
+  results?: Array<{ id: string; library: string; libraryVersion: string; title: string; body: string; sourceUrl: string; license: string }>;
+  payment?: { mode?: string; feeUsd?: number; remainingFreeLookups?: number; transaction?: string | null };
+};
+
+/** Compact text for agents: snippets with version and source, plus one payment line. */
+export function renderLookupText(status: number, raw: string, origin: string): string {
+  if (status !== 200) {
+    if (status === 402) {
+      return `Payment required: the free trial for today is used up. Pay the x402 challenge below ($0.01 USDC on Solana) and call docs_lookup again with paymentSignature set to your PAYMENT-SIGNATURE value.\n${raw}`;
+    }
+    return raw;
+  }
+  let body: LookupJson;
+  try {
+    body = JSON.parse(raw) as LookupJson;
+  } catch {
+    return raw;
+  }
+  const results = body.results ?? [];
+  const lines: string[] = [];
+  if (results.length === 0) {
+    lines.push(`No matching snippet. Try another wording or a library slug from docs_libraries. Know the answer from an official source? Add it with docs_contribute (${origin}/llms.txt).`);
+  }
+  for (const r of results) {
+    lines.push(`## ${r.title} (${r.library} ${r.libraryVersion})\n${r.body}\nSource: ${r.sourceUrl} · ${r.license} · id ${r.id}`);
+  }
+  const p = body.payment ?? {};
+  if (p.mode === "free") {
+    lines.push(`[free trial lookup · ${p.remainingFreeLookups ?? 0} free left today · then $0.01 USDC via x402]`);
+  } else if (p.mode) {
+    lines.push(`[paid $${(p.feeUsd ?? 0.01).toFixed(2)} USDC${p.transaction ? ` · tx ${p.transaction}` : ""}]`);
+  }
+  return lines.join("\n\n");
 }

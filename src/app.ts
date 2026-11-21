@@ -24,6 +24,7 @@ import { formatUsd, usdToMicros } from "./money.ts";
 import { isInternalWallet, splitQueryFee, type FactForPayout } from "./payout.ts";
 import {
   buildChallenge,
+  compactJsonResponse,
   extractPaymentHeader,
   jsonResponse,
   lookupResource,
@@ -35,7 +36,17 @@ import { checkSnippetFields, checkSourceUrl, contentHash, isSolanaAddress } from
 import { rankSnippets, selectForAnswer } from "./search.ts";
 import { buildOpenApi } from "./openapi.ts";
 import { buildLlmsTxt } from "./llms.ts";
-import { browseHtml, landingHtml, loadPublicCatalog, referralsHtml } from "./catalog.ts";
+import {
+  browseHtml,
+  findCatalogLibrary,
+  landingHtml,
+  libraryPageHtml,
+  loadPublicCatalog,
+  notFoundLibraryHtml,
+  referralsHtml,
+} from "./catalog.ts";
+import { serverCard } from "./server-card.ts";
+import { BAZAAR_DESCRIPTION, MEASURED, REFERRAL_TEXT, SERVICE_PITCH } from "./descriptions.ts";
 import { handleMcp } from "./mcp-http.ts";
 import { seedIfEmpty, seedOfficialSnippets } from "./seed-data.ts";
 import { lookupResourceUrl, robotsTxt, sitemapXml } from "./bazaar.ts";
@@ -51,7 +62,12 @@ import {
   referralWindowActive,
   unlockHeldReferralLines,
 } from "./referrals.ts";
-import { TRIAL_RULES_TEXT, consumeFreeLookup } from "./trial.ts";
+import {
+  FREE_LOOKUPS_PER_IP_PER_UTC_DAY,
+  NEW_IDENTITY_FREE_LOOKUPS_FIRST_DAY,
+  TRIAL_SHORT_TEXT,
+  consumeFreeLookup,
+} from "./trial.ts";
 import { buildStats, walletForConfig } from "./stats.ts";
 
 export { seedIfEmpty, seedOfficialSnippets };
@@ -92,6 +108,23 @@ async function route(cfg: AppConfig, db: Db, req: Request, url: URL): Promise<Re
   if (method === "GET" && path === "/browse") {
     return textResponse(200, "text/html; charset=utf-8", browseHtml(cfg, await loadPublicCatalog(db)));
   }
+  if (method === "GET" && path.startsWith("/browse/")) {
+    let slug = path.slice("/browse/".length).toLowerCase();
+    try {
+      slug = decodeURIComponent(slug);
+    } catch {
+      /* keep the raw slug */
+    }
+    const catalog = await loadPublicCatalog(db);
+    const lib = findCatalogLibrary(catalog, slug);
+    if (!lib) return textResponse(404, "text/html; charset=utf-8", notFoundLibraryHtml(cfg, slug, catalog));
+    return textResponse(200, "text/html; charset=utf-8", libraryPageHtml(cfg, lib, catalog), {
+      "Cache-Control": "public, max-age=300",
+    });
+  }
+  if (method === "GET" && (path === "/.well-known/mcp/server-card.json" || path === "/.well-known/mcp.json")) {
+    return jsonResponse(200, serverCard(cfg));
+  }
   if (method === "GET" && path === "/referrals") {
     return textResponse(200, "text/html; charset=utf-8", referralsHtml(cfg));
   }
@@ -114,7 +147,7 @@ async function route(cfg: AppConfig, db: Db, req: Request, url: URL): Promise<Re
     return textResponse(200, "text/plain; charset=utf-8", robotsTxt(cfg.publicBaseUrl));
   }
   if (method === "GET" && path === "/sitemap.xml") {
-    return textResponse(200, "application/xml; charset=utf-8", sitemapXml(cfg.publicBaseUrl));
+    return textResponse(200, "application/xml; charset=utf-8", sitemapXml(cfg.publicBaseUrl, await loadPublicCatalog(db)));
   }
   if (method === "GET" && (path === "/openapi.json" || path === "/openapi")) {
     return jsonResponse(200, buildOpenApi(cfg));
@@ -185,14 +218,43 @@ async function wellKnownX402(cfg: AppConfig, url: URL): Promise<Response> {
   );
   return jsonResponse(200, {
     x402Version: 2,
+    name: "llmdocs.dev",
+    description: SERVICE_PITCH,
     resource: challenge.resource,
     accepts: challenge.accepts,
+    extensions: challenge.extensions,
     facilitator: challenge.facilitator,
     discovery: {
       openapi: `${cfg.publicBaseUrl}/openapi.json`,
       llms: `${cfg.publicBaseUrl}/llms.txt`,
       mcp: `${cfg.publicBaseUrl}/mcp`,
+      mcpServerCard: `${cfg.publicBaseUrl}/.well-known/mcp/server-card.json`,
       libraries: `${cfg.publicBaseUrl}/v1/docs/libraries`,
+      browse: `${cfg.publicBaseUrl}/browse`,
+      sitemap: `${cfg.publicBaseUrl}/sitemap.xml`,
+    },
+    answerSize: {
+      tokenizer: MEASURED.tokenizer,
+      measuredOn: MEASURED.date,
+      sampleQueries: MEASURED.sampleQueries,
+      mcpTextMedianTokens: MEASURED.mcpAnswerMedianTokens,
+      mcpTextRange: MEASURED.mcpAnswerRange,
+      httpJsonMedianTokens: MEASURED.httpJsonMedianTokens,
+    },
+    freeTrial: {
+      firstDayLookups: NEW_IDENTITY_FREE_LOOKUPS_FIRST_DAY,
+      dailyLookupsAfter: FREE_LOOKUPS_PER_IP_PER_UTC_DAY,
+      countedBy: "hashed client IP (IPv6 by /64), UTC day",
+      probesAlways402: "HEAD, and GET without q",
+    },
+    referrals: {
+      share: 0.1,
+      windowDays: 180,
+      capUsdPerReferredAgent: 10,
+      paidFrom: "platform share (contributors are not reduced)",
+      howTo: "Add ref=<your Solana address> to a new agent's lookups, send X-Llmdocs-Ref, or POST /v1/referrals/claim",
+      summary: REFERRAL_TEXT,
+      rules: `${cfg.publicBaseUrl}/referrals`,
     },
     paidEndpoints: [
       {
@@ -237,7 +299,7 @@ async function lookupDocs(cfg: AppConfig, db: Db, req: Request, url: URL): Promi
 
   const gate = await requirePayment(cfg, req, {
     resourceUrl,
-    description: q ? `Documentation lookup: ${q}` : "Documentation lookup",
+    description: q ? `Documentation lookup: ${q}` : BAZAAR_DESCRIPTION,
     priceUsd: cfg.priceLookupUsd,
   });
   if (!gate.ok) return gate.response;
@@ -317,7 +379,7 @@ async function fulfillLookup(
       snippetIds: payoutFacts.map((f) => f.snippetId),
       settlementTx: null,
     });
-    return jsonResponse(
+    return compactJsonResponse(
       200,
       {
         results: accepted.map((r) => ({
@@ -338,7 +400,7 @@ async function fulfillLookup(
           mode: "free",
           feeUsd: 0,
           remainingFreeLookups: opts.remainingFreeLookups ?? 0,
-          trial: TRIAL_RULES_TEXT,
+          trial: TRIAL_SHORT_TEXT,
           payerWallet: null,
           transaction: null,
         },
@@ -397,7 +459,7 @@ async function fulfillLookup(
     ? "60% contributor pool (70% submitter / 30% verifiers per fact; house-seeded submitter cut goes to the treasury), 10% referrer, 20% platform, 10% reserve"
     : "60% contributor pool (70% submitter / 30% verifiers per fact; house-seeded submitter cut goes to the treasury), 30% platform, 10% reserve";
 
-  return jsonResponse(
+  return compactJsonResponse(
     200,
     {
       results: accepted.map((r) => ({

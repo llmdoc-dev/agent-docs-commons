@@ -2,8 +2,8 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "dev.llmdocs/docs",
   "title": "llmdocs.dev",
-  "description": "Remote MCP for short, versioned developer-docs answers. $0.01 USDC via x402 on Solana, no API key.",
-  "version": "0.1.0",
+  "description": "Version-pinned dev docs for agents. $0.01 USDC/lookup via x402, free daily trial, 10% referrals.",
+  "version": "0.2.0",
   "websiteUrl": "https://llmdocs.dev",
   "remotes": [
     {

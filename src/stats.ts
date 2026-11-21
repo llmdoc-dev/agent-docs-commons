@@ -231,7 +231,7 @@ export async function buildStats(db: Db, cfg: AppConfig, wallet: WalletBalances)
     "n",
   );
   const uniqueFreeIdentities = num(
-    await db.get(`SELECT COUNT(DISTINCT identity_key) AS n FROM free_lookup_usage`),
+    await db.get(`SELECT COUNT(DISTINCT identity_key) AS n FROM free_lookup_usage WHERE identity_key LIKE 'ip:%'`),
     "n",
   );
 

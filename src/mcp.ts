@@ -3,6 +3,7 @@
  * Start the HTTP server first (`npm start`), then `npm run mcp`.
  */
 import { loadConfig } from "./config.ts";
+import { LOOKUP_TOOL_DESCRIPTION } from "./descriptions.ts";
 
 type JsonRpc = {
   jsonrpc: "2.0";
@@ -20,8 +21,7 @@ const payer = process.env.MCP_PAYER ?? "BDkdaa5aHZZooaG2dRRMzBNe33PzTqZoZyQaBxVr
 const TOOLS = [
   {
     name: "docs_lookup",
-    description:
-      "Look up a short, cited, versioned documentation snippet from the Agent Docs Commons. Use for React, Express, Zod, Stripe, OpenAI, LangChain, or AWS questions instead of a fresh web search. Optional ref attributes a new payer so the referrer earns 10% of that agent's paid spend for 180 days.",
+    description: LOOKUP_TOOL_DESCRIPTION,
     inputSchema: {
       type: "object",
       required: ["q"],
