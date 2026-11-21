@@ -13,7 +13,6 @@ import {
   listLibraries,
   listSnippets,
   listVerifications,
-  migrate,
   pendingPayouts,
   recordDryRun,
   recordQuery,
@@ -63,7 +62,6 @@ export type App = {
 };
 
 export async function createApp(cfg: AppConfig, db: Db): Promise<App> {
-  await migrate(db);
   await seedOfficialSnippets(db);
 
   const handle = async (req: Request): Promise<Response> => {
