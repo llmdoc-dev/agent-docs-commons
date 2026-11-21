@@ -24,6 +24,8 @@ export const DEFAULT_PAY_TO = "Gm3Ae1UTwJsLj5NKHhznJccYiGLMMdfJiZUJ39hLAsoH";
  * not in Worker bindings, and not in Wrangler secrets.
  */
 export const MAINNET_PAY_TO = "EAJiExxSG5K3G4nnqeCZd1DmWMaK6CmisXi53yYa5SJJ";
+/** Associated USDC token account for MAINNET_PAY_TO. Public address only. */
+export const MAINNET_USDC_ATA = "HRrDNF7wbaX7yZEG52vzTt6JR4JDvPiUZB4wkn4pgBYB";
 /** @deprecated use MAINNET_PAY_TO */
 export const MAINNET_PAY_TO_CANDIDATE = MAINNET_PAY_TO;
 

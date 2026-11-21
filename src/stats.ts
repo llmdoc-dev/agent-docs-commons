@@ -1,5 +1,5 @@
 import type { AppConfig } from "./config.ts";
-import { isMainnetNetwork, MAINNET_PAY_TO, USDC_MINT_MAINNET } from "./config.ts";
+import { isMainnetNetwork, MAINNET_PAY_TO, MAINNET_USDC_ATA, USDC_MINT_MAINNET } from "./config.ts";
 import type { Db } from "./db.ts";
 import { formatUsd } from "./money.ts";
 
@@ -432,51 +432,68 @@ export function skippedWallet(address: string, reason: string): WalletBalances {
 
 let walletCache: { key: string; value: WalletBalances; at: number } | null = null;
 
-async function fetchBalancesFromRpc(rpc: string, address: string): Promise<WalletBalances> {
-  const signal = AbortSignal.timeout(4000);
-  const headers = { "Content-Type": "application/json", "User-Agent": "llmdocs.dev/stats" };
-  const [solRes, tokenRes] = await Promise.all([
-    fetch(rpc, {
-      method: "POST",
-      headers,
-      signal,
-      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "getBalance", params: [address] }),
-    }),
-    fetch(rpc, {
-      method: "POST",
-      headers,
-      signal,
-      body: JSON.stringify({
-        jsonrpc: "2.0",
-        id: 2,
-        method: "getTokenAccountsByOwner",
-        params: [address, { mint: USDC_MINT_MAINNET }, { encoding: "jsonParsed" }],
-      }),
-    }),
-  ]);
-  if (!solRes.ok || !tokenRes.ok) {
-    return skippedWallet(address, `rpc_http_${solRes.status}_${tokenRes.status}`);
+async function rpc(rpcUrl: string, method: string, params: unknown[]): Promise<{ ok: boolean; status: number; body: Record<string, unknown> }> {
+  const res = await fetch(rpcUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "User-Agent": "llmdocs.dev/stats" },
+    signal: AbortSignal.timeout(4000),
+    body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
+  });
+  if (!res.ok) {
+    return { ok: false, status: res.status, body: {} };
   }
-  const solBody = (await solRes.json()) as { result?: { value?: number }; error?: { message?: string } };
-  const tokenBody = (await tokenRes.json()) as {
-    result?: { value?: Array<{ account?: { data?: { parsed?: { info?: { tokenAmount?: { amount: string; decimals: number } } } } } }> };
-    error?: { message?: string };
-  };
-  if (solBody.error || tokenBody.error) {
-    return skippedWallet(address, solBody.error?.message ?? tokenBody.error?.message ?? "rpc_error");
-  }
-  const lamports = solBody.result?.value ?? 0;
+  return { ok: true, status: res.status, body: (await res.json()) as Record<string, unknown> };
+}
+
+function rpcError(body: Record<string, unknown>): string | null {
+  const err = body.error as { message?: string } | undefined;
+  return err?.message ?? null;
+}
+
+async function fetchBalancesFromRpc(rpcUrl: string, address: string): Promise<WalletBalances> {
+  const sol = await rpc(rpcUrl, "getBalance", [address]);
+  if (!sol.ok) return skippedWallet(address, `rpc_http_${sol.status}`);
+  const solErr = rpcError(sol.body);
+  if (solErr) return skippedWallet(address, solErr);
+  const solResult = sol.body.result as { value?: number } | undefined;
+  const lamports = solResult?.value ?? 0;
+
   let usdc = 0;
-  for (const account of tokenBody.result?.value ?? []) {
-    const tokenAmount = account.account?.data?.parsed?.info?.tokenAmount;
-    if (!tokenAmount) continue;
-    usdc += Number(tokenAmount.amount) / 10 ** Number(tokenAmount.decimals);
+  if (address === MAINNET_PAY_TO) {
+    // getAccountInfo is allowed on public RPCs; getTokenAccountsByOwner often is not.
+    const info = await rpc(rpcUrl, "getAccountInfo", [MAINNET_USDC_ATA, { encoding: "jsonParsed" }]);
+    if (!info.ok) return skippedWallet(address, `rpc_http_${info.status}`);
+    const infoErr = rpcError(info.body);
+    if (infoErr) return skippedWallet(address, infoErr);
+    const value = info.body.result as {
+      value?: { data?: { parsed?: { info?: { tokenAmount?: { amount: string; decimals: number } } } } };
+    } | undefined;
+    const tokenAmount = value?.value?.data?.parsed?.info?.tokenAmount;
+    if (tokenAmount) {
+      usdc = Number(tokenAmount.amount) / 10 ** Number(tokenAmount.decimals);
+    }
+  } else {
+    const token = await rpc(rpcUrl, "getTokenAccountsByOwner", [
+      address,
+      { mint: USDC_MINT_MAINNET },
+      { encoding: "jsonParsed" },
+    ]);
+    if (!token.ok) return skippedWallet(address, `rpc_http_${token.status}`);
+    const tokenErr = rpcError(token.body);
+    if (tokenErr) return skippedWallet(address, tokenErr);
+    const accounts = (token.body.result as { value?: Array<{ account?: { data?: { parsed?: { info?: { tokenAmount?: { amount: string; decimals: number } } } } } }> } | undefined)?.value ?? [];
+    for (const account of accounts) {
+      const tokenAmount = account.account?.data?.parsed?.info?.tokenAmount;
+      if (!tokenAmount) continue;
+      usdc += Number(tokenAmount.amount) / 10 ** Number(tokenAmount.decimals);
+    }
   }
+
   return {
     address,
     sol: lamports / 1_000_000_000,
     usdc,
-    source: rpc,
+    source: rpcUrl,
     fetchedAt: new Date().toISOString(),
     error: null,
   };
