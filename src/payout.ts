@@ -5,6 +5,8 @@ export const PLATFORM_BPS = 3000; // 30%
 export const RESERVE_BPS = 1000; // 10%
 export const SUBMITTER_BPS = 7000; // 70% of a fact slice
 export const VERIFIER_BPS = 3000; // 30% of a fact slice
+export const REFERRER_BPS = 1000; // 10% of a referred lookup, taken from the owner share
+export const PLATFORM_REFERRED_BPS = 2000; // 20% owner share while a referral is active
 
 /** Identity of the site as a contributor of official seed facts. */
 export const HOUSE_WALLET = "house";
@@ -33,7 +35,7 @@ export type FactForPayout = {
 
 export type LedgerLine = {
   wallet: string;
-  role: "submitter" | "verifier" | "platform" | "reserve" | "house";
+  role: "submitter" | "verifier" | "platform" | "reserve" | "house" | "referral";
   snippetId: string | null;
   amountMicros: number;
   houseOwned?: boolean;
@@ -49,14 +51,28 @@ function bps(amount: number, basisPoints: number): number {
  * External agents earn only on facts they submitted, or on the verifier cut if they later verified a fact.
  * Remainder micros after integer division go to the reserve so the lines sum to the fee.
  */
-export function splitQueryFee(feeUsd: number, facts: FactForPayout[]): LedgerLine[] {
+export type SplitOptions = {
+  /** When set, 10% of the fee goes to this wallet and the owner share drops to 20%. */
+  referrerWallet?: string;
+  /** Remaining room under the $10 per-referred-agent cap, in atomic USDC. */
+  referralCapRemainingMicros?: number;
+};
+
+export function splitQueryFee(feeUsd: number, facts: FactForPayout[], opts: SplitOptions = {}): LedgerLine[] {
   if (feeUsd <= 0) throw new Error("fee must be positive");
   const fee = usdToMicros(feeUsd);
   const lines: LedgerLine[] = [];
 
-  const platformFixed = bps(fee, PLATFORM_BPS);
+  const referrer = opts.referrerWallet && !isInternalWallet(opts.referrerWallet) ? opts.referrerWallet : undefined;
+  const reservedReferral = referrer ? bps(fee, REFERRER_BPS) : 0;
+  const remainingCap = opts.referralCapRemainingMicros;
+  const referralAmt = referrer
+    ? Math.min(reservedReferral, remainingCap == null ? reservedReferral : Math.max(0, remainingCap))
+    : 0;
+  const unusedReferral = reservedReferral - referralAmt;
+  const platformFixed = referrer ? bps(fee, PLATFORM_REFERRED_BPS) + unusedReferral : bps(fee, PLATFORM_BPS);
   const reserveFixed = bps(fee, RESERVE_BPS);
-  const pool = fee - platformFixed - reserveFixed;
+  const pool = fee - platformFixed - reserveFixed - referralAmt;
 
   lines.push({
     wallet: PLATFORM_WALLET,
@@ -70,6 +86,14 @@ export function splitQueryFee(feeUsd: number, facts: FactForPayout[]): LedgerLin
     snippetId: null,
     amountMicros: reserveFixed,
   });
+  if (referrer && referralAmt > 0) {
+    lines.push({
+      wallet: referrer,
+      role: "referral",
+      snippetId: null,
+      amountMicros: referralAmt,
+    });
+  }
 
   if (facts.length === 0) {
     lines.push({

@@ -61,10 +61,10 @@ describe("HTTP API", () => {
     expect(String(sitemap.body)).toContain("/.well-known/x402");
   });
 
-  it("returns a Solana-devnet 402 challenge without payment", async () => {
-    const res = await http("/v1/docs/lookup?library=react&q=useState");
-    expect(res.status).toBe(402);
-    const body = res.body as { x402Version: number; resource?: { url?: string }; extensions?: { bazaar?: { info?: { input?: { method?: string } } } }; accepts: Array<{ network: string; asset: string; payTo: string; amount: string }> };
+  it("returns a Solana-devnet 402 challenge on unpaid discovery probes and after the free trial", async () => {
+    const discovery = await http("/v1/docs/lookup");
+    expect(discovery.status).toBe(402);
+    const body = discovery.body as { x402Version: number; resource?: { url?: string }; extensions?: { bazaar?: { info?: { input?: { method?: string } } } }; accepts: Array<{ network: string; asset: string; payTo: string; amount: string }> };
     expect(body.x402Version).toBe(2);
     expect(body.accepts[0]!.network).toBe("solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1");
     expect(body.accepts[0]!.asset).toBe(USDC_MINT_DEVNET);
@@ -72,6 +72,17 @@ describe("HTTP API", () => {
     expect(body.accepts[0]!.payTo).toBeTruthy();
     expect(body.resource?.url).toBe("http://127.0.0.1/v1/docs/lookup");
     expect(body.extensions?.bazaar?.info?.input?.method).toBe("GET");
+
+    const trialIp = { "CF-Connecting-IP": "203.0.113.50" };
+    for (let i = 0; i < 5; i++) {
+      const free = await http("/v1/docs/lookup?library=react&q=useState", { headers: trialIp });
+      expect(free.status).toBe(200);
+      expect((free.body as { payment: { mode: string } }).payment.mode).toBe("free");
+    }
+    const after = await http("/v1/docs/lookup?library=react&q=useState", { headers: trialIp });
+    expect(after.status).toBe(402);
+    expect((after.body as { x402Version: number }).x402Version).toBe(2);
+    expect((after.body as { accepts: Array<{ amount: string }> }).accepts[0]!.amount).toBe("10000");
   });
 
   it("returns 402 on the canonical lookup URL even when q is missing", async () => {
@@ -131,11 +142,16 @@ describe("HTTP API", () => {
         "flask",
         "postgresql",
         "docker",
+        "stripe",
+        "openai",
+        "langchain",
+        "aws-sdk",
+        "boto3",
       ]),
     );
     expect(names).not.toContain("tailwind");
-    expect(libraries).toHaveLength(18);
-    expect(libraries.reduce((s, l) => s + l.count, 0)).toBe(53);
+    expect(libraries).toHaveLength(23);
+    expect(libraries.reduce((s, l) => s + l.count, 0)).toBe(71);
   });
 
   it("accepts a contribution, blocks self-verify, then verifies and pays out on use", async () => {
@@ -279,8 +295,22 @@ describe("HTTP API", () => {
 
     const sitemap = String((await http("/sitemap.xml")).body);
     expect(sitemap).toContain("/browse");
+    expect(sitemap).toContain("/referrals");
     const llms = String((await http("/llms.txt")).body);
     expect(llms).toContain("/browse");
+    expect(llms).toContain("/referrals");
+    expect(llms).toContain("stripe");
+    expect(llms).toMatch(/not cheaper per call/i);
+
+    expect(homeHtml).toContain("claude mcp add");
+    expect(homeHtml).toContain(".cursor/mcp.json");
+    expect(homeHtml).toContain("Context7");
+    expect(homeHtml).toMatch(/not cheaper per call/i);
+    expect(homeHtml).toContain("Stripe");
+    const referrals = await http("/referrals");
+    expect(referrals.status).toBe(200);
+    expect(String(referrals.body)).toContain("10%");
+    expect(String(referrals.body)).toContain("X-Llmdocs-Ref");
   });
 
 });

@@ -29,6 +29,15 @@ export const ALLOWED_SOURCE_HOSTS = new Set([
   "www.postgresql.org",
   "postgresql.org",
   "docs.docker.com",
+  "docs.stripe.com",
+  "developers.openai.com",
+  "platform.openai.com",
+  "docs.langchain.com",
+  "reference.langchain.com",
+  "python.langchain.com",
+  "js.langchain.com",
+  "docs.aws.amazon.com",
+  "boto3.amazonaws.com",
 ]);
 
 export const ALLOWED_GITHUB_REPOS = [
@@ -52,6 +61,14 @@ export const ALLOWED_GITHUB_REPOS = [
   "pallets/flask",
   "postgres/postgres",
   "docker/docs",
+  "stripe/stripe-node",
+  "stripe/stripe-python",
+  "openai/openai-python",
+  "openai/openai-node",
+  "langchain-ai/langchain",
+  "langchain-ai/langchainjs",
+  "aws/aws-sdk-js-v3",
+  "boto/boto3",
 ];
 
 export const MAX_BODY_CHARS = 1500;

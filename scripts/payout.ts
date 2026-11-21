@@ -36,6 +36,7 @@ import {
   type PayoutPlan,
   type PayoutTransfer,
 } from "../src/payout-plan.ts";
+import { REFERRAL_HOLD_MS, UNLOCK_HELD_REFERRAL_SQL } from "../src/referrals.ts";
 
 const execFileAsync = promisify(execFile);
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -245,6 +246,10 @@ async function main(): Promise<void> {
   }
   const runId = crypto.randomUUID();
   const paidAt = new Date().toISOString();
+
+  // Unlock held referral lines that have met the $0.10 spend threshold and 7-day hold.
+  const unlockCutoff = new Date(Date.now() - REFERRAL_HOLD_MS).toISOString();
+  await d1Exec(UNLOCK_HELD_REFERRAL_SQL(unlockCutoff));
 
   const pendingBefore = await loadPendingRows();
 

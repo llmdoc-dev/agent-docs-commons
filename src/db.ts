@@ -119,8 +119,25 @@ CREATE TABLE IF NOT EXISTS settled_payments (
   transaction_sig TEXT,
   created_at TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS referral_attributions (
+  payer_wallet TEXT PRIMARY KEY,
+  referrer_wallet TEXT NOT NULL,
+  claimed_at TEXT NOT NULL,
+  first_paid_at TEXT,
+  window_ends_at TEXT,
+  spend_unlocked_at TEXT,
+  earned_micros INTEGER NOT NULL DEFAULT 0,
+  source TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS free_lookup_usage (
+  identity_key TEXT NOT NULL,
+  period TEXT NOT NULL,
+  count INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (identity_key, period)
+);
 CREATE INDEX IF NOT EXISTS idx_snippets_library ON snippets(library);
 CREATE INDEX IF NOT EXISTS idx_ledger_wallet ON ledger_entries(wallet);
+CREATE INDEX IF NOT EXISTS idx_referral_referrer ON referral_attributions(referrer_wallet);
 `;
 
 export async function migrate(db: Db): Promise<void> {
@@ -140,6 +157,27 @@ export async function migrate(db: Db): Promise<void> {
     }
   }
   await db.exec("CREATE INDEX IF NOT EXISTS idx_ledger_status ON ledger_entries(status)");
+  await db.exec(
+    `CREATE TABLE IF NOT EXISTS referral_attributions (
+      payer_wallet TEXT PRIMARY KEY,
+      referrer_wallet TEXT NOT NULL,
+      claimed_at TEXT NOT NULL,
+      first_paid_at TEXT,
+      window_ends_at TEXT,
+      spend_unlocked_at TEXT,
+      earned_micros INTEGER NOT NULL DEFAULT 0,
+      source TEXT NOT NULL
+    )`,
+  );
+  await db.exec(
+    `CREATE TABLE IF NOT EXISTS free_lookup_usage (
+      identity_key TEXT NOT NULL,
+      period TEXT NOT NULL,
+      count INTEGER NOT NULL DEFAULT 0,
+      PRIMARY KEY (identity_key, period)
+    )`,
+  );
+  await db.exec("CREATE INDEX IF NOT EXISTS idx_referral_referrer ON referral_attributions(referrer_wallet)");
   await db.exec(
     `UPDATE snippets
      SET house_owned = 1, submitter_wallet = '${HOUSE_WALLET}'
@@ -352,19 +390,21 @@ export async function recordQuery(
 export async function insertLedgerLines(
   db: Db,
   queryId: string,
-  lines: { wallet: string; role: string; snippetId: string | null; amountMicros: number }[],
+  lines: { wallet: string; role: string; snippetId: string | null; amountMicros: number; status?: string }[],
 ): Promise<void> {
   const createdAt = nowIso();
   for (const line of lines) {
+    const status = line.status ?? (line.role === "referral" ? "held" : "pending");
     await db.run(
       `INSERT INTO ledger_entries (id, query_id, snippet_id, wallet, role, amount_micros, status, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, 'pending', ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       newId(),
       queryId,
       line.snippetId,
       line.wallet,
       line.role,
       line.amountMicros,
+      status,
       createdAt,
     );
   }

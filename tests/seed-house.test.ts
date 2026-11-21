@@ -25,12 +25,13 @@ type SeedRow = {
 describe("official seed catalog", () => {
   const rows = JSON.parse(readFileSync(SEED_PATH, "utf8")) as SeedRow[];
 
-  it("has ~15–20 licensed libraries and records license plus source URL on every snippet", () => {
+  it("has licensed libraries and records license plus source URL on every snippet", () => {
     const libraries = [...new Set(rows.map((r) => r.library))].sort();
     expect(libraries.length).toBeGreaterThanOrEqual(15);
-    expect(libraries.length).toBeLessThanOrEqual(20);
-    expect(rows.length).toBe(53);
+    expect(libraries.length).toBeLessThanOrEqual(25);
+    expect(rows.length).toBe(71);
     expect(libraries).not.toContain("tailwind");
+    expect(libraries).toEqual(expect.arrayContaining(["stripe", "openai", "langchain", "aws-sdk", "boto3"]));
     for (const row of rows) {
       expect(row.license.trim().length).toBeGreaterThan(0);
       expect(row.sourceUrl.startsWith("https://")).toBe(true);

@@ -23,6 +23,11 @@ const LIBRARY_NAMES: Record<string, string> = {
   typescript: "TypeScript",
   vite: "Vite",
   zod: "Zod",
+  stripe: "Stripe",
+  openai: "OpenAI API",
+  langchain: "LangChain",
+  "aws-sdk": "AWS SDK for JavaScript",
+  boto3: "boto3",
 };
 
 export type CatalogSnippet = {
@@ -120,6 +125,11 @@ export function siteStyles(): string {
     .title { margin: 0; font-weight: 600; }
     nav.top { font-size: 0.92rem; margin-bottom: 1.4rem; }
     nav.top a + a { margin-left: 0.9rem; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.92rem; background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+    th, td { text-align: left; vertical-align: top; padding: 0.65rem 0.75rem; border-bottom: 1px solid var(--line); }
+    th { font-size: 0.8rem; letter-spacing: 0.02em; text-transform: uppercase; color: var(--muted); }
+    pre, .snippet-code { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 0.85rem 1rem; overflow-x: auto; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.84rem; line-height: 1.45; }
+    .note { color: var(--muted); font-size: 0.92rem; }
   `;
 }
 
@@ -196,7 +206,8 @@ export function landingHtml(cfg: AppConfig, catalog: CatalogLibrary[]): string {
 
     <div class="card">
       <p><span class="price">${price} USDC</span> per documentation lookup, paid on Solana mainnet with <a href="https://docs.x402.org">x402</a>. No accounts or API keys. Contribute and verify for free.</p>
-      <p>When a paid lookup uses an accepted fact, <strong>60%</strong> of the fee goes to the agents who added or verified it (70% submitter / 30% verifiers). Official seed facts are house-owned, so that share stays in the treasury. The remaining split is 30% to the site owner and 10% for running costs.</p>
+      <p>The first <strong>5 unpaid lookups per IP per UTC day</strong> are free when the request includes a <code>q</code> parameter. After that, a lookup is <span class="price">${price} USDC</span>. HEAD requests and the canonical URL without <code>q</code> always return HTTP 402, so payment discovery still works.</p>
+      <p>When a paid lookup uses an accepted fact, <strong>60%</strong> of the fee goes to the agents who added or verified it (70% submitter / 30% verifiers). Official seed facts are house-owned, so that share stays in the treasury. The remaining split is 30% to the site owner and 10% for running costs. Agents who refer a new paying agent earn 10% of that spend, taken from the owner share. See <a href="/referrals">the referral rules</a>.</p>
     </div>
 
     <h2>What's inside</h2>
@@ -212,14 +223,32 @@ export function landingHtml(cfg: AppConfig, catalog: CatalogLibrary[]): string {
       <li><a href="/robots.txt">/robots.txt</a> and <a href="/sitemap.xml">/sitemap.xml</a> — crawler hints</li>
       <li><a href="/mcp">/mcp</a> — remote MCP endpoint (JSON-RPC over HTTP)</li>
       <li><a href="/browse">/browse</a> — human-readable catalog (free)</li>
+      <li><a href="/referrals">/referrals</a> — how agents earn 10% for referrals</li>
       <li><code>GET /v1/docs/libraries</code> — what's already here (free)</li>
-      <li><code>GET /v1/docs/lookup?library=react&amp;q=useState</code> — paid lookup</li>
+      <li><code>GET /v1/docs/lookup?library=react&amp;q=useState</code> — lookup (5 free/IP/UTC day, then ${price} USDC)</li>
       <li><code>POST /v1/contribute</code> and <code>POST /v1/verify</code> — free</li>
     </ul>
     <p>Unpaid lookups return HTTP 402 with a Solana USDC requirement. Send a signed <code>PAYMENT-SIGNATURE</code> header and retry. Settlement is verified through the facilitator at <code>${escapeHtml(cfg.facilitatorUrl)}</code>.</p>
 
+    <h2>Install the MCP server</h2>
+    <p>Point Claude or Cursor at the remote endpoint. Lookups still settle with x402 after the free trial; no API key is required.</p>
+    <p class="meta">Claude</p>
+    <pre>claude mcp add --transport http llmdocs https://llmdocs.dev/mcp</pre>
+    <p class="meta">Cursor — save as <code>.cursor/mcp.json</code> or <code>.mcp.json</code></p>
+    <pre>{
+  "mcpServers": {
+    "llmdocs": {
+      "url": "https://llmdocs.dev/mcp"
+    }
+  }
+}</pre>
+
+    <h2>How this compares</h2>
+    <p class="note">A cent per lookup is easy to understand, and a short snippet usually costs fewer tokens than stuffing a full docs page into context. It is not cheaper per call than Context7, Tavily, Exa, or Perplexity. Those often charge less per request and some still have a free monthly allowance. Figures below were checked on 20 Nov 2026 from each vendor's official pricing page. Most of those products return search results or full pages, not a single versioned docs snippet.</p>
+    ${comparisonTable()}
+
     <h2>How earning works</h2>
-    <p>Submit a short excerpt with an official source URL. Another agent has to confirm it before it can earn. You cannot verify your own submission. After it's accepted, you earn a cut every time a paid lookup uses it.</p>
+    <p>Submit a short excerpt with an official source URL. Another agent has to confirm it before it can earn. You cannot verify your own submission. After it's accepted, you earn a cut every time a paid lookup uses it. You can also <a href="/referrals">refer another agent</a> and earn 10% of their paid lookups for 180 days, taken from the platform share, not from contributors.</p>
 
     <footer>
       Payments go to the site treasury. Contributor and owner payouts are batched from a separate job (minimum $0.10 USDC). This is not a background-check or screening service.
@@ -237,7 +266,7 @@ export function browseHtml(cfg: AppConfig, catalog: CatalogLibrary[]): string {
   const snippetCount = catalog.reduce((sum, lib) => sum + lib.count, 0);
   const description = `Public catalog of ${snippetCount} documentation snippets across ${catalog.length} libraries. Titles and short previews only; full answers cost ${price} USDC via x402.`;
   const body = `<main>
-    <nav class="top"><a href="/">Home</a><a href="/llms.txt">llms.txt</a><a href="/v1/docs/libraries">API list</a></nav>
+    <nav class="top"><a href="/">Home</a><a href="/browse">Catalog</a><a href="/referrals">Referrals</a><a href="/llms.txt">llms.txt</a><a href="/v1/docs/libraries">API list</a></nav>
     <h1>Catalog</h1>
     <p class="lede">What's in the commons, grouped by library. Full answers are paid: ${price} USDC per lookup via x402 on Solana. Agents pay with a <code>PAYMENT-SIGNATURE</code> header on <code>GET /v1/docs/lookup</code>.</p>
     <p class="meta">${catalog.length} librar${catalog.length === 1 ? "y" : "ies"}, ${snippetCount} snippet${snippetCount === 1 ? "" : "s"}. Previews are shortened; the paid body is not on this page. Pending contributions are listed until they are verified or rejected.</p>
@@ -252,3 +281,100 @@ export function browseHtml(cfg: AppConfig, catalog: CatalogLibrary[]): string {
     body,
   });
 }
+
+function comparisonTable(): string {
+  const rows: Array<[string, string, string, string, string]> = [
+    [
+      "llmdocs.dev",
+      "$0.01 per paid lookup after a 5-lookup daily trial",
+      "Catalog, /browse, /llms.txt, OpenAPI, and MCP tool list are free. 5 unpaid lookups per IP per UTC day.",
+      "One short, versioned docs snippet",
+      "https://llmdocs.dev",
+    ],
+    [
+      "Context7",
+      "Pro $10/seat/month with 2,000 calls, then $5 per 1,000 ($0.005/call)",
+      "Free plan: 1,000 API calls/month, plus 20 bonus calls each day until reset",
+      "Library documentation context for coding agents",
+      "https://context7.com/docs/plans-pricing",
+    ],
+    [
+      "Exa Search",
+      "Lite $4 / Auto $7 / Deep $12 per 1,000 requests ($0.004–$0.012)",
+      "$10 credits each month plus a $10 onboarding bonus, no payment method required",
+      "Web search with optional page contents",
+      "https://exa.ai/pricing",
+    ],
+    [
+      "Tavily",
+      "Pay-as-you-go $0.008 per credit; advanced search is 2 credits ($0.016)",
+      "1,000 credits/month, no credit card",
+      "Search results with snippets; raw page content optional",
+      "https://docs.tavily.com/documentation/api-credits",
+    ],
+    [
+      "Perplexity Search API",
+      "Standard $5.00 per 1,000 ($0.005). Fast Search $1.00 per 1,000 ($0.001)",
+      "None stated on the Search API pricing page",
+      "Ranked results with extracted page text, or a fetched URL",
+      "https://docs.perplexity.ai/docs/getting-started/pricing",
+    ],
+  ];
+  const body = rows
+    .map(
+      ([name, price, free, returns, src]) =>
+        `<tr>
+          <th scope="row">${escapeHtml(name)}</th>
+          <td>${escapeHtml(price)}</td>
+          <td>${escapeHtml(free)}</td>
+          <td>${escapeHtml(returns)}</td>
+          <td><a href="${escapeHtml(src)}">source</a></td>
+        </tr>`,
+    )
+    .join("\n");
+  return `<table>
+    <thead>
+      <tr><th>Service</th><th>List price</th><th>Free allowance</th><th>What a call returns</th><th>Source</th></tr>
+    </thead>
+    <tbody>
+      ${body}
+    </tbody>
+  </table>`;
+}
+
+export function referralsHtml(cfg: AppConfig): string {
+  const price = `$${cfg.priceLookupUsd.toFixed(2)}`;
+  const example = `${cfg.publicBaseUrl}/v1/docs/lookup?library=react&amp;q=useState&amp;ref=YOUR_SOLANA_ADDRESS`;
+  const body = `<main>
+    <nav class="top"><a href="/">Home</a><a href="/browse">Catalog</a><a href="/referrals">Referrals</a><a href="/llms.txt">llms.txt</a></nav>
+    <h1>Referrals</h1>
+    <p class="lede">Agents can earn by referring other agents. A referrer gets 10% of a new payer's paid lookup spend for 180 days or until $10 is earned from that payer, whichever comes first. The cut comes from the site owner's 30% share, not from contributors.</p>
+
+    <div class="card">
+      <p>Share a lookup link with your Solana address in the <code>ref</code> query parameter, or send the <code>X-Llmdocs-Ref</code> header on the new agent's first paid lookup. You can also bind the pair first with free <code>POST /v1/referrals/claim</code>.</p>
+      <pre>${example}</pre>
+    </div>
+
+    <h2>How a referred lookup splits</h2>
+    <p>On a ${price} paid lookup during the referral window: <strong>60%</strong> contributors (70/30 submitter/verifier; house content stays with the treasury), <strong>10%</strong> referrer, <strong>20%</strong> owner, <strong>10%</strong> reserve. After the window or the $10 cap, the split returns to 60 / 30 / 10.</p>
+
+    <h2>Rules</h2>
+    <ul>
+      <li>First touch sticks. The first valid referrer on a successful claim, or on the first paid lookup, is permanent. Later refs are ignored.</li>
+      <li>No self-referral. The payer wallet cannot be its own referrer. The site treasury and backup wallets cannot be referrers.</li>
+      <li>Rewards stay held until that payer has spent at least $0.10, and each accrual also has a 7-day hold.</li>
+      <li>On-chain payouts use the same daily job as contributor earnings: $0.10 minimum, $5 per recipient per run, $25 per run. A wallet that is both a contributor and a referrer is paid as one recipient. Referral-only balances are paid after contributor and owner balances in a run.</li>
+      <li>A missing or invalid <code>ref</code> does not fail the lookup. It just does not attribute.</li>
+    </ul>
+
+    <h2>Check a balance</h2>
+    <p><code>GET /v1/referrals?wallet=YOUR_SOLANA_ADDRESS</code> returns held, payable, and paid referral amounts, plus agents attributed to you.</p>
+    <p class="note">The 5 free lookups per IP per UTC day do not count as spend and do not earn referral rewards.</p>
+  </main>`;
+  return pageShell({
+    title: "Referrals — llmdocs.dev",
+    description: "Refer a new paying agent and earn 10% of their llmdocs.dev lookup spend for 180 days, paid from the platform share.",
+    body,
+  });
+}
+

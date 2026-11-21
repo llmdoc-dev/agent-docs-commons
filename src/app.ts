@@ -13,6 +13,7 @@ import {
   listLibraries,
   listSnippets,
   listVerifications,
+  migrate,
   pendingPayouts,
   recordDryRun,
   recordQuery,
@@ -24,21 +25,34 @@ import { formatUsd, usdToMicros } from "./money.ts";
 import { isInternalWallet, splitQueryFee, type FactForPayout } from "./payout.ts";
 import {
   buildChallenge,
+  extractPaymentHeader,
   jsonResponse,
   lookupResource,
   paymentCorsHeaders,
   requirePayment,
   textResponse,
-  type SettledPayment,
 } from "./payment.ts";
 import { checkSnippetFields, checkSourceUrl, contentHash, isSolanaAddress } from "./quality.ts";
 import { rankSnippets, selectForAnswer } from "./search.ts";
 import { buildOpenApi } from "./openapi.ts";
 import { buildLlmsTxt } from "./llms.ts";
-import { browseHtml, landingHtml, loadPublicCatalog } from "./catalog.ts";
+import { browseHtml, landingHtml, loadPublicCatalog, referralsHtml } from "./catalog.ts";
 import { handleMcp } from "./mcp-http.ts";
 import { seedIfEmpty, seedOfficialSnippets } from "./seed-data.ts";
 import { lookupResourceUrl, robotsTxt, sitemapXml } from "./bazaar.ts";
+import {
+  REFERRAL_CAP_MICROS,
+  bindReferrerOnFirstPaidLookup,
+  claimReferral,
+  getAttribution,
+  listAttributionsForReferrer,
+  markFirstPaidAndAccrual,
+  readOfferedReferrer,
+  referralBalances,
+  referralWindowActive,
+  unlockHeldReferralLines,
+} from "./referrals.ts";
+import { TRIAL_RULES_TEXT, consumeFreeLookup } from "./trial.ts";
 
 export { seedIfEmpty, seedOfficialSnippets };
 
@@ -49,6 +63,7 @@ export type App = {
 };
 
 export async function createApp(cfg: AppConfig, db: Db): Promise<App> {
+  await migrate(db);
   await seedOfficialSnippets(db);
 
   const handle = async (req: Request): Promise<Response> => {
@@ -78,6 +93,9 @@ async function route(cfg: AppConfig, db: Db, req: Request, url: URL): Promise<Re
   if (method === "GET" && path === "/browse") {
     return textResponse(200, "text/html; charset=utf-8", browseHtml(cfg, await loadPublicCatalog(db)));
   }
+  if (method === "GET" && path === "/referrals") {
+    return textResponse(200, "text/html; charset=utf-8", referralsHtml(cfg));
+  }
   if (method === "GET" && path === "/health") {
     return jsonResponse(200, {
       ok: true,
@@ -91,7 +109,7 @@ async function route(cfg: AppConfig, db: Db, req: Request, url: URL): Promise<Re
     });
   }
   if (method === "GET" && path === "/llms.txt") {
-    return textResponse(200, "text/plain; charset=utf-8", buildLlmsTxt(cfg));
+    return textResponse(200, "text/plain; charset=utf-8", buildLlmsTxt(cfg, await loadPublicCatalog(db)));
   }
   if (method === "GET" && path === "/robots.txt") {
     return textResponse(200, "text/plain; charset=utf-8", robotsTxt(cfg.publicBaseUrl));
@@ -136,6 +154,12 @@ async function route(cfg: AppConfig, db: Db, req: Request, url: URL): Promise<Re
     const wallet = await getWallet(db, address);
     if (!wallet) return jsonResponse(404, { error: "wallet_not_found" });
     return jsonResponse(200, wallet);
+  }
+  if (method === "POST" && path === "/v1/referrals/claim") {
+    return claimReferralRoute(db, req);
+  }
+  if (method === "GET" && path === "/v1/referrals") {
+    return referralStatusRoute(db, url);
   }
   if (method === "GET" && path === "/v1/payouts/preview") {
     return jsonResponse(200, await dryRunPayload(db));
@@ -186,8 +210,27 @@ async function lookupDocs(cfg: AppConfig, db: Db, req: Request, url: URL): Promi
   const library = (url.searchParams.get("library") ?? "").trim() || undefined;
   const version = (url.searchParams.get("version") ?? "").trim() || undefined;
   // Require payment even when `q` is missing so facilitator discovery probes
-  // to the canonical resource URL see HTTP 402, not 400.
+  // to the canonical resource URL see HTTP 402, not 400. HEAD is also always
+  // paid so liveness monitors keep seeing 402. Free trial applies only to
+  // unpaid GET requests that include q.
   const resourceUrl = lookupResourceUrl(cfg.publicBaseUrl);
+  const hasPayment = Boolean(extractPaymentHeader(req));
+  const discoveryProbe = req.method === "HEAD" || !q;
+
+  if (!hasPayment && !discoveryProbe) {
+    const trial = await consumeFreeLookup(db, req);
+    if (trial.ok) {
+      return fulfillLookup(cfg, db, req, url, {
+        q,
+        library,
+        version,
+        kind: "free",
+        remainingFreeLookups: trial.remaining,
+        responseHeaders: paymentCorsHeaders(),
+      });
+    }
+  }
+
   const gate = await requirePayment(cfg, req, {
     resourceUrl,
     description: q ? `Documentation lookup: ${q}` : "Documentation lookup",
@@ -213,13 +256,41 @@ async function lookupDocs(cfg: AppConfig, db: Db, req: Request, url: URL): Promi
     }
   }
 
-  let catalog = await listSnippets(db, library);
-  if (version) {
+  return fulfillLookup(cfg, db, req, url, {
+    q,
+    library,
+    version,
+    kind: "paid",
+    payment: gate.payment,
+    responseHeaders: gate.responseHeaders,
+  });
+}
+
+async function fulfillLookup(
+  cfg: AppConfig,
+  db: Db,
+  req: Request,
+  url: URL,
+  opts: {
+    q: string;
+    library?: string;
+    version?: string;
+    kind: "free" | "paid";
+    payment?: { mode: "mock" | "x402"; payerWallet: string | null; transaction?: string | null; alreadySettled?: boolean };
+    remainingFreeLookups?: number;
+    responseHeaders: Record<string, string>;
+  },
+): Promise<Response> {
+  let catalog = await listSnippets(db, opts.library);
+  if (opts.version) {
     catalog = catalog.filter(
-      (s) => s.libraryVersion === version || s.libraryVersion.startsWith(`${version}.`) || s.libraryVersion.startsWith(version),
+      (s) =>
+        s.libraryVersion === opts.version ||
+        s.libraryVersion.startsWith(`${opts.version}.`) ||
+        s.libraryVersion.startsWith(opts.version!),
     );
   }
-  const ranked = rankSnippets(catalog, q, library);
+  const ranked = rankSnippets(catalog, opts.q, opts.library);
   const accepted = selectForAnswer(ranked);
   const payoutFacts: FactForPayout[] = [];
   for (const r of accepted) {
@@ -232,20 +303,95 @@ async function lookupDocs(cfg: AppConfig, db: Db, req: Request, url: URL): Promi
     });
   }
 
-  let payoutLines = splitQueryFee(cfg.priceLookupUsd, payoutFacts);
-  if (!gate.payment.alreadySettled) {
-    const queryId = await recordQuery(db, {
-      payerWallet: gate.payment.payerWallet,
-      library: library ?? null,
-      question: q,
-      feeMicros: usdToMicros(cfg.priceLookupUsd),
-      paymentMode: gate.payment.mode,
+  if (opts.kind === "free") {
+    await recordQuery(db, {
+      payerWallet: null,
+      library: opts.library ?? null,
+      question: opts.q,
+      feeMicros: 0,
+      paymentMode: "free",
       snippetIds: payoutFacts.map((f) => f.snippetId),
-      settlementTx: gate.payment.transaction ?? null,
+      settlementTx: null,
+    });
+    return jsonResponse(
+      200,
+      {
+        results: accepted.map((r) => ({
+          ...publicSnippet(r.snippet),
+          score: r.score,
+        })),
+        attribution: payoutFacts.map((f) => ({
+          snippetId: f.snippetId,
+          submitterWallet: f.submitterWallet,
+          verifierWallets: f.verifierWallets,
+          houseOwned: Boolean(f.houseOwned),
+        })),
+        payout: {
+          split: "Free trial lookup. No fee was collected or split.",
+          lines: [],
+        },
+        payment: {
+          mode: "free",
+          feeUsd: 0,
+          remainingFreeLookups: opts.remainingFreeLookups ?? 0,
+          trial: TRIAL_RULES_TEXT,
+          payerWallet: null,
+          transaction: null,
+        },
+      },
+      opts.responseHeaders,
+    );
+  }
+
+  const payment = opts.payment!;
+  const offered = readOfferedReferrer(req, url);
+  let referrerWallet: string | undefined;
+  let capRemaining: number | undefined;
+  if (payment.payerWallet && !payment.alreadySettled) {
+    const attr = await bindReferrerOnFirstPaidLookup(db, {
+      payerWallet: payment.payerWallet,
+      offeredReferrer: offered,
+    });
+    if (attr && referralWindowActive(attr, new Date())) {
+      const remaining = REFERRAL_CAP_MICROS - attr.earnedMicros;
+      if (remaining > 0) {
+        referrerWallet = attr.referrerWallet;
+        capRemaining = remaining;
+      }
+    }
+  }
+
+  const payoutLines = splitQueryFee(
+    cfg.priceLookupUsd,
+    payoutFacts,
+    referrerWallet ? { referrerWallet, referralCapRemainingMicros: capRemaining } : {},
+  );
+  if (!payment.alreadySettled) {
+    const queryId = await recordQuery(db, {
+      payerWallet: payment.payerWallet,
+      library: opts.library ?? null,
+      question: opts.q,
+      feeMicros: usdToMicros(cfg.priceLookupUsd),
+      paymentMode: payment.mode,
+      snippetIds: payoutFacts.map((f) => f.snippetId),
+      settlementTx: payment.transaction ?? null,
     });
     await insertLedgerLines(db, queryId, payoutLines);
+    if (payment.payerWallet) {
+      const referralLine = payoutLines.find((l) => l.role === "referral");
+      await markFirstPaidAndAccrual(db, {
+        payerWallet: payment.payerWallet,
+        amountMicros: referralLine?.amountMicros ?? 0,
+      });
+      await unlockHeldReferralLines(db);
+    }
     await applyUsageReputation(db, payoutFacts);
   }
+
+  const referred = payoutLines.some((l) => l.role === "referral");
+  const split = referred
+    ? "60% contributor pool (70% submitter / 30% verifiers per fact; house-seeded submitter cut goes to the treasury), 10% referrer, 20% platform, 10% reserve"
+    : "60% contributor pool (70% submitter / 30% verifiers per fact; house-seeded submitter cut goes to the treasury), 30% platform, 10% reserve";
 
   return jsonResponse(
     200,
@@ -261,8 +407,7 @@ async function lookupDocs(cfg: AppConfig, db: Db, req: Request, url: URL): Promi
         houseOwned: Boolean(f.houseOwned),
       })),
       payout: {
-        split:
-          "60% contributor pool (70% submitter / 30% verifiers per fact; house-seeded submitter cut goes to the treasury), 30% platform, 10% reserve",
+        split,
         lines: payoutLines.map((l) => ({
           wallet: l.wallet,
           role: l.role,
@@ -272,13 +417,13 @@ async function lookupDocs(cfg: AppConfig, db: Db, req: Request, url: URL): Promi
         })),
       },
       payment: {
-        mode: gate.payment.mode,
+        mode: payment.mode,
         feeUsd: cfg.priceLookupUsd,
-        payerWallet: gate.payment.payerWallet,
-        transaction: gate.payment.transaction ?? null,
+        payerWallet: payment.payerWallet,
+        transaction: payment.transaction ?? null,
       },
     },
-    gate.responseHeaders,
+    opts.responseHeaders,
   );
 }
 
@@ -387,6 +532,47 @@ async function verify(db: Db, req: Request): Promise<Response> {
   return jsonResponse(200, {
     verification,
     snippet: { ...publicSnippet((await getSnippet(db, snippetId))!), status },
+  });
+}
+
+async function claimReferralRoute(db: Db, req: Request): Promise<Response> {
+  const body = (await readJson(req)) as Record<string, unknown> | null;
+  if (!body) return jsonResponse(400, { error: "json_body_required" });
+  const result = await claimReferral(db, {
+    payerWallet: String(body.payerWallet ?? body.payer ?? ""),
+    referrerWallet: String(body.referrerWallet ?? body.referrer ?? body.ref ?? ""),
+  });
+  if (!result.ok) return jsonResponse(result.status, { error: result.error });
+  return jsonResponse(result.created ? 201 : 200, {
+    attribution: result.attribution,
+    created: result.created,
+    note: "First touch sticks. Referral rewards accrue on later paid lookups, stay held until the payer has spent $0.10, and then have a 7-day hold. The cut comes from the owner share, not from contributors.",
+  });
+}
+
+async function referralStatusRoute(db: Db, url: URL): Promise<Response> {
+  const wallet = (url.searchParams.get("wallet") ?? "").trim();
+  if (!isSolanaAddress(wallet)) return jsonResponse(400, { error: "wallet must be a Solana address" });
+  await unlockHeldReferralLines(db);
+  const attributedTo = await getAttribution(db, wallet);
+  const asReferrer = await listAttributionsForReferrer(db, wallet);
+  const balances = await referralBalances(db, wallet);
+  return jsonResponse(200, {
+    wallet,
+    attributedTo,
+    referredAgents: asReferrer,
+    balances: {
+      heldUsd: formatUsd(balances.heldMicros),
+      pendingUsd: formatUsd(balances.pendingMicros),
+      paidUsd: formatUsd(balances.paidMicros),
+    },
+    rules: {
+      share: "10% of a referred payer's paid lookup spend, taken from the owner share",
+      windowDays: 180,
+      capUsd: 10,
+      unlockSpendUsd: 0.1,
+      holdDays: 7,
+    },
   });
 }
 

@@ -143,6 +143,44 @@ describe("planPayouts", () => {
     expect(plan.transfers).toHaveLength(0);
     expect(plan.carries[0]!.reason).toMatch(/exceeds the 5 USDC/);
   });
+
+  it("pays contributor and owner transfers before referral-only wallets", () => {
+    const plan = planPayouts(
+      [
+        row({ id: "r1", wallet: AGENT_B, role: "referral", amountMicros: 5_000_000, createdAt: "2026-11-20T00:00:00Z" }),
+        row({ id: "c1", wallet: AGENT_A, role: "submitter", amountMicros: 200_000, createdAt: "2026-11-20T00:00:01Z" }),
+        row({ id: "p1", wallet: PLATFORM_WALLET, role: "platform", amountMicros: 200_000, createdAt: "2026-11-20T00:00:02Z" }),
+      ],
+      { ...baseOpts, mainBalanceMicros: 6_000_000 },
+    );
+    expect(plan.transfers.map((t) => [t.recipient, t.source, t.amountMicros])).toEqual([
+      [OWNER, "platform", 200_000],
+      [AGENT_A, "contributor", 200_000],
+      [AGENT_B, "referral", 5_000_000],
+    ]);
+  });
+
+  it("pays a mixed contributor-and-referrer wallet as one contributor-wave recipient", () => {
+    const plan = planPayouts(
+      [
+        row({ id: "c1", wallet: AGENT_A, role: "submitter", amountMicros: 80_000, createdAt: "2026-11-20T00:00:01Z" }),
+        row({ id: "r1", wallet: AGENT_A, role: "referral", amountMicros: 80_000, createdAt: "2026-11-20T00:00:02Z" }),
+      ],
+      baseOpts,
+    );
+    expect(plan.transfers).toEqual([
+      expect.objectContaining({ recipient: AGENT_A, amountMicros: 160_000, source: "contributor", entryIds: ["c1", "r1"] }),
+    ]);
+  });
+
+  it("ignores held referral rows until they become pending", () => {
+    const plan = planPayouts(
+      [row({ id: "r1", wallet: AGENT_A, role: "referral", amountMicros: 150_000, status: "held" })],
+      baseOpts,
+    );
+    expect(plan.transfers).toHaveLength(0);
+    expect(plan.carries).toHaveLength(0);
+  });
 });
 
 describe("packRows", () => {

@@ -21,14 +21,15 @@ const TOOLS = [
   {
     name: "docs_lookup",
     description:
-      "Look up a short, cited, versioned documentation snippet from the Agent Docs Commons. Use for React, Express, or Zod questions instead of a fresh web search.",
+      "Look up a short, cited, versioned documentation snippet from the Agent Docs Commons. Use for React, Express, Zod, Stripe, OpenAI, LangChain, or AWS questions instead of a fresh web search. Optional ref attributes a new payer so the referrer earns 10% of that agent's paid spend for 180 days.",
     inputSchema: {
       type: "object",
       required: ["q"],
       properties: {
         q: { type: "string", description: "The question or API name" },
-        library: { type: "string", description: "react | express | zod" },
+        library: { type: "string", description: "Library slug, e.g. react, stripe, openai, langchain, aws-sdk, boto3" },
         version: { type: "string" },
+        ref: { type: "string", description: "Referrer Solana address" },
       },
     },
   },
@@ -86,6 +87,7 @@ async function handleTool(name: string, args: Record<string, unknown>): Promise<
     q.set("q", String(args.q ?? ""));
     if (args.library) q.set("library", String(args.library));
     if (args.version) q.set("version", String(args.version));
+    if (args.ref) q.set("ref", String(args.ref));
     return callApi(`/v1/docs/lookup?${q.toString()}`, {
       headers: { "X-PAYMENT": `mock:${payer}` },
     });

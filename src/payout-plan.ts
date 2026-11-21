@@ -33,7 +33,7 @@ export type PayoutTransfer = {
   amountMicros: number;
   entryIds: string[];
   needsAta: boolean;
-  source: "platform" | "contributor";
+  source: "platform" | "contributor" | "referral";
 };
 
 export type PayoutInternal = {
@@ -103,7 +103,7 @@ export function planPayouts(rows: PendingLedgerRow[], opts: PlanOptions): Payout
   const transfers: PayoutTransfer[] = [];
 
   const internalGroups = new Map<string, PendingLedgerRow[]>();
-  const payable = new Map<string, { source: "platform" | "contributor"; rows: PendingLedgerRow[] }>();
+  const payable = new Map<string, { source: "platform" | "contributor" | "referral"; rows: PendingLedgerRow[] }>();
 
   for (const row of pending) {
     if (INTERNAL_SETTLE_WALLETS.has(row.wallet) || row.role === "house") {
@@ -129,8 +129,11 @@ export function planPayouts(rows: PendingLedgerRow[], opts: PlanOptions): Payout
       });
       continue;
     }
-    const group = payable.get(row.wallet) ?? { source: "contributor", rows: [] };
+    const group = payable.get(row.wallet) ?? { source: row.role === "referral" ? "referral" : "contributor", rows: [] };
     group.rows.push(row);
+    // A wallet that is both a contributor and a referrer is paid as one recipient
+    // in the contributor wave, so referral volume cannot starve docs writers.
+    if (group.source === "referral" && row.role !== "referral") group.source = "contributor";
     payable.set(row.wallet, group);
   }
 
@@ -146,8 +149,14 @@ export function planPayouts(rows: PendingLedgerRow[], opts: PlanOptions): Payout
 
   let remainingRun = Math.min(MAX_RUN_MICROS, Math.max(0, opts.mainBalanceMicros));
 
-  // Pay larger accrued balances first so we don't spend the run cap on dust packing.
-  const recipients = [...payable.entries()].sort((a, b) => sumRows(b[1].rows) - sumRows(a[1].rows));
+  // Pay owner, then contributors, then referral-only wallets. Within a wave,
+  // pay larger accrued balances first so we don't spend the run cap on dust packing.
+  const wave = { platform: 0, contributor: 1, referral: 2 } as const;
+  const recipients = [...payable.entries()].sort((a, b) => {
+    const waveDelta = wave[a[1].source] - wave[b[1].source];
+    if (waveDelta !== 0) return waveDelta;
+    return sumRows(b[1].rows) - sumRows(a[1].rows);
+  });
 
   for (const [recipient, group] of recipients) {
     if (!isSolanaAddress(recipient)) {

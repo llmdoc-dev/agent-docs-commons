@@ -166,7 +166,7 @@ function header(req: Request, name: string): string | null {
   return req.headers.get(name);
 }
 
-function extractPaymentHeader(req: Request): string | null {
+export function extractPaymentHeader(req: Request): string | null {
   return (
     header(req, "PAYMENT-SIGNATURE") ??
     header(req, "payment-signature") ??
@@ -416,7 +416,7 @@ export function paymentCorsHeaders(): Record<string, string> {
   return {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Accept, PAYMENT-SIGNATURE, X-PAYMENT, PAYMENT-REQUIRED, PAYMENT-RESPONSE",
+    "Access-Control-Allow-Headers": "Content-Type, Accept, PAYMENT-SIGNATURE, X-PAYMENT, PAYMENT-REQUIRED, PAYMENT-RESPONSE, X-Llmdocs-Ref",
     "Access-Control-Expose-Headers": "PAYMENT-REQUIRED, PAYMENT-RESPONSE, X-PAYMENT-RESPONSE, EXTENSION-RESPONSES",
   };
 }

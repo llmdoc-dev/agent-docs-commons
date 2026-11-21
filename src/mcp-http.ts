@@ -19,7 +19,7 @@ const TOOLS = [
   {
     name: "docs_lookup",
     description:
-      "Look up a short, cited, versioned documentation snippet. This is a paid tool ($0.01 USDC on Solana via x402). Pass paymentSignature if you already have a signed payment; otherwise the result includes the 402 payment requirement.",
+      "Look up a short, cited, versioned documentation snippet. The first 5 unpaid lookups per client IP per UTC day are free; after that this is a paid tool ($0.01 USDC on Solana via x402). Pass paymentSignature if you already have a signed payment; otherwise the result includes the 402 payment requirement. Optional ref (a Solana address) attributes the payer so the referrer can earn 10% of this agent's paid spend for 180 days, taken from the platform share.",
     inputSchema: {
       type: "object",
       required: ["q"],
@@ -27,6 +27,7 @@ const TOOLS = [
         q: { type: "string", description: "The question or API name" },
         library: { type: "string" },
         version: { type: "string" },
+        ref: { type: "string", description: "Referrer Solana address. First touch on a new payer sticks." },
         paymentSignature: { type: "string", description: "PAYMENT-SIGNATURE value from a prior x402 payment" },
       },
     },
@@ -140,10 +141,13 @@ async function callTool(
     const q = encodeURIComponent(String(args.q ?? ""));
     const library = args.library ? `&library=${encodeURIComponent(String(args.library))}` : "";
     const version = args.version ? `&version=${encodeURIComponent(String(args.version))}` : "";
+    const ref = args.ref ? `&ref=${encodeURIComponent(String(args.ref))}` : "";
     const headers: Record<string, string> = { accept: "application/json" };
     const payment = args.paymentSignature ? String(args.paymentSignature) : incoming.headers.get("PAYMENT-SIGNATURE") ?? incoming.headers.get("X-PAYMENT");
     if (payment) headers["PAYMENT-SIGNATURE"] = payment;
-    const lookupReq = new Request(`${origin}/v1/docs/lookup?q=${q}${library}${version}`, { headers });
+    const incomingRef = incoming.headers.get("X-Llmdocs-Ref");
+    if (incomingRef) headers["X-Llmdocs-Ref"] = incomingRef;
+    const lookupReq = new Request(`${origin}/v1/docs/lookup?q=${q}${library}${version}${ref}`, { headers });
     const res = dispatch ? await dispatch(lookupReq) : await fetch(lookupReq);
     const text = await res.text();
     return {

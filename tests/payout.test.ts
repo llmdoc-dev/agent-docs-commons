@@ -119,3 +119,40 @@ describe("splitQueryFee", () => {
     expect(byWallet.get(TREASURY_WALLET)).toBe(usdToMicros(0.006));
   });
 });
+
+describe("splitQueryFee with a referrer", () => {
+  it("takes 10% from the owner share and leaves contributors at 60%", () => {
+    const lines = splitQueryFee(
+      0.01,
+      [{ snippetId: "s1", submitterWallet: AGENT_A, verifierWallets: [AGENT_B] }],
+      { referrerWallet: AGENT_C },
+    );
+    expect(lines.reduce((s, l) => s + l.amountMicros, 0)).toBe(usdToMicros(0.01));
+    const byRole = Object.fromEntries(
+      ["platform", "reserve", "submitter", "verifier", "referral"].map((role) => [
+        role,
+        lines.filter((l) => l.role === role).reduce((s, l) => s + l.amountMicros, 0),
+      ]),
+    );
+    expect(byRole.platform).toBe(usdToMicros(0.002));
+    expect(byRole.reserve).toBe(usdToMicros(0.001));
+    expect(byRole.submitter).toBe(4200);
+    expect(byRole.verifier).toBe(1800);
+    expect(byRole.referral).toBe(1000);
+    expect(lines.find((l) => l.role === "referral")?.wallet).toBe(AGENT_C);
+  });
+
+  it("returns unused cap room to the owner, not the reserve", () => {
+    const lines = splitQueryFee(
+      0.01,
+      [{ snippetId: "seed", submitterWallet: HOUSE_WALLET, verifierWallets: [], houseOwned: true }],
+      { referrerWallet: AGENT_A, referralCapRemainingMicros: 500 },
+    );
+    const byRole = Object.fromEntries(lines.map((l) => [l.role, l.amountMicros]));
+    expect(byRole.referral).toBe(500);
+    expect(byRole.platform).toBe(usdToMicros(0.002) + 500);
+    expect(byRole.reserve).toBe(usdToMicros(0.001));
+    expect(byRole.house).toBe(usdToMicros(0.006));
+    expect(lines.reduce((s, l) => s + l.amountMicros, 0)).toBe(usdToMicros(0.01));
+  });
+});

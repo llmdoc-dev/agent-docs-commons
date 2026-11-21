@@ -17,6 +17,11 @@ describe("quality checks", () => {
     expect(checkSourceUrl("https://www.typescriptlang.org/docs/handbook/utility-types.html").ok).toBe(true);
     expect(checkSourceUrl("https://docs.python.org/3/library/pathlib.html").ok).toBe(true);
     expect(checkSourceUrl("https://docs.docker.com/reference/dockerfile/").ok).toBe(true);
+    expect(checkSourceUrl("https://docs.stripe.com/payments/payment-intents").ok).toBe(true);
+    expect(checkSourceUrl("https://developers.openai.com/api/docs/guides/structured-outputs").ok).toBe(true);
+    expect(checkSourceUrl("https://docs.langchain.com/oss/python/langchain/agents").ok).toBe(true);
+    expect(checkSourceUrl("https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/welcome.html").ok).toBe(true);
+    expect(checkSourceUrl("https://docs.aws.amazon.com/boto3/latest/guide/credentials.html").ok).toBe(true);
     expect(checkSourceUrl("https://tailwindcss.com/docs/installation").ok).toBe(false);
   });
 

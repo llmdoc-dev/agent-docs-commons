@@ -528,5 +528,185 @@
     "sourceUrl": "https://docs.docker.com/compose/",
     "license": "Apache-2.0",
     "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "stripe-payment-intent",
+    "library": "stripe",
+    "libraryVersion": "v1",
+    "title": "PaymentIntents create and confirm a payment",
+    "body": "Stripe's Payment Intents API collects a payment in two steps: create a PaymentIntent on your server, then confirm it. POST /v1/payment_intents with amount (in the smallest currency unit) and currency. Setting confirm=true creates and confirms in one call and accepts the Confirm API parameters. Reuse one PaymentIntent for a cart or checkout session instead of creating a new one after an interruption. Pass the client_secret to the client; do not send the whole PaymentIntent object or secret keys to the browser. This is a short original summary for agents, not a substitute for the official API reference.",
+    "sourceUrl": "https://docs.stripe.com/payments/payment-intents",
+    "license": "proprietary",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "stripe-idempotency-key",
+    "library": "stripe",
+    "libraryVersion": "v1",
+    "title": "Idempotency-Key makes Stripe POSTs safely retryable",
+    "body": "Stripe v1 POST requests accept an Idempotency-Key so a retried create or update does not run twice. Generate a unique key (a v4 UUID is recommended), at most 255 characters, and avoid putting emails or other personal data in the key. Stripe stores the first response for that key; later retries with the same key and the same parameters return the saved result, including 500s. If the parameters differ, the request errors. Keys can be pruned after 24 hours. Do not send idempotency keys on GET or DELETE. Use a key derived from the cart or session id when creating a PaymentIntent so a checkout retry cannot open a second intent. This is a short original summary for agents, not a substitute for the official API reference.",
+    "sourceUrl": "https://docs.stripe.com/api/idempotent_requests",
+    "license": "proprietary",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "stripe-webhook-verify",
+    "library": "stripe",
+    "libraryVersion": "v1",
+    "title": "Verify Stripe webhooks with Stripe-Signature",
+    "body": "Stripe delivers events to your HTTPS webhook endpoint as a JSON POST. Verify each event before acting: check the Stripe-Signature header with the raw request body and the endpoint's whsec_ signing secret, preferably through an official Stripe library. Do not parse the body into JSON before verification, or the signature will not match. Return a 2xx quickly, then do slower fulfillment work. Events can arrive more than once; record processed event ids and ignore duplicates. Unsigned or failed signatures must be rejected so attackers cannot fake a successful payment. This is a short original summary for agents, not a substitute for the official API reference.",
+    "sourceUrl": "https://docs.stripe.com/webhooks",
+    "license": "proprietary",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "stripe-fulfill-succeeded",
+    "library": "stripe",
+    "libraryVersion": "v1",
+    "title": "Fulfill orders on payment_intent.succeeded",
+    "body": "Fulfill goods or services from the payment_intent.succeeded webhook, not from client-side success callbacks. A customer can close the tab after paying and before your frontend runs. Listen for payment_intent.succeeded to fulfill and payment_intent.payment_failed to ask for another method. A PaymentIntent can have more than one Charge if the customer retried. Polling the PaymentIntent can hit rate limits and is less reliable than webhooks. This is a short original summary for agents, not a substitute for the official API reference.",
+    "sourceUrl": "https://docs.stripe.com/payments/payment-intents/verifying-status",
+    "license": "proprietary",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "openai-responses-api",
+    "library": "openai",
+    "libraryVersion": "v1",
+    "title": "Responses API is recommended for new OpenAI projects",
+    "body": "OpenAI recommends the Responses API (POST /v1/responses) for new projects. Chat Completions remains supported. Responses uses input and output arrays of typed Items instead of a messages array; a message is one Item type, alongside function_call, function_call_output, and reasoning. You get one generation (there is no n/choices parameter). When you only need the final text, SDKs expose an output_text helper. To disable stored responses, set store: false. This is a short original summary for agents, not a substitute for the official API reference.",
+    "sourceUrl": "https://developers.openai.com/api/docs/guides/migrate-to-responses",
+    "license": "proprietary",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "openai-structured-outputs",
+    "library": "openai",
+    "libraryVersion": "v1",
+    "title": "Structured Outputs bind the model to a JSON Schema",
+    "body": "Structured Outputs constrains completed, non-refusal model output to a JSON Schema you supply. Prefer json_schema over the older json_object mode, which only guarantees valid JSON, not schema adherence. In the Responses API, pass the schema with text.format. In Chat Completions, pass response_format with type json_schema and a json_schema object (set strict to true). You still must handle refusals, incomplete responses, and API errors, and enforce business rules the schema does not express. This is a short original summary for agents, not a substitute for the official API reference.",
+    "sourceUrl": "https://developers.openai.com/api/docs/guides/structured-outputs",
+    "license": "proprietary",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "openai-response-state",
+    "library": "openai",
+    "libraryVersion": "v1",
+    "title": "Chain Responses with previous_response_id",
+    "body": "Unlike Chat Completions, where your app must resend the full messages array each turn, the Responses API can carry conversation state for you. Pass previous_response_id to chain the next turn onto a stored response, or use the Conversations API for a longer-lived thread. Set store: false if you do not want responses stored. System or developer guidance can go in a developer input item or in the top-level instructions field for a single turn. This is a short original summary for agents, not a substitute for the official API reference.",
+    "sourceUrl": "https://developers.openai.com/api/docs/guides/migrate-to-responses",
+    "license": "proprietary",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "openai-function-calling-items",
+    "library": "openai",
+    "libraryVersion": "v1",
+    "title": "Responses function calls are typed Items with call_id",
+    "body": "On the Responses API, a model tool call arrives as a function_call output Item, not as a Chat Completions message with tool_calls. After your app runs the tool, send a function_call_output input Item linked to that call with the same call_id. Keep Items separate rather than gluing tool calls and text into one message object. Function configuration also differs from Chat Completions; follow the function-calling guide when migrating. This is a short original summary for agents, not a substitute for the official API reference.",
+    "sourceUrl": "https://developers.openai.com/api/docs/guides/migrate-to-responses",
+    "license": "proprietary",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "langchain-create-agent",
+    "library": "langchain",
+    "libraryVersion": "1.1",
+    "title": "create_agent is the LangChain agent harness",
+    "body": "In current LangChain, create_agent (from langchain.agents) is the standard way to build an agent. An agent is a model calling tools in a loop; the harness is the prompt, tools, and middleware around that loop. Pass a model (a chat model instance or a string such as openai:gpt-4.1), an optional tools list, and an optional system_prompt. The returned object is a compiled graph. Invoke it with a messages dict: agent.invoke({\"messages\": [{\"role\": \"user\", \"content\": \"...\"}]}). This is a short original summary for agents, not a substitute for the official API reference.",
+    "sourceUrl": "https://docs.langchain.com/oss/python/langchain/agents",
+    "license": "MIT",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "langchain-agent-loop",
+    "library": "langchain",
+    "libraryVersion": "1.1",
+    "title": "create_agent loops tools until the model stops calling them",
+    "body": "create_agent builds a graph that sends the message list (after applying system_prompt) to the model. If the AIMessage contains tool_calls, the tools node runs those tools and appends ToolMessage results, then the model is called again. The loop stops when the model returns no tool_calls, and the graph returns the full message list. If tools is None or empty, the graph is a single model node with no tool loop. You can also pass response_format for structured output and checkpointer for state. This is a short original summary for agents, not a substitute for the official API reference.",
+    "sourceUrl": "https://reference.langchain.com/python/langchain/agents/factory/create_agent",
+    "license": "MIT",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "langchain-chat-openai",
+    "library": "langchain",
+    "libraryVersion": "1.1",
+    "title": "ChatOpenAI lives in langchain-openai",
+    "body": "The OpenAI chat integration is langchain_openai.ChatOpenAI, installed with pip install -U langchain-openai. Construct it with model (and optional api_key, base_url, temperature, timeout, max_retries). You can pass that instance into create_agent, or skip the class and pass a model string such as openai:gpt-4.1. ChatOpenAI can point at an OpenAI-compatible base_url, but it only follows official OpenAI API shapes; non-standard fields from third-party providers are not preserved, so use a provider-specific package when you need those features. This is a short original summary for agents, not a substitute for the official API reference.",
+    "sourceUrl": "https://docs.langchain.com/oss/python/integrations/chat/openai",
+    "license": "MIT",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "langchain-init-model-string",
+    "library": "langchain",
+    "libraryVersion": "1.1",
+    "title": "create_agent accepts a provider:model string",
+    "body": "The model argument to create_agent can be a string identifier such as openai:gpt-4.1 or a BaseChatModel instance. String identifiers are resolved through LangChain's model initialization helpers (see init_chat_model). This lets you swap providers without constructing a vendor class first. Tools may be BaseTool objects, plain Python callables, or dicts. Keep the system prompt in system_prompt rather than prepending a SystemMessage yourself unless you already have one. This is a short original summary for agents, not a substitute for the official API reference.",
+    "sourceUrl": "https://docs.langchain.com/oss/python/langchain/overview",
+    "license": "MIT",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "aws-sdk-js-modular-clients",
+    "library": "aws-sdk",
+    "libraryVersion": "3.x",
+    "title": "AWS SDK for JavaScript v3 uses per-service clients",
+    "body": "AWS SDK for JavaScript v3 is modular. Install and import only the service client you need, for example import { S3Client, ListBucketsCommand } from \"@aws-sdk/client-s3\". Create a client with new S3Client({ region: \"us-east-1\" }) and call await client.send(new ListBucketsCommand({})). This replaces the v2 pattern of new AWS.S3().listBuckets(). Each command is a class; pass input as the constructor argument. Clients are the public surface; do not expect a single aws-sdk package to include every service. This is a short original summary for agents, not a substitute for the official API reference.",
+    "sourceUrl": "https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/welcome.html",
+    "license": "Apache-2.0",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "aws-sdk-js-fromini",
+    "library": "aws-sdk",
+    "libraryVersion": "3.x",
+    "title": "fromIni loads shared AWS credentials in SDK v3",
+    "body": "In AWS SDK for JavaScript v3, load shared-file credentials with fromIni from @aws-sdk/credential-providers (Apache-2.0). import { fromIni } from \"@aws-sdk/credential-providers\" and pass credentials: fromIni() to the client. It reads ~/.aws/credentials and ~/.aws/config (or AWS_SHARED_CREDENTIALS_FILE). Optional arguments include profile, filepath, and configFilepath. If the client is constructed with profile, fromIni inherits that profile unless you override it. fromIni is not available in browsers. Prefer the default provider chain when running on AWS with instance or task roles. This is a short original summary for agents, not a substitute for the official API reference.",
+    "sourceUrl": "https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/migrate-credential-providers.html",
+    "license": "Apache-2.0",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "aws-sdk-js-commands",
+    "library": "aws-sdk",
+    "libraryVersion": "3.x",
+    "title": "v3 clients send Command objects, not callback methods",
+    "body": "AWS SDK for JavaScript v3 clients expose send(command) and return promises. There is no callback-style service.method(params, cb) on the v3 client. Import the command for the API you want (GetObjectCommand, PutObjectCommand, ListBucketsCommand) from the same client package, construct it with the input shape, and await client.send(command). Mid-stack errors are thrown as exceptions. Configure retries and region on the client, not on each command, unless you pass a specific override. This is a short original summary for agents, not a substitute for the official API reference.",
+    "sourceUrl": "https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/welcome.html",
+    "license": "Apache-2.0",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "boto3-client-and-session",
+    "library": "boto3",
+    "libraryVersion": "1.44",
+    "title": "boto3.client and Session create service clients",
+    "body": "In boto3, boto3.client(\"s3\", region_name=\"us-east-1\") returns a low-level service client. boto3.Session(profile_name=\"my-profile\", region_name=\"us-west-2\") stores credentials and region so you can call session.client(\"s3\") or session.resource(\"s3\") with the same config. session.client(service_name) is the usual starting point for a named AWS API. Pass endpoint_url only when you need a custom endpoint. Do not hard-code access keys in source; let the session load the environment or the shared credentials file. This is a short original summary for agents, not a substitute for the official API reference.",
+    "sourceUrl": "https://docs.aws.amazon.com/boto3/latest/guide/credentials.html",
+    "license": "Apache-2.0",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "boto3-credential-chain",
+    "library": "boto3",
+    "libraryVersion": "1.44",
+    "title": "boto3 loads credentials from the standard AWS chain",
+    "body": "boto3 and botocore resolve credentials in a chain: parameters you pass to Session or client, then environment variables (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AWS_SESSION_TOKEN when present), then the shared credentials and config files, then IAM roles for Amazon EC2 or container credentials. You can pass aws_access_key_id and aws_secret_access_key into client() or Session() for temporary or externally sourced keys, including an aws_session_token from STS. Official docs warn against hard-coding keys. Prefer a named profile or a runtime role. This is a short original summary for agents, not a substitute for the official API reference.",
+    "sourceUrl": "https://docs.aws.amazon.com/boto3/latest/guide/credentials.html",
+    "license": "Apache-2.0",
+    "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "boto3-session-profiles",
+    "library": "boto3",
+    "libraryVersion": "1.44",
+    "title": "Use a boto3 Session to select a profile and region",
+    "body": "boto3.session.Session accepts profile_name, region_name, and optional explicit keys or a session token. If profile_name is omitted, the default profile is used. Create clients from the session so they share that profile and region: session = boto3.Session(profile_name=\"my-profile\", region_name=\"us-east-1\"); s3 = session.client(\"s3\"). available_profiles lists profiles the session can see. A region passed directly to client() overrides the session default for that client only. This is a short original summary for agents, not a substitute for the official API reference.",
+    "sourceUrl": "https://docs.aws.amazon.com/boto3/latest/reference/core/session.html",
+    "license": "Apache-2.0",
+    "retrievedAt": "2026-11-20"
   }
 ]

@@ -84,6 +84,7 @@ export function sitemapXml(publicBaseUrl: string): string {
   const urls = [
     "/",
     "/browse",
+    "/referrals",
     "/llms.txt",
     "/openapi.json",
     "/.well-known/x402",

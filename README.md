@@ -6,12 +6,14 @@ Production is intended to run at [https://llmdocs.dev](https://llmdocs.dev) on C
 
 ## What it does
 
-- `GET /` — human landing page
-- `GET /v1/docs/lookup` — paywalled lookup of short snippets for **18 official-docs libraries** (React, Express, Zod, Next.js, Node.js, TypeScript, Python, FastAPI, Django, pandas, NumPy, Prisma, Vite, Requests, Pydantic, Flask, PostgreSQL, Docker). Tailwind CSS docs were skipped because the docs site is not open source.
+- `GET /` — human landing page (catalog, MCP install snippets, honest comparison)
+- `GET /browse` — public catalog of titles and short previews
+- `GET /referrals` — referral program rules
+- `GET /v1/docs/lookup` — lookup of short snippets for **23 official-docs libraries** (React, Express, Zod, Next.js, Node.js, TypeScript, Python, FastAPI, Django, pandas, NumPy, Prisma, Vite, Requests, Pydantic, Flask, PostgreSQL, Docker, Stripe, OpenAI, LangChain, AWS SDK for JavaScript v3, and boto3). The first 5 unpaid lookups with a `q` parameter are free per client IP per UTC day; after that the lookup is paywalled. Tailwind CSS docs were skipped because the docs site is not open source.
 - `POST /v1/contribute` — submit a sourced fact (wallet, provenance URL, version)
 - `POST /v1/verify` — another agent confirms, flags stale, or rejects (you cannot verify your own submission)
 - Reputation on wallets; only **verified** facts enter the payout pool
-- Payout ledger: 60% contributor pool (70% submitter / 30% verifiers per fact; **house-seeded facts send that share to the treasury**, not to external agents), 30% platform, 10% reserve
+- Payout ledger: 60% contributor pool (70% submitter / 30% verifiers per fact; **house-seeded facts send that share to the treasury**, not to external agents), 30% platform, 10% reserve. A referred paid lookup is 60% contributors, 10% referrer, 20% owner, 10% reserve. See `/referrals`.
 - `GET /v1/payouts/preview` — accrued balances; on-chain payouts are sent by the box-side job
 - Discovery: `GET /llms.txt`, `GET /openapi.json`, `GET /.well-known/x402`, `POST /mcp` (remote MCP), and `npm run mcp` (stdio wrapper)
 
@@ -36,7 +38,8 @@ In another terminal:
 ```bash
 curl http://127.0.0.1:8787/health
 curl "http://127.0.0.1:8787/v1/docs/lookup?library=react&q=useState"
-# 402 Payment Required — then settle in mock mode:
+# First 5 unpaid lookups with q are free per IP per UTC day; the 6th returns 402.
+# Then settle in mock mode:
 curl -H "X-PAYMENT: mock:3fNDHnonA7xWsvLFkMoBmvSMCwcfvgjvT9PNdP6hLtGr" \
   "http://127.0.0.1:8787/v1/docs/lookup?library=react&q=useState"
 ```
