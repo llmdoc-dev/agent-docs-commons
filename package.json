@@ -22,7 +22,8 @@
     "deploy": "wrangler deploy",
     "d1:migrate": "wrangler d1 migrations apply llmdocs --remote",
     "d1:seed": "tsx scripts/seed-d1.ts",
-    "cf-typegen": "wrangler types"
+    "cf-typegen": "wrangler types",
+    "measure-tokens": "tsx scripts/measure-tokens.ts"
   },
   "devDependencies": {
     "@solana/spl-token": "^0.4.15",
