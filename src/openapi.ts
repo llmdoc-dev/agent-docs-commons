@@ -51,6 +51,14 @@ export function buildOpenApi(cfg: AppConfig): Record<string, unknown> {
       "/sitemap.xml": {
         get: { summary: "Public URL list", responses: { "200": { description: "XML" } } },
       },
+      "/v1/stats": {
+        get: {
+          summary: "Public aggregate usage stats",
+          description:
+            "Totals and daily series for lookups, revenue, ledger buckets, referrals, contributions, and payouts. No IP addresses, identity hashes, or individual payer wallets are included. Main-wallet balances are read from a public Solana RPC.",
+          responses: { "200": { description: "Aggregate-only JSON" } },
+        },
+      },
       "/v1/docs/libraries": {
         get: {
           summary: "List seeded and contributed libraries",

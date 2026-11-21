@@ -13,3 +13,6 @@ worker-configuration.d.ts
 # Payout run logs may include public addresses and tx ids; keep them off git.
 payout-logs/*.json
 payout-logs/*.jsonl
+
+# Local stats snapshots may include public traffic numbers.
+stats-snapshots/

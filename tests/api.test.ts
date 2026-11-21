@@ -313,4 +313,27 @@ describe("HTTP API", () => {
     expect(String(referrals.body)).toContain("X-Llmdocs-Ref");
   });
 
+  it("serves aggregate-only /v1/stats and documents it in OpenAPI", async () => {
+    const res = await http("/v1/stats");
+    expect(res.status).toBe(200);
+    const body = res.body as {
+      timezone: string;
+      lookups: { total: number; paid: number; uniquePayers: number };
+      contributions: { libraries: number };
+      wallet: { error: string | null };
+      directories: Array<{ name: string }>;
+    };
+    expect(body.timezone).toBe("America/Phoenix");
+    expect(body.lookups.paid).toBeGreaterThanOrEqual(1);
+    expect(body.lookups.uniquePayers).toBeGreaterThanOrEqual(1);
+    expect(body.contributions.libraries).toBeGreaterThanOrEqual(23);
+    expect(body.directories.some((d) => d.name === "PayAI Bazaar")).toBe(true);
+    expect(body.wallet.error).toBe("skipped_in_non_mainnet");
+    const json = JSON.stringify(body);
+    expect(json).not.toMatch(/payer_wallet|identity_key|content_hash|private_key/);
+    expect(json).not.toContain(PAYER);
+    const spec = await http("/openapi.json");
+    expect(JSON.stringify(spec.body)).toContain("/v1/stats");
+  });
+
 });

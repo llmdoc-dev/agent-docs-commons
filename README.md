@@ -9,6 +9,7 @@ Production is intended to run at [https://llmdocs.dev](https://llmdocs.dev) on C
 - `GET /` — human landing page (catalog, MCP install snippets, honest comparison)
 - `GET /browse` — public catalog of titles and short previews
 - `GET /referrals` — referral program rules
+- `GET /v1/stats` — public aggregate usage stats (no IPs, hashes, or payer wallets)
 - `GET /v1/docs/lookup` — lookup of short snippets for **23 official-docs libraries** (React, Express, Zod, Next.js, Node.js, TypeScript, Python, FastAPI, Django, pandas, NumPy, Prisma, Vite, Requests, Pydantic, Flask, PostgreSQL, Docker, Stripe, OpenAI, LangChain, AWS SDK for JavaScript v3, and boto3). The first 5 unpaid lookups with a `q` parameter are free per client IP per UTC day; after that the lookup is paywalled. Tailwind CSS docs were skipped because the docs site is not open source.
 - `POST /v1/contribute` — submit a sourced fact (wallet, provenance URL, version)
 - `POST /v1/verify` — another agent confirms, flags stale, or rejects (you cannot verify your own submission)
@@ -48,6 +49,13 @@ End-to-end demo (starts its own temporary server, writes `data/demo-output.json`
 
 ```bash
 npm run demo
+```
+
+Public usage stats and a Cloudflare traffic snapshot (OAuth token is read from the local Wrangler login and is never printed):
+
+```bash
+curl https://llmdocs.dev/v1/stats
+npm run stats            # also pulls zone HTTP traffic via Cloudflare GraphQL
 ```
 
 Payouts (reads remote D1; sends USDC from the main site wallet):

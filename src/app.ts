@@ -52,6 +52,7 @@ import {
   unlockHeldReferralLines,
 } from "./referrals.ts";
 import { TRIAL_RULES_TEXT, consumeFreeLookup } from "./trial.ts";
+import { buildStats, walletForConfig } from "./stats.ts";
 
 export { seedIfEmpty, seedOfficialSnippets };
 
@@ -125,6 +126,11 @@ async function route(cfg: AppConfig, db: Db, req: Request, url: URL): Promise<Re
     return handleMcp(cfg, db, req, url, (inner) =>
       route(cfg, db, inner, new URL(inner.url)).then((r) => r ?? jsonResponse(404, { error: "not_found" })),
     );
+  }
+  if (method === "GET" && path === "/v1/stats") {
+    const wallet = await walletForConfig(cfg);
+    const stats = await buildStats(db, cfg, wallet);
+    return jsonResponse(200, stats, { "Cache-Control": "no-store" });
   }
   if (method === "GET" && path === "/v1/docs/libraries") {
     return jsonResponse(200, { libraries: await listLibraries(db) });

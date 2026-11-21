@@ -15,6 +15,7 @@
     "demo": "tsx scripts/demo.ts",
     "payout": "tsx scripts/payout.ts",
     "payout:dry-run": "tsx scripts/payout.ts --dry-run",
+    "stats": "tsx scripts/stats.ts",
     "seed": "tsx scripts/seed.ts",
     "typecheck": "tsc --noEmit",
     "deploy": "wrangler deploy",
