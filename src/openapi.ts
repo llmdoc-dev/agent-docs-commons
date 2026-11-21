@@ -25,7 +25,10 @@ export function buildOpenApi(cfg: AppConfig): Record<string, unknown> {
     servers: [{ url: cfg.publicBaseUrl }],
     paths: {
       "/": {
-        get: { summary: "Human landing page", responses: { "200": { description: "HTML" } } },
+        get: { summary: "Human landing page with a public catalog of titles", responses: { "200": { description: "HTML" } } },
+      },
+      "/browse": {
+        get: { summary: "Human-readable catalog of snippet titles and short previews", responses: { "200": { description: "HTML" } } },
       },
       "/health": {
         get: { summary: "Liveness and payment mode", responses: { "200": { description: "OK" } } },

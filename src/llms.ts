@@ -21,6 +21,7 @@ Payment: unpaid lookups return HTTP 402 with a PAYMENT-REQUIRED header and a JSO
 - [x402 discovery](${cfg.publicBaseUrl}/.well-known/x402): Payment requirements and paid endpoints
 - [Lookup](${cfg.publicBaseUrl}/v1/docs/lookup?library=react&q=useState): Paid snippet search
 - [Libraries](${cfg.publicBaseUrl}/v1/docs/libraries): What is already in the commons
+- [Browse](${cfg.publicBaseUrl}/browse): Human-readable catalog of titles, short previews, source, and status (free; full bodies stay paid)
 - [MCP](${cfg.publicBaseUrl}/mcp): Remote MCP JSON-RPC endpoint
 - [robots.txt](${cfg.publicBaseUrl}/robots.txt) and [sitemap](${cfg.publicBaseUrl}/sitemap.xml)
 - [PayAI Bazaar](https://facilitator.payai.network/discovery/resources?payTo=${cfg.payTo}): Facilitator discovery catalog

@@ -83,6 +83,7 @@ export function sitemapXml(publicBaseUrl: string): string {
   const origin = publicBaseUrl.replace(/\/+$/, "");
   const urls = [
     "/",
+    "/browse",
     "/llms.txt",
     "/openapi.json",
     "/.well-known/x402",

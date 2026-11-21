@@ -227,4 +227,60 @@ describe("HTTP API", () => {
     expect(body.accepts[0]!.asset).toBe(USDC_MINT_DEVNET);
   });
 
+  it("lists library titles on the homepage and short previews on /browse, without paid bodies", async () => {
+    const home = await http("/");
+    expect(home.status).toBe(200);
+    const homeHtml = String(home.body);
+    expect(homeHtml).toContain("What's inside");
+    expect(homeHtml).toContain("$0.01");
+    expect(homeHtml).toMatch(/full answers are paid via x402/i);
+    expect(homeHtml).toContain('href="/browse"');
+    expect(homeHtml).toContain("React");
+    expect(homeHtml).toContain("Django");
+    expect(homeHtml).toContain("useState declares a state variable");
+    expect(homeHtml).not.toContain("Set isolationLevel when you need a stricter isolation mode");
+    expect(homeHtml).not.toContain("The setter replaces the previous value; passing an updater function receives the pending state.");
+
+    const browse = await http("/browse");
+    expect(browse.status).toBe(200);
+    const browseHtml = String(browse.body);
+    expect(browseHtml).toContain("React");
+    expect(browseHtml).toContain("Django");
+    expect(browseHtml).toContain("useState declares a state variable");
+    expect(browseHtml).toContain("house");
+    expect(browseHtml).toContain("verified");
+    expect(browseHtml).toContain("useState is a React Hook");
+    expect(browseHtml).not.toContain("The setter replaces the previous value; passing an updater function receives the pending state.");
+    expect(browseHtml).not.toContain("Set isolationLevel when you need a stricter isolation mode");
+
+    const pendingTitle = "useImperativeHandle exposes a handle to a parent";
+    const pendingBody =
+      "useImperativeHandle customizes the handle exposed to parent components when using ref. This catalog test body is long enough that a 120-character preview cannot include the secret paid tail UNIQUE_PENDING_TAIL_TOKEN.";
+    const submit = await http("/v1/contribute", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        wallet: AGENT_A,
+        library: "react",
+        libraryVersion: "19.0",
+        title: pendingTitle,
+        body: pendingBody,
+        sourceUrl: "https://react.dev/reference/react/useImperativeHandle",
+        license: "CC-BY-4.0",
+      }),
+    });
+    expect(submit.status).toBe(201);
+    const after = String((await http("/browse")).body);
+    expect(after).toContain(pendingTitle);
+    expect(after).toContain("contributed");
+    expect(after).toContain("pending");
+    expect(after).not.toContain("UNIQUE_PENDING_TAIL_TOKEN");
+    expect(String((await http("/")).body)).toContain(pendingTitle);
+
+    const sitemap = String((await http("/sitemap.xml")).body);
+    expect(sitemap).toContain("/browse");
+    const llms = String((await http("/llms.txt")).body);
+    expect(llms).toContain("/browse");
+  });
+
 });

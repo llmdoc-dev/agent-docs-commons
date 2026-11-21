@@ -35,7 +35,7 @@ import { checkSnippetFields, checkSourceUrl, contentHash, isSolanaAddress } from
 import { rankSnippets, selectForAnswer } from "./search.ts";
 import { buildOpenApi } from "./openapi.ts";
 import { buildLlmsTxt } from "./llms.ts";
-import { landingHtml } from "./landing.ts";
+import { browseHtml, landingHtml, loadPublicCatalog } from "./catalog.ts";
 import { handleMcp } from "./mcp-http.ts";
 import { seedIfEmpty, seedOfficialSnippets } from "./seed-data.ts";
 import { lookupResourceUrl, robotsTxt, sitemapXml } from "./bazaar.ts";
@@ -73,7 +73,10 @@ async function route(cfg: AppConfig, db: Db, req: Request, url: URL): Promise<Re
   const method = req.method ?? "GET";
 
   if (method === "GET" && path === "/") {
-    return textResponse(200, "text/html; charset=utf-8", landingHtml(cfg));
+    return textResponse(200, "text/html; charset=utf-8", landingHtml(cfg, await loadPublicCatalog(db)));
+  }
+  if (method === "GET" && path === "/browse") {
+    return textResponse(200, "text/html; charset=utf-8", browseHtml(cfg, await loadPublicCatalog(db)));
   }
   if (method === "GET" && path === "/health") {
     return jsonResponse(200, {
