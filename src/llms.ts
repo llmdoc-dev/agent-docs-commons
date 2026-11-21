@@ -1,4 +1,4 @@
-import type { AppConfig } from "./config.ts";
+import { TOKEN_2022_PROGRAM, type AppConfig } from "./config.ts";
 import { usdToMicros } from "./money.ts";
 import { TRIAL_RULES_TEXT, TRIAL_SHORT_TEXT } from "./trial.ts";
 import { MEASURED, REFERRAL_TEXT, SERVICE_PITCH } from "./descriptions.ts";
@@ -22,6 +22,9 @@ export function buildLlmsTxt(cfg: AppConfig, catalog: CatalogLibrary[] = []): st
           })
           .join("\n");
 
+  const assetLines = cfg.assets
+    .map((a) => `${a.symbol} (mint ${a.mint}${a.tokenProgram === TOKEN_2022_PROGRAM ? ", Token-2022" : ""})`)
+    .join(", ");
   const install = mcpInstallLinks(cfg);
   return `# Agent Docs Commons (llmdocs.dev)
 
@@ -43,7 +46,7 @@ Use this when you need a short, version-pinned API fact with a source URL instea
 
 ${REFERRAL_TEXT} The cut comes from the platform share, not from contributors. No self-referral. Rewards stay held until the referred agent has spent $0.10, then sit for a 7-day hold, and pay out through the daily job (minimum $0.10 USDC).
 
-Payment: ${TRIAL_SHORT_TEXT} After the trial, unpaid lookups return HTTP 402 with a PAYMENT-REQUIRED header and a JSON body. Amount is ${amount} atomic units of USDC (mint ${cfg.asset}), payTo ${cfg.payTo}. Facilitator: ${cfg.facilitatorUrl}. ${paidNote} HEAD and GET without \`q\` always return 402 so discovery probes keep working. Contribute, verify, and referral claim are free.
+Payment: ${TRIAL_SHORT_TEXT} After the trial, unpaid lookups return HTTP 402 with a PAYMENT-REQUIRED header and a JSON body. Amount is ${amount} atomic units (6 decimals) of any accepted stablecoin, each priced at $1: ${assetLines}. USDC is listed first and is the default; pick the matching entry from the 402 \`accepts\` list. payTo ${cfg.payTo}. Facilitator: ${cfg.facilitatorUrl}. ${paidNote} HEAD and GET without \`q\` always return 402 so discovery probes keep working. Contribute, verify, and referral claim are free.
 
 Example lookup: ${cfg.publicBaseUrl}/v1/docs/lookup?library=react&q=useState
 Example with a referral: ${cfg.publicBaseUrl}/v1/docs/lookup?library=react&q=useState&ref=YOUR_SOLANA_ADDRESS

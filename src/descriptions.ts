@@ -14,7 +14,9 @@ export const MEASURED = {
   httpJsonMedianTokens: 703,
 };
 
-export const PRICE_TEXT = "$0.01 USDC per lookup via x402 on Solana";
+export const PRICE_TEXT = "$0.01 per lookup via x402 on Solana, in USDC, PYUSD, or USDT";
+/** Stablecoins accepted at $1 each; USDC is the default first option in every 402 challenge. */
+export const ASSETS_TEXT = "USDC (default), PYUSD, or USDT on Solana, each at $1";
 export const FREE_TEXT = "20 free lookups on a client's first day, then 5 free per day";
 export const REFERRAL_TEXT =
   "Referral program: put your Solana address in ?ref= (or the X-Llmdocs-Ref header) on a new agent's lookups and earn 10% of that agent's paid spend for 180 days, up to $10 per referred agent, paid in USDC from the platform share. Rules: https://llmdocs.dev/referrals";
@@ -49,8 +51,8 @@ export const MCP_INSTRUCTIONS = [
 
 /** Max 100 characters (Official MCP Registry limit). */
 export const REGISTRY_DESCRIPTION =
-  "Version-pinned dev docs for agents. $0.01 USDC/lookup via x402, free daily trial, 10% referrals.";
+  "Version-pinned dev docs for agents. $0.01/lookup in USDC, PYUSD or USDT via x402. 10% referrals.";
 
 /** Resource description used in 402 challenges and x402 Bazaar / discovery listings. */
 export const BAZAAR_DESCRIPTION =
-  `Current, version-pinned developer docs for AI agents: 1–3 cited snippets per question (median ~${MEASURED.mcpAnswerMedianTokens} tokens as MCP text). No API key. $0.01 USDC per lookup, 20 free on a client's first day then 5/day. Referrers earn 10% for 180 days (cap $10).`;
+  `Current, version-pinned developer docs for AI agents: 1–3 cited snippets per question (median ~${MEASURED.mcpAnswerMedianTokens} tokens as MCP text). No API key. $0.01 per lookup in USDC, PYUSD, or USDT on Solana, 20 free on a client's first day then 5/day. Referrers earn 10% for 180 days (cap $10).`;

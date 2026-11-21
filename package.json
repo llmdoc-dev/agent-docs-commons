@@ -23,7 +23,9 @@
     "d1:migrate": "wrangler d1 migrations apply llmdocs --remote",
     "d1:seed": "tsx scripts/seed-d1.ts",
     "cf-typegen": "wrangler types",
-    "measure-tokens": "tsx scripts/measure-tokens.ts"
+    "measure-tokens": "tsx scripts/measure-tokens.ts",
+    "swap-usdt": "tsx scripts/swap-usdt.ts",
+    "swap-usdt:dry-run": "tsx scripts/swap-usdt.ts --dry-run"
   },
   "devDependencies": {
     "@solana/spl-token": "^0.4.15",

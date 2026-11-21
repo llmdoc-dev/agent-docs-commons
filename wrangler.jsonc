@@ -27,6 +27,7 @@
     "X402_NETWORK": "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
     "FACILITATOR_URL": "https://facilitator.payai.network",
     "PRICE_LOOKUP_USD": "0.01",
+    "X402_ASSETS": "USDC,PYUSD,USDT",
     "PUBLIC_BASE_URL": "https://llmdocs.dev",
     "OWNER_PAYOUT_ADDRESS": "7vUCMQL5U5RtyLskFrrW7L5i7YV4pTtqg72qG87BoxSB"
   }

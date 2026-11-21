@@ -1,4 +1,4 @@
-import type { AppConfig } from "./config.ts";
+import { acceptedAssetsPublic, type AppConfig } from "./config.ts";
 import { MCP_INSTRUCTIONS, SERVICE_PITCH } from "./descriptions.ts";
 import { MCP_SERVER_VERSION, TOOLS } from "./mcp-http.ts";
 
@@ -17,6 +17,7 @@ export function serverCard(cfg: AppConfig): Record<string, unknown> {
       scheme: "exact",
       network: cfg.network,
       asset: cfg.asset,
+      assets: acceptedAssetsPublic(cfg).map((a) => ({ symbol: a.symbol, mint: a.mint, tokenProgram: a.tokenProgram, default: a.default })),
       priceUsd: cfg.priceLookupUsd,
       discovery: `${cfg.publicBaseUrl}/.well-known/x402`,
     },

@@ -1,4 +1,4 @@
-import type { AppConfig } from "./config.ts";
+import { acceptedAssetsSentence, type AppConfig } from "./config.ts";
 import { MEASURED, REFERRAL_SHORT, REFERRAL_TEXT, SERVICE_PITCH } from "./descriptions.ts";
 
 export function buildOpenApi(cfg: AppConfig): Record<string, unknown> {
@@ -9,7 +9,7 @@ export function buildOpenApi(cfg: AppConfig): Record<string, unknown> {
     description:
       cfg.paymentMode === "mock"
         ? "Local/test mock settlement: mock:<solana-address>. A 402 response describes the x402 v2 requirement."
-        : "x402 v2 PAYMENT-SIGNATURE (or X-PAYMENT) for Solana USDC.",
+        : `x402 v2 PAYMENT-SIGNATURE (or X-PAYMENT) on Solana, paying ${acceptedAssetsSentence(cfg)} (each at $1; pick one entry from the 402 accepts list).`,
     schema: { type: "string" },
   };
   return {
@@ -20,7 +20,7 @@ export function buildOpenApi(cfg: AppConfig): Record<string, unknown> {
       description: `${SERVICE_PITCH} Measured answer size: median ~${MEASURED.mcpAnswerMedianTokens} tokens as MCP text, ~${MEASURED.httpJsonMedianTokens} tokens as full HTTP JSON (${MEASURED.tokenizer}, ${MEASURED.sampleQueries} typical queries, ${MEASURED.date}). ${REFERRAL_TEXT} Contributors earn 60% of each paid lookup fee that uses their verified facts. Honest note: per call this is not cheaper than Context7, Tavily, Exa, or Perplexity; the pitch is short version-pinned answers, no API key, and pay-per-use.`,
       contact: { email: "dyvnkcxp@mail.grokbot.com", url: cfg.publicBaseUrl },
       "x-guidance":
-        "Start at /llms.txt or /v1/docs/libraries. GET /v1/docs/lookup?library=<slug>&q=<question>: the first 20 unpaid lookups on a client's first UTC day are free, then 5 per day; after that it returns HTTP 402 (x402 v2 exact, USDC on Solana). Retry with a PAYMENT-SIGNATURE header. Add ref=<your Solana address> to earn 10% of a referred agent's spend. Contribute and verify are free. No API keys.",
+        "Start at /llms.txt or /v1/docs/libraries. GET /v1/docs/lookup?library=<slug>&q=<question>: the first 20 unpaid lookups on a client's first UTC day are free, then 5 per day; after that it returns HTTP 402 (x402 v2 exact on Solana; accepts USDC (default), PYUSD, or USDT at $1 each). Retry with a PAYMENT-SIGNATURE header. Add ref=<your Solana address> to earn 10% of a referred agent's spend. Contribute and verify are free. No API keys.",
       "x-referral-program": { share: 0.1, windowDays: 180, capUsdPerReferredAgent: 10, rules: `${cfg.publicBaseUrl}/referrals` },
     },
     servers: [{ url: cfg.publicBaseUrl }],
@@ -121,21 +121,21 @@ export function buildOpenApi(cfg: AppConfig): Record<string, unknown> {
             },
           ],
           "x-payment-info": {
-            protocols: [
-              {
-                name: "x402",
-                version: 2,
-                scheme: "exact",
-                network: cfg.network,
-                asset: cfg.asset,
-                payTo: cfg.payTo,
-                amount: String(Math.round(cfg.priceLookupUsd * 1_000_000)),
-                currency: "USDC",
-                facilitator: cfg.facilitatorUrl,
-              },
-            ],
+            protocols: cfg.assets.map((a) => ({
+              name: "x402",
+              version: 2,
+              scheme: "exact",
+              network: cfg.network,
+              asset: a.mint,
+              payTo: cfg.payTo,
+              amount: String(Math.round(cfg.priceLookupUsd * 1_000_000)),
+              currency: a.symbol,
+              tokenProgram: a.tokenProgram,
+              facilitator: cfg.facilitatorUrl,
+            })),
             fixed: cfg.priceLookupUsd,
-            currency: "USDC",
+            currency: "USD",
+            acceptedCurrencies: cfg.assets.map((a) => a.symbol),
           },
           responses: {
             "200": {
@@ -189,15 +189,14 @@ export function buildOpenApi(cfg: AppConfig): Record<string, unknown> {
                           description: "Documentation lookup",
                           mimeType: "application/json",
                         },
-                        accepts: [
-                          {
-                            scheme: "exact",
-                            network: cfg.network,
-                            amount: "10000",
-                            asset: cfg.asset,
-                            payTo: cfg.payTo,
-                          },
-                        ],
+                        accepts: cfg.assets.map((a) => ({
+                          scheme: "exact",
+                          network: cfg.network,
+                          amount: "10000",
+                          asset: a.mint,
+                          payTo: cfg.payTo,
+                          extra: { name: a.symbol, decimals: a.decimals },
+                        })),
                         facilitator: { url: cfg.facilitatorUrl },
                       },
                     },

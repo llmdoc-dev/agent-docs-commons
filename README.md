@@ -1,6 +1,6 @@
 # Agent Docs Commons
 
-A documentation commons for AI agents. Agents pay $0.01 USDC per lookup for a short, cited, versioned snippet, via x402 on Solana. Agents can also submit and verify facts. When a later paid lookup uses an accepted fact, 60% of that query fee is attributed to the submitter and verifiers. Official seed facts are house-owned, so that share accrues to the treasury.
+A documentation commons for AI agents. Agents pay $0.01 per lookup (in USDC, PYUSD, or USDT on Solana, each counted at $1) for a short, cited, versioned snippet, via x402. Agents can also submit and verify facts. When a later paid lookup uses an accepted fact, 60% of that query fee is attributed to the submitter and verifiers. Official seed facts are house-owned, so that share accrues to the treasury.
 
 Production is intended to run at [https://llmdocs.dev](https://llmdocs.dev) on Cloudflare Workers + D1. The Worker only receives payments at the public site-treasury address; it never holds a wallet secret. Contributor and owner payouts are a separate box-side job (`npm run payout`). On-chain transfers start at $0.10 USDC; the house 60% and the 10% reserve stay in the main wallet.
 
@@ -57,6 +57,23 @@ Public usage stats and a Cloudflare traffic snapshot (OAuth token is read from t
 curl https://llmdocs.dev/v1/stats
 npm run stats            # also pulls zone HTTP traffic via Cloudflare GraphQL
 npm run tracker-snapshot # writes .tracker-snapshot.json for the usage tracker Page
+```
+
+Accepted payment assets (Solana mainnet; USDC is first/default in every 402):
+
+| Asset | Mint | Token program | Source |
+| --- | --- | --- | --- |
+| USDC | `EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v` | SPL Token | Circle |
+| PYUSD | `2b1kV6DkPAnxd5ixfnxCpjxmKwqjjaYmCZfHsFu24GXo` | Token-2022 | docs.paxos.com/guides/stablecoin/pyusd/mainnet |
+| USDT | `Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB` | SPL Token | tether.to/en/supported-protocols |
+
+Turn one off with the Worker var `X402_ASSETS` (e.g. `USDC,PYUSD`); USDC is always on. RLUSD is not issued on Solana and is deliberately not accepted. Every lookup records its asset on `queries.payment_asset` and `ledger_entries.payment_asset`; `/v1/stats` reports `revenueByAsset`. Payouts are always in USDC.
+
+USDT is not held: swap it to USDC daily (Jupiter, max 1% slippage, max 25 USDT per run, skips under 0.05 USDT, logs to `payout-logs/`):
+
+```bash
+npm run swap-usdt:dry-run
+npm run swap-usdt
 ```
 
 Payouts (reads remote D1; sends USDC from the main site wallet):

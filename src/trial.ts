@@ -131,7 +131,7 @@ export async function consumeFreeLookup(
 }
 
 export const TRIAL_SHORT_TEXT =
-  "Free trial: 20 unpaid lookups on a client's first UTC day, then 5 per UTC day (per hashed client IP). Then $0.01 USDC via x402.";
+  "Free trial: 20 unpaid lookups on a client's first UTC day, then 5 per UTC day (per hashed client IP). Then $0.01 via x402 (USDC, PYUSD, or USDT on Solana).";
 
 export const TRIAL_RULES_TEXT =
   "Free trial: a client seen for the first time gets 20 unpaid GET /v1/docs/lookup requests (with a q parameter) on its first UTC day; after that it is 5 per UTC day. Clients are counted per hashed IP (CF-Connecting-IP, then X-Forwarded-For; IPv6 grouped by /64). First-day bonus lookups come from a shared daily pool, and when it runs out new clients get the normal 5. HEAD and the canonical lookup URL without q always return HTTP 402 so payment discovery probes keep working. After the daily quota, unpaid lookups return 402 as usual. Paid requests with a PAYMENT-SIGNATURE do not consume the trial.";

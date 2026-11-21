@@ -84,7 +84,8 @@ CREATE TABLE IF NOT EXISTS queries (
   fee_micros INTEGER NOT NULL,
   payment_mode TEXT NOT NULL,
   settlement_tx TEXT,
-  created_at TEXT NOT NULL
+  created_at TEXT NOT NULL,
+  payment_asset TEXT
 );
 CREATE TABLE IF NOT EXISTS query_facts (
   query_id TEXT NOT NULL,
@@ -105,6 +106,7 @@ CREATE TABLE IF NOT EXISTS ledger_entries (
   payout_tx TEXT,
   payout_run_id TEXT,
   paid_at TEXT,
+  payment_asset TEXT,
   FOREIGN KEY (query_id) REFERENCES queries(id)
 );
 CREATE TABLE IF NOT EXISTS payout_runs (
@@ -117,7 +119,8 @@ CREATE TABLE IF NOT EXISTS settled_payments (
   id TEXT PRIMARY KEY,
   payer_wallet TEXT,
   transaction_sig TEXT,
-  created_at TEXT NOT NULL
+  created_at TEXT NOT NULL,
+  asset TEXT
 );
 CREATE TABLE IF NOT EXISTS referral_attributions (
   payer_wallet TEXT PRIMARY KEY,
@@ -140,6 +143,13 @@ CREATE INDEX IF NOT EXISTS idx_ledger_wallet ON ledger_entries(wallet);
 CREATE INDEX IF NOT EXISTS idx_referral_referrer ON referral_attributions(referrer_wallet);
 `;
 
+async function addColumnIfMissing(db: Db, table: string, column: string): Promise<void> {
+  const cols = await db.all(`PRAGMA table_info(${table})`);
+  if (cols.length > 0 && !cols.some((c) => String(c.name) === column)) {
+    await db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} TEXT`);
+  }
+}
+
 export async function migrate(db: Db): Promise<void> {
   await db.exec(SCHEMA_SQL);
   const cols = await db.all(`PRAGMA table_info(snippets)`);
@@ -157,6 +167,9 @@ export async function migrate(db: Db): Promise<void> {
     }
   }
   await db.exec("CREATE INDEX IF NOT EXISTS idx_ledger_status ON ledger_entries(status)");
+  await addColumnIfMissing(db, "queries", "payment_asset");
+  await addColumnIfMissing(db, "ledger_entries", "payment_asset");
+  await addColumnIfMissing(db, "settled_payments", "asset");
   await db.exec(
     `CREATE TABLE IF NOT EXISTS referral_attributions (
       payer_wallet TEXT PRIMARY KEY,
@@ -361,13 +374,15 @@ export async function recordQuery(
     paymentMode: string;
     snippetIds: string[];
     settlementTx?: string | null;
+    /** Mint of the stablecoin that paid (null for free lookups). */
+    paymentAsset?: string | null;
   },
 ): Promise<string> {
   const id = newId();
   const createdAt = nowIso();
   await db.run(
-    `INSERT INTO queries (id, payer_wallet, library, question, fee_micros, payment_mode, settlement_tx, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO queries (id, payer_wallet, library, question, fee_micros, payment_mode, settlement_tx, created_at, payment_asset)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     id,
     input.payerWallet,
     input.library,
@@ -376,6 +391,7 @@ export async function recordQuery(
     input.paymentMode,
     input.settlementTx ?? null,
     createdAt,
+    input.paymentAsset ?? null,
   );
   for (const snippetId of input.snippetIds) {
     await db.run(`INSERT INTO query_facts (query_id, snippet_id) VALUES (?, ?)`, id, snippetId);
@@ -391,13 +407,14 @@ export async function insertLedgerLines(
   db: Db,
   queryId: string,
   lines: { wallet: string; role: string; snippetId: string | null; amountMicros: number; status?: string }[],
+  paymentAsset: string | null = null,
 ): Promise<void> {
   const createdAt = nowIso();
   for (const line of lines) {
     const status = line.status ?? (line.role === "referral" ? "held" : "pending");
     await db.run(
-      `INSERT INTO ledger_entries (id, query_id, snippet_id, wallet, role, amount_micros, status, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO ledger_entries (id, query_id, snippet_id, wallet, role, amount_micros, status, created_at, payment_asset)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       newId(),
       queryId,
       line.snippetId,
@@ -406,6 +423,7 @@ export async function insertLedgerLines(
       line.amountMicros,
       status,
       createdAt,
+      paymentAsset,
     );
   }
 }
@@ -484,14 +502,15 @@ export async function findSettledPayment(
 
 export async function recordSettledPayment(
   db: Db,
-  input: { id: string; payerWallet: string | null; transactionSig: string | null },
+  input: { id: string; payerWallet: string | null; transactionSig: string | null; asset?: string | null },
 ): Promise<void> {
   await db.run(
-    `INSERT OR IGNORE INTO settled_payments (id, payer_wallet, transaction_sig, created_at) VALUES (?, ?, ?, ?)`,
+    `INSERT OR IGNORE INTO settled_payments (id, payer_wallet, transaction_sig, created_at, asset) VALUES (?, ?, ?, ?, ?)`,
     input.id,
     input.payerWallet,
     input.transactionSig,
     nowIso(),
+    input.asset ?? null,
   );
 }
 

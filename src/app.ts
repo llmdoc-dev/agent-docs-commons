@@ -1,4 +1,4 @@
-import type { AppConfig } from "./config.ts";
+import { acceptedAssetsPublic, assetSymbolForMint, type AppConfig } from "./config.ts";
 import type { Db } from "./db.ts";
 import {
   bumpReputation,
@@ -135,6 +135,7 @@ async function route(cfg: AppConfig, db: Db, req: Request, url: URL): Promise<Re
       paymentMode: cfg.paymentMode,
       network: cfg.network,
       asset: cfg.asset,
+      assets: acceptedAssetsPublic(cfg),
       payTo: cfg.payTo,
       priceLookupUsd: cfg.priceLookupUsd,
       facilitator: cfg.facilitatorUrl,
@@ -263,10 +264,14 @@ async function wellKnownX402(cfg: AppConfig, url: URL): Promise<Response> {
         priceUsd: cfg.priceLookupUsd,
         amount: challenge.accepts[0]!.amount,
         asset: cfg.asset,
+        assets: challenge.accepts.map((a) => ({ symbol: a.extra.name, asset: a.asset, amount: a.amount })),
         network: cfg.network,
         payTo: cfg.payTo,
       },
     ],
+    acceptedAssets: acceptedAssetsPublic(cfg),
+    assetNote:
+      "Every asset is priced at $1, so a lookup costs 10000 atomic units (6 decimals) of whichever you pick. USDC is listed first and is the default. Contributor, owner, and referral payouts are paid in USDC.",
     origin: url.origin,
   });
 }
@@ -318,6 +323,7 @@ async function lookupDocs(cfg: AppConfig, db: Db, req: Request, url: URL): Promi
         id: gate.payment.paymentId,
         payerWallet: gate.payment.payerWallet,
         transactionSig: gate.payment.transaction ?? null,
+        asset: gate.payment.asset ?? cfg.asset,
       });
     }
   }
@@ -342,7 +348,7 @@ async function fulfillLookup(
     library?: string;
     version?: string;
     kind: "free" | "paid";
-    payment?: { mode: "mock" | "x402"; payerWallet: string | null; transaction?: string | null; alreadySettled?: boolean };
+    payment?: { mode: "mock" | "x402"; payerWallet: string | null; transaction?: string | null; alreadySettled?: boolean; asset?: string };
     remainingFreeLookups?: number;
     responseHeaders: Record<string, string>;
   },
@@ -441,8 +447,9 @@ async function fulfillLookup(
       paymentMode: payment.mode,
       snippetIds: payoutFacts.map((f) => f.snippetId),
       settlementTx: payment.transaction ?? null,
+      paymentAsset: payment.asset ?? cfg.asset,
     });
-    await insertLedgerLines(db, queryId, payoutLines);
+    await insertLedgerLines(db, queryId, payoutLines, payment.asset ?? cfg.asset);
     if (payment.payerWallet) {
       const referralLine = payoutLines.find((l) => l.role === "referral");
       await markFirstPaidAndAccrual(db, {
@@ -485,6 +492,8 @@ async function fulfillLookup(
       payment: {
         mode: payment.mode,
         feeUsd: cfg.priceLookupUsd,
+        asset: assetSymbolForMint(payment.asset ?? cfg.asset),
+        assetMint: payment.asset ?? cfg.asset,
         payerWallet: payment.payerWallet,
         transaction: payment.transaction ?? null,
       },

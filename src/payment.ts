@@ -1,4 +1,4 @@
-import type { AppConfig } from "./config.ts";
+import { TOKEN_2022_PROGRAM, type AppConfig, type PaymentAsset } from "./config.ts";
 import { usdToMicros } from "./money.ts";
 import { isSolanaAddress } from "./quality.ts";
 import { lookupBazaarExtension } from "./bazaar.ts";
@@ -13,6 +13,8 @@ export type SettledPayment = {
   transaction?: string | null;
   paymentId?: string;
   alreadySettled?: boolean;
+  /** Mint of the asset the payer used (USDC, PYUSD, or USDT). */
+  asset?: string;
 };
 
 export type ResourceInfo = {
@@ -31,9 +33,11 @@ export type PaymentRequirements = {
   payTo: string;
   maxTimeoutSeconds: number;
   extra: {
-    name: "USDC";
+    name: string;
     feePayer?: string;
-    decimals: 6;
+    decimals: number;
+    /** Only set for Token-2022 mints (PYUSD) so clients derive the right token account. */
+    tokenProgram?: string;
   };
 };
 
@@ -79,25 +83,51 @@ export async function facilitatorFeePayer(cfg: AppConfig): Promise<string | unde
   }
 }
 
+function requirementFor(cfg: AppConfig, asset: PaymentAsset, priceUsd: number, feePayer: string | undefined): PaymentRequirements {
+  return {
+    scheme: "exact",
+    network: cfg.network,
+    amount: String(usdToMicros(priceUsd)),
+    asset: asset.mint,
+    payTo: cfg.payTo,
+    maxTimeoutSeconds: 60,
+    extra: {
+      name: asset.symbol,
+      decimals: asset.decimals,
+      ...(asset.tokenProgram === TOKEN_2022_PROGRAM ? { tokenProgram: asset.tokenProgram } : {}),
+      ...(feePayer ? { feePayer } : {}),
+    },
+  };
+}
+
+/** Every accepted payment option, default (USDC) first. All assets are priced at $1. */
+export async function buildRequirementsList(
+  cfg: AppConfig,
+  _resource: ResourceInfo,
+  priceUsd: number,
+): Promise<PaymentRequirements[]> {
+  const feePayer = await facilitatorFeePayer(cfg);
+  const assets = cfg.assets?.length ? cfg.assets : [];
+  if (assets.length === 0) {
+    return [
+      requirementFor(
+        cfg,
+        { symbol: "USDC", mint: cfg.asset, decimals: 6, tokenProgram: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", issuer: "Circle" },
+        priceUsd,
+        feePayer,
+      ),
+    ];
+  }
+  return assets.map((a) => requirementFor(cfg, a, priceUsd, feePayer));
+}
+
+/** The default (first) payment option. */
 export async function buildRequirements(
   cfg: AppConfig,
   resource: ResourceInfo,
   priceUsd: number,
 ): Promise<PaymentRequirements> {
-  const feePayer = await facilitatorFeePayer(cfg);
-  return {
-    scheme: "exact",
-    network: cfg.network,
-    amount: String(usdToMicros(priceUsd)),
-    asset: cfg.asset,
-    payTo: cfg.payTo,
-    maxTimeoutSeconds: 60,
-    extra: {
-      name: "USDC",
-      decimals: 6,
-      ...(feePayer ? { feePayer } : {}),
-    },
-  };
+  return (await buildRequirementsList(cfg, resource, priceUsd))[0]!;
 }
 
 export async function buildChallenge(
@@ -106,7 +136,7 @@ export async function buildChallenge(
   priceUsd: number,
   error = "PAYMENT-SIGNATURE header is required",
 ): Promise<PaymentRequired> {
-  const accepts = [await buildRequirements(cfg, resource, priceUsd)];
+  const accepts = await buildRequirementsList(cfg, resource, priceUsd);
   const challenge: PaymentRequired = {
     x402Version: 2,
     error,
@@ -289,6 +319,7 @@ async function callFacilitator(
 
 function requirementsCompatible(accepted: PaymentRequirements, expected: PaymentRequirements): boolean {
   return (
+    Boolean(accepted) &&
     accepted.scheme === expected.scheme &&
     accepted.network === expected.network &&
     accepted.asset === expected.asset &&
@@ -313,6 +344,7 @@ export async function requirePayment(
   if (cfg.paymentMode === "mock") {
     const settled = raw ? parseMock(raw.trim()) : null;
     if (settled) {
+      settled.asset = cfg.asset;
       return {
         ok: true,
         payment: settled,
@@ -340,8 +372,9 @@ export async function requirePayment(
     return { ok: false, response: paymentRequiredResponse(challenge, corsHeaders) };
   }
 
-  const expected = await buildRequirements(cfg, resource, opts.priceUsd);
-  if (!requirementsCompatible(payload.accepted, expected)) {
+  const options = await buildRequirementsList(cfg, resource, opts.priceUsd);
+  const expected = options.find((o) => requirementsCompatible(payload.accepted, o));
+  if (!expected) {
     const challenge = await buildChallenge(
       cfg,
       resource,
@@ -380,6 +413,7 @@ export async function requirePayment(
       rawHeader: raw,
       transaction,
       paymentId: await paymentIdFor(raw, payload, transaction),
+      asset: expected.asset,
     };
     const responseHeaders = {
       "PAYMENT-RESPONSE": encodePaymentResponseHeader({
@@ -387,6 +421,7 @@ export async function requirePayment(
         payer,
         transaction,
         network: cfg.network,
+        asset: expected.asset,
       }),
       ...corsHeaders,
     };

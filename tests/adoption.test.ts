@@ -107,7 +107,8 @@ describe("tool descriptions and discovery metadata", () => {
     expect(lookup.description).toBe(LOOKUP_TOOL_DESCRIPTION);
     expect(lookup.description).toContain(`about ${MEASURED.mcpAnswerMedianTokens} tokens`);
     expect(lookup.description).toMatch(/No API key/);
-    expect(lookup.description).toContain("$0.01 USDC");
+    expect(lookup.description).toContain("$0.01 per lookup");
+    expect(lookup.description).toMatch(/USDC, PYUSD, or USDT/);
     expect(lookup.description).toMatch(/20 free lookups on a client's first day, then 5 free per day/);
     expect(lookup.description).toMatch(/version-pinned/);
     expect(lookup.description).not.toMatch(/cheaper than/i);

@@ -19,3 +19,6 @@ stats-snapshots/
 
 # Combined tracker snapshot used to refresh the usage Page.
 .tracker-snapshot.json
+
+# USDT swap job lock and pending-signature state.
+payout-logs/.swap-usdt.lock

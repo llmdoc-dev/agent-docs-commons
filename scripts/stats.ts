@@ -193,7 +193,17 @@ async function main() {
   const file = join(dir, `${new Date().toISOString().replace(/[:.]/g, "-")}.json`);
   writeFileSync(file, JSON.stringify(snapshot, null, 2));
 
-  const site = snapshot.site as { lookups?: { total?: number; paid?: number; free?: number; revenueUsdc?: string; uniquePayers?: number }; wallet?: { usdc?: number; sol?: number } } | undefined;
+  const site = snapshot.site as {
+    lookups?: {
+      total?: number;
+      paid?: number;
+      free?: number;
+      revenueUsdc?: string;
+      uniquePayers?: number;
+      revenueByAsset?: Array<{ asset: string; paid: number; revenueUsd: string }>;
+    };
+    wallet?: { usdc?: number; pyusd?: number | null; usdt?: number | null; sol?: number };
+  } | undefined;
   const traffic = snapshot.traffic as { zoneRequests?: number; zoneUniquesPeak?: number; hours?: unknown[]; workerRequests?: number; workerErrors?: number } | undefined;
   console.log("llmdocs.dev stats snapshot");
   console.log(`timezone: America/Phoenix`);
@@ -204,7 +214,10 @@ async function main() {
     );
   }
   if (site?.wallet && site.wallet.usdc != null && site.wallet.sol != null) {
-    console.log(`main wallet: ${site.wallet.usdc} USDC, ${site.wallet.sol} SOL`);
+    console.log(`main wallet: ${site.wallet.usdc} USDC, ${site.wallet.pyusd ?? 0} PYUSD, ${site.wallet.usdt ?? 0} USDT, ${site.wallet.sol} SOL`);
+  }
+  if (site?.lookups?.revenueByAsset) {
+    console.log(`revenue by asset: ${site.lookups.revenueByAsset.map((r) => `${r.asset} ${r.revenueUsd} (${r.paid} paid)`).join(", ")}`);
   }
   if (snapshot.siteError) console.log(`site stats: ${snapshot.siteError}`);
   if (traffic) {

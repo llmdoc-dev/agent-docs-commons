@@ -71,12 +71,16 @@ function readWranglerToken(): string | null {
 
 const MAIN_WALLET = "EAJiExxSG5K3G4nnqeCZd1DmWMaK6CmisXi53yYa5SJJ";
 const MAIN_USDC_ATA = "HRrDNF7wbaX7yZEG52vzTt6JR4JDvPiUZB4wkn4pgBYB";
+const MAIN_PYUSD_ATA = "DYKf6yrv1aPrZKVpBZ8M5CFwUEirxxwxHWrgiphpCYZi";
+const MAIN_USDT_ATA = "GLgbqRQBS5gL4A6putusVqtoWARRqjCb381xmQaqs3uz";
 const BOX_RPC = "https://api.mainnet-beta.solana.com";
 
 async function fetchWalletFromPublicRpc(address: string): Promise<{
   address: string;
   sol: number;
   usdc: number;
+  pyusd: number | null;
+  usdt: number | null;
   source: string;
   fetchedAt: string;
   error: null;
@@ -95,28 +99,34 @@ async function fetchWalletFromPublicRpc(address: string): Promise<{
     body: JSON.stringify({
       jsonrpc: "2.0",
       id: 2,
-      method: "getAccountInfo",
-      params: [address === MAIN_WALLET ? MAIN_USDC_ATA : address, { encoding: "jsonParsed" }],
+      method: "getMultipleAccounts",
+      params: [address === MAIN_WALLET ? [MAIN_USDC_ATA, MAIN_PYUSD_ATA, MAIN_USDT_ATA] : [address], { encoding: "jsonParsed" }],
     }),
   });
   if (!solRes.ok || !tokenRes.ok) {
     throw new Error(`box_rpc_http_${solRes.status}_${tokenRes.status}`);
   }
   const solBody = (await solRes.json()) as { result?: { value?: number }; error?: { message?: string } };
+  type Parsed = { data?: { parsed?: { info?: { tokenAmount?: { amount: string; decimals: number } } } } } | null;
   const tokenBody = (await tokenRes.json()) as {
-    result?: { value?: { data?: { parsed?: { info?: { tokenAmount?: { amount: string; decimals: number } } } } } };
+    result?: { value?: Parsed[] };
     error?: { message?: string };
   };
   if (solBody.error || tokenBody.error) {
     throw new Error(solBody.error?.message ?? tokenBody.error?.message ?? "box_rpc_error");
   }
   const lamports = solBody.result?.value ?? 0;
-  const tokenAmount = tokenBody.result?.value?.data?.parsed?.info?.tokenAmount;
-  const usdc = tokenAmount ? Number(tokenAmount.amount) / 10 ** Number(tokenAmount.decimals) : 0;
+  const values = tokenBody.result?.value ?? [];
+  const amountOf = (v: Parsed | undefined): number => {
+    const t = v?.data?.parsed?.info?.tokenAmount;
+    return t ? Number(t.amount) / 10 ** Number(t.decimals) : 0;
+  };
   return {
     address,
     sol: lamports / 1_000_000_000,
-    usdc,
+    usdc: amountOf(values[0]),
+    pyusd: address === MAIN_WALLET ? amountOf(values[1]) : null,
+    usdt: address === MAIN_WALLET ? amountOf(values[2]) : null,
     source: BOX_RPC,
     fetchedAt: new Date().toISOString(),
     error: null,
@@ -240,9 +250,19 @@ function summarizeTraffic(data: unknown): TrafficSummary {
 
 function headlines(site: Record<string, unknown> | undefined, traffic: TrafficSummary | undefined) {
   const lookups = site?.lookups as
-    | { total?: number; paid?: number; free?: number; uniquePayers?: number; revenueUsdc?: string; ownerShareUsdc?: string }
+    | {
+        total?: number;
+        paid?: number;
+        free?: number;
+        uniquePayers?: number;
+        revenueUsdc?: string;
+        ownerShareUsdc?: string;
+        revenueByAsset?: Array<{ asset: string; paid: number; revenueUsd: string }>;
+      }
     | undefined;
-  const wallet = site?.wallet as { usdc?: number | null; sol?: number | null; address?: string } | undefined;
+  const wallet = site?.wallet as
+    | { usdc?: number | null; pyusd?: number | null; usdt?: number | null; sol?: number | null; address?: string }
+    | undefined;
   return {
     httpRequests: traffic?.zoneRequests ?? null,
     uniqueVisitorsPeak: traffic?.zoneUniquesPeak ?? null,
@@ -252,7 +272,10 @@ function headlines(site: Record<string, unknown> | undefined, traffic: TrafficSu
     uniquePayers: lookups?.uniquePayers ?? null,
     revenueUsdc: lookups?.revenueUsdc ?? null,
     ownerShareUsdc: lookups?.ownerShareUsdc ?? null,
+    revenueByAsset: lookups?.revenueByAsset ?? null,
     walletUsdc: wallet?.usdc ?? null,
+    walletPyusd: wallet?.pyusd ?? null,
+    walletUsdt: wallet?.usdt ?? null,
     walletSol: wallet?.sol ?? null,
     walletAddress: wallet?.address ?? null,
   };
@@ -308,7 +331,10 @@ async function main() {
     );
   }
   if (h.walletUsdc != null && h.walletSol != null) {
-    console.log(`main wallet: ${h.walletUsdc} USDC, ${h.walletSol} SOL`);
+    console.log(`main wallet: ${h.walletUsdc} USDC, ${h.walletPyusd ?? 0} PYUSD, ${h.walletUsdt ?? 0} USDT, ${h.walletSol} SOL`);
+  }
+  if (h.revenueByAsset) {
+    console.log(`revenue by asset: ${h.revenueByAsset.map((r) => `${r.asset} ${r.revenueUsd} (${r.paid} paid)`).join(", ")}`);
   }
   if (h.httpRequests != null) {
     console.log(`Cloudflare zone: ${h.httpRequests} requests; peak unique visitors in a published interval: ${h.uniqueVisitorsPeak}`);

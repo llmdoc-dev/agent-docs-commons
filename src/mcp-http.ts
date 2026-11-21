@@ -17,7 +17,7 @@ import {
  */
 const PROTOCOL_VERSION = "2025-03-26";
 
-export const MCP_SERVER_VERSION = "0.2.0";
+export const MCP_SERVER_VERSION = "0.3.0";
 
 export const TOOLS = [
   {
@@ -203,14 +203,14 @@ function mcpMessage(
 
 type LookupJson = {
   results?: Array<{ id: string; library: string; libraryVersion: string; title: string; body: string; sourceUrl: string; license: string }>;
-  payment?: { mode?: string; feeUsd?: number; remainingFreeLookups?: number; transaction?: string | null };
+  payment?: { mode?: string; feeUsd?: number; remainingFreeLookups?: number; transaction?: string | null; asset?: string };
 };
 
 /** Compact text for agents: snippets with version and source, plus one payment line. */
 export function renderLookupText(status: number, raw: string, origin: string): string {
   if (status !== 200) {
     if (status === 402) {
-      return `Payment required: the free trial for today is used up. Pay the x402 challenge below ($0.01 USDC on Solana) and call docs_lookup again with paymentSignature set to your PAYMENT-SIGNATURE value.\n${raw}`;
+      return `Payment required: the free trial for today is used up. Pay the x402 challenge below ($0.01 in USDC, PYUSD, or USDT on Solana; pick one entry from accepts) and call docs_lookup again with paymentSignature set to your PAYMENT-SIGNATURE value.\n${raw}`;
     }
     return raw;
   }
@@ -230,9 +230,9 @@ export function renderLookupText(status: number, raw: string, origin: string): s
   }
   const p = body.payment ?? {};
   if (p.mode === "free") {
-    lines.push(`[free trial lookup · ${p.remainingFreeLookups ?? 0} free left today · then $0.01 USDC via x402]`);
+    lines.push(`[free trial lookup · ${p.remainingFreeLookups ?? 0} free left today · then $0.01 via x402 in USDC, PYUSD, or USDT]`);
   } else if (p.mode) {
-    lines.push(`[paid $${(p.feeUsd ?? 0.01).toFixed(2)} USDC${p.transaction ? ` · tx ${p.transaction}` : ""}]`);
+    lines.push(`[paid $${(p.feeUsd ?? 0.01).toFixed(2)} ${p.asset ?? "USDC"}${p.transaction ? ` · tx ${p.transaction}` : ""}]`);
   }
   return lines.join("\n\n");
 }

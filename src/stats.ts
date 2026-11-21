@@ -1,5 +1,13 @@
 import type { AppConfig } from "./config.ts";
-import { isMainnetNetwork, MAINNET_PAY_TO, MAINNET_USDC_ATA, USDC_MINT_MAINNET } from "./config.ts";
+import {
+  assetSymbolForMint,
+  isMainnetNetwork,
+  MAINNET_PAY_TO,
+  MAINNET_PYUSD_ATA,
+  MAINNET_USDC_ATA,
+  MAINNET_USDT_ATA,
+  USDC_MINT_MAINNET,
+} from "./config.ts";
 import type { Db } from "./db.ts";
 import { formatUsd } from "./money.ts";
 
@@ -67,6 +75,10 @@ export type WalletBalances = {
   address: string;
   sol: number | null;
   usdc: number | null;
+  /** PYUSD held (kept as-is). */
+  pyusd?: number | null;
+  /** USDT held; swapped to USDC daily by scripts/swap-usdt.ts. */
+  usdt?: number | null;
   source: string | null;
   fetchedAt: string | null;
   error: string | null;
@@ -83,6 +95,8 @@ export type StatsPayload = {
     uniquePayers: number;
     uniqueFreeIdentities: number;
     revenueUsdc: string;
+    /** Paid lookups and revenue split by the stablecoin that paid (all valued at $1). */
+    revenueByAsset: Array<{ asset: string; mint: string; paid: number; revenueUsd: string }>;
     ownerShareUsdc: string;
     contributorShareUsdc: string;
     reserveShareUsdc: string;
@@ -222,6 +236,30 @@ export async function buildStats(db: Db, cfg: AppConfig, wallet: WalletBalances)
        COALESCE(SUM(CASE WHEN ${paidModeSql()} THEN fee_micros ELSE 0 END), 0) AS revenue_micros
      FROM queries`,
   );
+  const assetRows = await db.all(
+    `SELECT COALESCE(payment_asset, ?) AS mint,
+            COUNT(*) AS paid,
+            COALESCE(SUM(fee_micros), 0) AS revenue_micros
+     FROM queries
+     WHERE ${paidModeSql()}
+     GROUP BY mint
+     ORDER BY revenue_micros DESC`,
+    cfg.asset,
+  );
+  const revenueByAsset = (cfg.assets?.length ? cfg.assets.map((a) => a.mint) : [cfg.asset]).map((mint) => {
+    const row = assetRows.find((r) => String(r.mint) === mint);
+    return {
+      asset: assetSymbolForMint(mint),
+      mint,
+      paid: row ? num(row, "paid") : 0,
+      revenueUsd: formatUsd(row ? num(row, "revenue_micros") : 0),
+    };
+  });
+  for (const row of assetRows) {
+    const mint = String(row.mint);
+    if (revenueByAsset.some((r) => r.mint === mint)) continue;
+    revenueByAsset.push({ asset: assetSymbolForMint(mint), mint, paid: num(row, "paid"), revenueUsd: formatUsd(num(row, "revenue_micros")) });
+  }
   const uniquePayers = num(
     await db.get(
       `SELECT COUNT(DISTINCT payer_wallet) AS n
@@ -362,6 +400,7 @@ export async function buildStats(db: Db, cfg: AppConfig, wallet: WalletBalances)
       uniquePayers,
       uniqueFreeIdentities,
       revenueUsdc: formatUsd(num(lookupTotals, "revenue_micros")),
+      revenueByAsset,
       ownerShareUsdc: formatUsd(shareMicros.owner ?? 0),
       contributorShareUsdc: formatUsd((shareMicros.contributors ?? 0) + (shareMicros.treasury ?? 0)),
       reserveShareUsdc: formatUsd(shareMicros.reserve ?? 0),
@@ -459,19 +498,26 @@ async function fetchBalancesFromRpc(rpcUrl: string, address: string): Promise<Wa
   const lamports = solResult?.value ?? 0;
 
   let usdc = 0;
+  let pyusd: number | null = null;
+  let usdt: number | null = null;
   if (address === MAINNET_PAY_TO) {
-    // getAccountInfo is allowed on public RPCs; getTokenAccountsByOwner often is not.
-    const info = await rpc(rpcUrl, "getAccountInfo", [MAINNET_USDC_ATA, { encoding: "jsonParsed" }]);
+    // getMultipleAccounts is allowed on public RPCs; getTokenAccountsByOwner often is not.
+    const info = await rpc(rpcUrl, "getMultipleAccounts", [
+      [MAINNET_USDC_ATA, MAINNET_PYUSD_ATA, MAINNET_USDT_ATA],
+      { encoding: "jsonParsed" },
+    ]);
     if (!info.ok) return skippedWallet(address, `rpc_http_${info.status}`);
     const infoErr = rpcError(info.body);
     if (infoErr) return skippedWallet(address, infoErr);
-    const value = info.body.result as {
-      value?: { data?: { parsed?: { info?: { tokenAmount?: { amount: string; decimals: number } } } } };
-    } | undefined;
-    const tokenAmount = value?.value?.data?.parsed?.info?.tokenAmount;
-    if (tokenAmount) {
-      usdc = Number(tokenAmount.amount) / 10 ** Number(tokenAmount.decimals);
-    }
+    type Parsed = { data?: { parsed?: { info?: { tokenAmount?: { amount: string; decimals: number } } } } } | null;
+    const values = ((info.body.result as { value?: Parsed[] } | undefined)?.value ?? []) as Parsed[];
+    const amountOf = (v: Parsed | undefined): number | null => {
+      const t = v?.data?.parsed?.info?.tokenAmount;
+      return t ? Number(t.amount) / 10 ** Number(t.decimals) : null;
+    };
+    usdc = amountOf(values[0]) ?? 0;
+    pyusd = values[1] ? amountOf(values[1]) ?? 0 : 0;
+    usdt = values[2] ? amountOf(values[2]) ?? 0 : 0;
   } else {
     const token = await rpc(rpcUrl, "getTokenAccountsByOwner", [
       address,
@@ -493,6 +539,8 @@ async function fetchBalancesFromRpc(rpcUrl: string, address: string): Promise<Wa
     address,
     sol: lamports / 1_000_000_000,
     usdc,
+    pyusd,
+    usdt,
     source: rpcUrl,
     fetchedAt: new Date().toISOString(),
     error: null,

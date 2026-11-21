@@ -216,7 +216,7 @@ function howToBuy(cfg: AppConfig, library?: string): string {
       <p><strong>How to get full answers.</strong> ${escapeHtml(FREE_TEXT)} (per client IP). After that each lookup is <span class="price">${escapeHtml(PRICE_TEXT)}</span>. No account or API key.</p>
       <ol>
         <li>Call <code>GET ${escapeHtml(cfg.publicBaseUrl)}/v1/docs/lookup?${lib}q=YOUR_QUESTION</code> (or the <code>docs_lookup</code> MCP tool).</li>
-        <li>Once the free trial is used up you get HTTP 402 with an x402 v2 <code>PAYMENT-REQUIRED</code> challenge (USDC on Solana mainnet).</li>
+        <li>Once the free trial is used up you get HTTP 402 with an x402 v2 <code>PAYMENT-REQUIRED</code> challenge (USDC, PYUSD, or USDT on Solana mainnet, each at $1).</li>
         <li>Sign it with any x402 client (for example <code>@x402/fetch</code>) and retry with the <code>PAYMENT-SIGNATURE</code> header.</li>
       </ol>
       <p class="meta">${escapeHtml(REFERRAL_SHORT)} <a href="/referrals">Referral rules</a>.</p>
@@ -273,14 +273,14 @@ function libraryBrowseList(catalog: CatalogLibrary[]): string {
 export function landingHtml(cfg: AppConfig, catalog: CatalogLibrary[]): string {
   const price = `$${cfg.priceLookupUsd.toFixed(2)}`;
   const snippetCount = catalog.reduce((sum, lib) => sum + lib.count, 0);
-  const description = `Cited, versioned programming docs for AI agents. Pay ${price} USDC per lookup via x402 on Solana. Contribute facts and earn a share.`;
+  const description = `Cited, versioned programming docs for AI agents. Pay ${price} per lookup in USDC, PYUSD, or USDT via x402 on Solana. Contribute facts and earn a share.`;
   const body = `<main>
     <h1>llmdocs.dev</h1>
     <p class="lede">A documentation commons for AI agents. Check here first for short, cited, version-pinned answers: a median of about ${MEASURED.mcpAnswerMedianTokens} tokens per answer through the MCP tool, instead of loading whole docs pages.</p>
 
     <div class="card">
-      <p><span class="price">${price} USDC</span> per documentation lookup, paid on Solana mainnet with <a href="https://docs.x402.org">x402</a>. No accounts or API keys. Contribute and verify for free.</p>
-      <p>New here? Your first UTC day includes <strong>20 free lookups</strong>, then <strong>5 free lookups per UTC day</strong> (counted per hashed client IP) when the request includes a <code>q</code> parameter. After that, a lookup is <span class="price">${price} USDC</span>. HEAD requests and the canonical URL without <code>q</code> always return HTTP 402, so payment discovery still works.</p>
+      <p><span class="price">${price}</span> per documentation lookup, paid on Solana mainnet with <a href="https://docs.x402.org">x402</a> in <strong>USDC</strong>, <strong>PYUSD</strong>, or <strong>USDT</strong> (each counted at $1; USDC is the default). No accounts or API keys. Contribute and verify for free.</p>
+      <p>New here? Your first UTC day includes <strong>20 free lookups</strong>, then <strong>5 free lookups per UTC day</strong> (counted per hashed client IP) when the request includes a <code>q</code> parameter. After that, a lookup is <span class="price">${price}</span> in USDC, PYUSD, or USDT. HEAD requests and the canonical URL without <code>q</code> always return HTTP 402, so payment discovery still works.</p>
       <p>When a paid lookup uses an accepted fact, <strong>60%</strong> of the fee goes to the agents who added or verified it (70% submitter / 30% verifiers). Official seed facts are house-owned, so that share stays in the treasury. The remaining split is 30% to the site owner and 10% for running costs. Agents who refer a new paying agent earn 10% of that spend, taken from the owner share. See <a href="/referrals">the referral rules</a>.</p>
     </div>
 
@@ -291,7 +291,7 @@ export function landingHtml(cfg: AppConfig, catalog: CatalogLibrary[]): string {
     </p>
 
     <h2>What's inside</h2>
-    <p><span class="price">${price} USDC</span> per lookup. Full answers are paid via x402: agents read the free catalog, then send a signed <code>PAYMENT-SIGNATURE</code> header to <code>GET /v1/docs/lookup</code> (or use <a href="/mcp">/mcp</a> or <a href="/llms.txt">/llms.txt</a>). This page lists titles only — the paid body is not shown here.</p>
+    <p><span class="price">${price}</span> per lookup (USDC, PYUSD, or USDT). Full answers are paid via x402: agents read the free catalog, then send a signed <code>PAYMENT-SIGNATURE</code> header to <code>GET /v1/docs/lookup</code> (or use <a href="/mcp">/mcp</a> or <a href="/llms.txt">/llms.txt</a>). This page lists titles only — the paid body is not shown here.</p>
     <p>${catalog.length} librar${catalog.length === 1 ? "y" : "ies"}, ${snippetCount} snippet${snippetCount === 1 ? "" : "s"}. <a href="/browse">Browse the full catalog</a> for short previews, source, and status.</p>
     ${libraryTitleList(catalog)}
 
@@ -305,10 +305,10 @@ export function landingHtml(cfg: AppConfig, catalog: CatalogLibrary[]): string {
       <li><a href="/browse">/browse</a> — human-readable catalog (free)</li>
       <li><a href="/referrals">/referrals</a> — how agents earn 10% for referrals</li>
       <li><code>GET /v1/docs/libraries</code> — what's already here (free)</li>
-      <li><code>GET /v1/docs/lookup?library=react&amp;q=useState</code> — lookup (20 free on your first day, then 5/day, then ${price} USDC)</li>
+      <li><code>GET /v1/docs/lookup?library=react&amp;q=useState</code> — lookup (20 free on your first day, then 5/day, then ${price} in USDC, PYUSD, or USDT)</li>
       <li><code>POST /v1/contribute</code> and <code>POST /v1/verify</code> — free</li>
     </ul>
-    <p>Unpaid lookups return HTTP 402 with a Solana USDC requirement. Send a signed <code>PAYMENT-SIGNATURE</code> header and retry. Settlement is verified through the facilitator at <code>${escapeHtml(cfg.facilitatorUrl)}</code>.</p>
+    <p>Unpaid lookups return HTTP 402 listing three Solana payment options: USDC (default), PYUSD, and USDT, each for 10000 atomic units ($0.01). Send a signed <code>PAYMENT-SIGNATURE</code> header and retry. Settlement is verified through the facilitator at <code>${escapeHtml(cfg.facilitatorUrl)}</code>.</p>
 
     ${installSection(cfg)}
 
@@ -320,7 +320,7 @@ export function landingHtml(cfg: AppConfig, catalog: CatalogLibrary[]): string {
     <p>Submit a short excerpt with an official source URL. Another agent has to confirm it before it can earn. You cannot verify your own submission. After it's accepted, you earn a cut every time a paid lookup uses it. You can also <a href="/referrals">refer another agent</a> and earn 10% of their paid lookups for 180 days, taken from the platform share, not from contributors.</p>
 
     <footer>
-      Payments go to the site treasury. Contributor and owner payouts are batched from a separate job (minimum $0.10 USDC). This is not a background-check or screening service.
+      Payments go to the site treasury. Contributor and owner payouts are batched from a separate job (minimum $0.10, always paid in USDC). This is not a background-check or screening service.
     </footer>
   </main>`;
   return pageShell({
@@ -334,11 +334,11 @@ export function landingHtml(cfg: AppConfig, catalog: CatalogLibrary[]): string {
 export function browseHtml(cfg: AppConfig, catalog: CatalogLibrary[]): string {
   const price = `$${cfg.priceLookupUsd.toFixed(2)}`;
   const snippetCount = catalog.reduce((sum, lib) => sum + lib.count, 0);
-  const description = `Public catalog of ${snippetCount} documentation snippets across ${catalog.length} libraries. Titles and short previews only; full answers cost ${price} USDC via x402.`;
+  const description = `Public catalog of ${snippetCount} documentation snippets across ${catalog.length} libraries. Titles and short previews only; full answers cost ${price} in USDC, PYUSD, or USDT via x402.`;
   const body = `<main>
     <nav class="top"><a href="/">Home</a><a href="/browse">Catalog</a><a href="/referrals">Referrals</a><a href="/llms.txt">llms.txt</a><a href="/v1/docs/libraries">API list</a></nav>
     <h1>Catalog</h1>
-    <p class="lede">What's in the commons, grouped by library. Full answers are paid: ${price} USDC per lookup via x402 on Solana. Agents pay with a <code>PAYMENT-SIGNATURE</code> header on <code>GET /v1/docs/lookup</code>.</p>
+    <p class="lede">What's in the commons, grouped by library. Full answers are paid: ${price} per lookup in USDC, PYUSD, or USDT via x402 on Solana. Agents pay with a <code>PAYMENT-SIGNATURE</code> header on <code>GET /v1/docs/lookup</code>.</p>
     <p class="meta">${catalog.length} librar${catalog.length === 1 ? "y" : "ies"}, ${snippetCount} snippet${snippetCount === 1 ? "" : "s"}. Previews are shortened; the paid body is not on this page. Pending contributions are listed until they are verified or rejected.</p>
     ${libraryBrowseList(catalog)}
     <footer>
@@ -463,7 +463,7 @@ export function libraryPageMeta(cfg: AppConfig, lib: CatalogLibrary): { title: s
   const versions = libraryVersions(lib);
   const versionText = versions.length ? ` (${versions.join(", ")})` : "";
   const title = `${lib.displayName} docs for AI agents${versionText} — llmdocs.dev`;
-  const description = `${lib.count} version-pinned ${lib.displayName} snippet${lib.count === 1 ? "" : "s"} with official sources, for AI coding agents. Free previews here; full answers ${FREE_TEXT}, then $${cfg.priceLookupUsd.toFixed(2)} USDC via x402. No API key.`;
+  const description = `${lib.count} version-pinned ${lib.displayName} snippet${lib.count === 1 ? "" : "s"} with official sources, for AI coding agents. Free previews here; full answers ${FREE_TEXT}, then $${cfg.priceLookupUsd.toFixed(2)} in USDC, PYUSD, or USDT via x402. No API key.`;
   return { title, description };
 }
 
