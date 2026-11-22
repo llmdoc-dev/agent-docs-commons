@@ -10,5 +10,9 @@
       "type": "streamable-http",
       "url": "https://llmdocs.dev/mcp"
     }
-  ]
+  ],
+  "repository": {
+    "url": "https://github.com/llmdoc-dev/agent-docs-commons",
+    "source": "github"
+  }
 }
