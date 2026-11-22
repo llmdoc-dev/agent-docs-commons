@@ -28,12 +28,31 @@ describe("official seed catalog", () => {
   it("has licensed libraries and records license plus source URL on every snippet", () => {
     const libraries = [...new Set(rows.map((r) => r.library))].sort();
     expect(libraries.length).toBeGreaterThanOrEqual(15);
-    expect(libraries.length).toBeLessThanOrEqual(40);
-    expect(rows.length).toBe(99);
+    expect(libraries.length).toBeLessThanOrEqual(60);
+    expect(rows.length).toBe(167);
     expect(libraries).not.toContain("tailwind");
     expect(libraries).toEqual(expect.arrayContaining(["stripe", "openai", "langchain", "aws-sdk", "boto3"]));
     expect(libraries).toEqual(
       expect.arrayContaining(["x402", "solana-kit", "solana-web3js", "mcp-typescript", "mcp-python", "phantom-connect", "ai-sdk", "hono"]),
+    );
+    expect(libraries).toEqual(
+      expect.arrayContaining([
+        "supabase",
+        "drizzle",
+        "trpc",
+        "anthropic",
+        "anchor",
+        "cloudflare-workers",
+        "expo",
+        "tanstack-query",
+        "playwright",
+        "sveltekit",
+        "authjs",
+        "bun",
+        "sqlalchemy",
+        "llamaindex",
+        "react-router",
+      ]),
     );
     const ids = new Set<string>();
     for (const row of rows) {

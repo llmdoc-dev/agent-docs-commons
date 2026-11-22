@@ -988,5 +988,685 @@
     "sourceUrl": "https://hono.dev/docs/guides/validation",
     "license": "MIT",
     "retrievedAt": "2026-11-20"
+  },
+  {
+    "id": "supabase-create-client",
+    "library": "supabase",
+    "libraryVersion": "2.119",
+    "title": "createClient takes your project URL and a publishable key",
+    "body": "Install @supabase/supabase-js and call createClient(supabaseUrl, supabaseKey). The first argument is your project URL (https://<project>.supabase.co). The second is the project's publishable key (not the service role key, which must stay on a server). The same helper works in browsers, Node.js, and Deno (import from npm:@supabase/supabase-js@2). Pass an optional third argument for client options such as auth storage. supabase-js talks to your database through the Data API, so tables must be exposed and granted to the anon or authenticated roles after RLS is in place. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://supabase.com/docs/reference/javascript/initializing",
+    "license": "Apache-2.0",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "supabase-select",
+    "library": "supabase",
+    "libraryVersion": "2.119",
+    "title": "from().select() queries a table through the Data API",
+    "body": "const { data, error } = await supabase.from('profiles').select('*') runs a query against a Postgres table exposed by the Data API. Chain filters and modifiers on the builder (for example .eq('id', id), .order(), .limit()). Select specific columns with a comma-separated list, and request related rows with embedded resource syntax when foreign keys exist. Always check error; a successful call returns typed rows when you generate TypeScript types from your schema. Nullable columns are typed as T | null. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://supabase.com/docs/reference/javascript/select",
+    "license": "Apache-2.0",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "supabase-signin-password",
+    "library": "supabase",
+    "libraryVersion": "2.119",
+    "title": "signInWithPassword authenticates with email or phone plus a password",
+    "body": "const { data, error } = await supabase.auth.signInWithPassword({ email, password }) logs in an existing user. You can pass phone instead of email. The returned error does not tell you whether the account is missing, the password is wrong, or the user must use social sign-in — treat it as a generic failure. On success, data includes a session (access token, refresh token, and user). Supabase Auth also supports magic links, OTP, OAuth, SSO, and passkeys. JWTs from Auth are what Row Level Security policies evaluate. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://supabase.com/docs/reference/javascript/auth-signinwithpassword",
+    "license": "Apache-2.0",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "supabase-rls",
+    "library": "supabase",
+    "libraryVersion": "2.119",
+    "title": "Enable Row Level Security before granting table access to client roles",
+    "body": "Supabase Auth issues JWTs; authorization for table data is done with Postgres Row Level Security. Enable RLS on the table and create policies for each allowed operation before you GRANT anything to client roles. Official guidance is: ALTER TABLE ... ENABLE ROW LEVEL SECURITY, add policies, then GRANT select to anon and GRANT select, insert, update, delete to authenticated as needed. The service_role key bypasses RLS and must never be shipped to a browser. New tables should not be left world-readable by default. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://supabase.com/docs/guides/database/postgres/row-level-security",
+    "license": "Apache-2.0",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "supabase-realtime-channel",
+    "library": "supabase",
+    "libraryVersion": "2.119",
+    "title": "channel() subscribes to broadcast, presence, or database changes",
+    "body": "const channel = supabase.channel('room1') creates a Realtime channel. Listen with channel.on('broadcast', { event }, handler), channel.on('presence', { event: 'sync' | 'join' | 'leave' }, handler), or a postgres_changes listener, then call .subscribe(). After the status is SUBSCRIBED you can channel.send({ type: 'broadcast', event, payload }) or channel.track(state) for presence. Realtime can also stream database changes; with RLS enabled, replica identity and policies determine what clients receive. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://supabase.com/docs/guides/realtime",
+    "license": "Apache-2.0",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "drizzle-pg-connect",
+    "library": "drizzle",
+    "libraryVersion": "0.45",
+    "title": "drizzle() connects to PostgreSQL with a URL or a node-postgres pool",
+    "body": "Install drizzle-orm and the pg driver. import { drizzle } from 'drizzle-orm/node-postgres' and create a client with const db = drizzle(process.env.DATABASE_URL) or drizzle({ client: pool }) after constructing a pg.Pool. The same package also ships drivers for postgres.js, Neon, Supabase, D1, and other backends — import from the matching drizzle-orm/<driver> path. Keep DATABASE_URL in the environment; do not hard-code credentials. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://orm.drizzle.team/docs/get-started/postgresql-new",
+    "license": "Apache-2.0",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "drizzle-pg-table",
+    "library": "drizzle",
+    "libraryVersion": "0.45",
+    "title": "pgTable declares a typed PostgreSQL schema in TypeScript",
+    "body": "import { integer, pgTable, varchar } from 'drizzle-orm/pg-core' and export const usersTable = pgTable('users', { id: integer().primaryKey().generatedAlwaysAsIdentity(), name: varchar({ length: 255 }).notNull(), email: varchar({ length: 255 }).notNull().unique() }). The object keys become the TypeScript field names; column types come from the pg-core helpers. Use $inferInsert and $inferSelect on the table for insert and select types. Put this in a schema.ts file and point Drizzle Kit at it. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://orm.drizzle.team/docs/get-started/postgresql-new",
+    "license": "Apache-2.0",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "drizzle-crud",
+    "library": "drizzle",
+    "libraryVersion": "0.45",
+    "title": "insert, select, update, and delete are chained on the db object",
+    "body": "await db.insert(usersTable).values(user) inserts a row. await db.select().from(usersTable) returns a typed array. Updates and deletes take a table and a WHERE clause: db.update(usersTable).set({ age: 31 }).where(eq(usersTable.email, email)) and db.delete(usersTable).where(eq(usersTable.email, email)). Import eq and other helpers from drizzle-orm. Queries are composable SQL builders, not string concatenation. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://orm.drizzle.team/docs/get-started/postgresql-new",
+    "license": "Apache-2.0",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "drizzle-kit-config",
+    "library": "drizzle",
+    "libraryVersion": "0.45",
+    "title": "drizzle.config.ts tells Drizzle Kit the schema, dialect, and credentials",
+    "body": "Create drizzle.config.ts at the project root: import { defineConfig } from 'drizzle-kit' and export default defineConfig({ out: './drizzle', schema: './src/db/schema.ts', dialect: 'postgresql', dbCredentials: { url: process.env.DATABASE_URL } }). out is where SQL migrations and snapshots are written. schema can be a file or glob. dialect must match your database (postgresql, mysql, sqlite, and others). This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://orm.drizzle.team/docs/drizzle-config-file",
+    "license": "Apache-2.0",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "drizzle-kit-migrate",
+    "library": "drizzle",
+    "libraryVersion": "0.45",
+    "title": "drizzle-kit push applies schema quickly; generate and migrate write SQL files",
+    "body": "npx drizzle-kit push pushes the current TypeScript schema to the database without writing migration files — convenient for local iteration. For a durable history, run npx drizzle-kit generate to emit SQL under the configured out folder, then npx drizzle-kit migrate to apply those files. Install drizzle-kit as a dev dependency. Do not use push as your only workflow in production if you need reviewable, versioned migrations. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://orm.drizzle.team/docs/get-started/postgresql-new",
+    "license": "Apache-2.0",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "trpc-init-router",
+    "library": "trpc",
+    "libraryVersion": "11.29",
+    "title": "initTRPC creates the router and procedure builder",
+    "body": "Install @trpc/server and @trpc/client. tRPC requires TypeScript 5.7.2 or later, and official support assumes \"strict\": true in tsconfig.json. const t = initTRPC.create() (or initTRPC.context<Context>().create() when you have context) yields t.router and t.procedure. Export router and a renamed publicProcedure = t.procedure, then compose an appRouter = router({ ... }) and export type AppRouter = typeof appRouter so the client can import only the type. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://trpc.io/docs/quickstart",
+    "license": "MIT",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "trpc-procedures",
+    "library": "trpc",
+    "libraryVersion": "11.29",
+    "title": "Procedures are query, mutation, or subscription builders",
+    "body": "A procedure is a backend function exposed to the client: a query fetches data and generally does not change it; a mutation creates, updates, or deletes; a subscription is a separate, less commonly needed path. Build on publicProcedure.query(() => { ... }) or .mutation(async (opts) => { ... }). The builder is immutable, so you can chain .input(), .use(), and other helpers and reuse the result as a base procedure. Access context as opts.ctx inside the resolver. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://trpc.io/docs/server/procedures",
+    "license": "MIT",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "trpc-base-procedures",
+    "library": "trpc",
+    "libraryVersion": "11.29",
+    "title": "Base procedures share auth and validation with .use() middleware",
+    "body": "Rename t.procedure to publicProcedure and build specialized procedures from it. For example authedProcedure = t.procedure.use(async function isAuthed(opts) { if (!opts.ctx.user) throw new TRPCError({ code: 'UNAUTHORIZED' }); return opts.next({ ctx: { user: opts.ctx.user } }) }). Later procedures see a narrowed context. You can chain further, such as an organizationProcedure that reads input.organizationId and throws FORBIDDEN when the user is not a member. This is the recommended reuse pattern in tRPC. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://trpc.io/docs/server/procedures",
+    "license": "MIT",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "trpc-input-zod",
+    "library": "trpc",
+    "libraryVersion": "11.29",
+    "title": "procedure.input() validates inputs with a schema such as Zod",
+    "body": "Chain .input(z.object({ id: z.string() })) (or another Standard Schema library) before .query or .mutation. Invalid input is rejected before the resolver runs. The resolver then receives a typed opts.input. Reusable base procedures can also declare shared input (for example organizationId) so every procedure built from them requires it. Keep input schemas at the procedure boundary rather than parsing inside the handler. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://trpc.io/docs/server/procedures",
+    "license": "MIT",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "trpc-client-setup",
+    "library": "trpc",
+    "libraryVersion": "11.29",
+    "title": "createTRPCClient infers types from the AppRouter type only",
+    "body": "On the client, install @trpc/client and import type { AppRouter } from your server (type-only). createTRPCClient<AppRouter>({ links: [httpBatchLink({ url: 'http://localhost:3000/trpc' })] }) gives a typed client: await client.hello.query() or client.userCreate.mutate({ name }). There is no generated runtime code; TypeScript inference is the contract. Framework adapters (TanStack React Query, Next.js) wrap this client rather than replacing it. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://trpc.io/docs/quickstart",
+    "license": "MIT",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "anthropic-messages-api",
+    "library": "anthropic",
+    "libraryVersion": "1.12",
+    "title": "POST /v1/messages is the Claude Messages API",
+    "body": "Send conversational requests to https://api.anthropic.com/v1/messages. Required JSON fields include model, max_tokens, and messages (an array of { role, content } turns; roles are user and assistant). Required headers include content-type: application/json and anthropic-version (for example 2026-10-21). Authenticate with x-api-key or Authorization: Bearer <token>. Official SDKs set the version and auth headers for you. The API is stateless: send prior turns in messages when you need a multi-turn conversation. This is a short original summary for agents, not a substitute for the official API reference.",
+    "sourceUrl": "https://platform.claude.com/docs/en/api/overview",
+    "license": "proprietary",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "anthropic-models",
+    "library": "anthropic",
+    "libraryVersion": "1.12",
+    "title": "Current Claude model IDs include Opus 5.5, Sonnet 5.5, and Haiku 5.5",
+    "body": "Official docs recommend Claude Opus 5.5 (claude-opus-5-5) as the default for most work, including complex agentic coding. Claude Fable 5.2 (claude-fable-5-2) is positioned for the hardest long-running agentic and research tasks. Claude Sonnet 5.5 (claude-sonnet-5-5) is the smart mid-tier model, and Claude Haiku 5.5 (claude-haiku-5-5) is for fast, cost-effective tasks. Use these IDs in the model field of a Messages request. Check the models overview for newer aliases before hard-coding a snapshot. This is a short original summary for agents, not a substitute for the official API reference.",
+    "sourceUrl": "https://platform.claude.com/docs/en/claude_api_primer",
+    "license": "proprietary",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "anthropic-sdk-messages-create",
+    "library": "anthropic",
+    "libraryVersion": "1.12",
+    "title": "The official SDKs call messages.create on a client",
+    "body": "In Python, pip install anthropic, set ANTHROPIC_API_KEY, then message = anthropic.Anthropic().messages.create(model='claude-opus-5-5', max_tokens=1024, messages=[{'role': 'user', 'content': 'Hello, Claude'}]). The TypeScript SDK (@anthropic-ai/sdk) follows the same shape on a client.messages.create(...) call. The response is a message with a content array of blocks (type text for plain replies). max_tokens is required; it caps the output, it is not optional. This is a short original summary for agents, not a substitute for the official API reference.",
+    "sourceUrl": "https://platform.claude.com/docs/en/get-started",
+    "license": "proprietary",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "anthropic-thinking",
+    "library": "anthropic",
+    "libraryVersion": "1.12",
+    "title": "Adaptive thinking is the current thinking mechanism on current models",
+    "body": "Thinking can help with very hard tasks. The current mechanism is adaptive thinking: thinking: { type: 'adaptive' }. Claude decides when and how much to think; you steer depth with the effort parameter rather than a token budget. Official docs say adaptive thinking is supported on Claude 4.6 and later (and Claude Mythos Preview), and that on Claude 5 and later, thinking is on by default when the thinking parameter is omitted. Model-specific exceptions exist (for example some models are always on, and some reject thinking: { type: 'disabled' }). This is a short original summary for agents, not a substitute for the official API reference.",
+    "sourceUrl": "https://platform.claude.com/docs/en/claude_api_primer",
+    "license": "proprietary",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "anchor-cli-workflow",
+    "library": "anchor",
+    "libraryVersion": "1.2",
+    "title": "anchor init, build, test, and deploy are the core CLI workflow",
+    "body": "Official docs install Anchor CLI 1.2.x (verify with anchor --version). Create a workspace with anchor init my-project (optionally --test-template mollusk, rust, mocha, or jest; the default test template is LiteSVM/Rust). cd into the project, then anchor build writes a .so under target/deploy. anchor test on localnet starts a local validator, deploys, runs tests, and stops the validator. anchor deploy uses the cluster in Anchor.toml. After cloning a repo, run anchor keys sync so declare_id! matches the local program keypair. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://www.anchor-lang.com/docs/quickstart/local",
+    "license": "Apache-2.0",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "anchor-program-macros",
+    "library": "anchor",
+    "libraryVersion": "1.2",
+    "title": "declare_id, #[program], #[derive(Accounts)], and #[account] structure a program",
+    "body": "use anchor_lang::prelude::*; then declare_id!(\"...\") for the program address. #[program] marks the module whose public functions are instruction handlers; each handler takes Context<T> as its first argument. #[derive(Accounts)] on a struct lists the accounts an instruction must receive. #[account] on a data struct defines a program-owned account type (Anchor sets the owner, writes an 8-byte discriminator, and (de)serializes the data). New workspaces also split instructions, state, constants, and errors into modules. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://www.anchor-lang.com/docs/basics/program-structure",
+    "license": "Apache-2.0",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "anchor-account-constraints",
+    "library": "anchor",
+    "libraryVersion": "1.2",
+    "title": "#[account(...)] constraints and account types validate instruction accounts",
+    "body": "Inside a #[derive(Accounts)] struct, put constraints on each field. #[account(init, payer = signer, space = 8 + 8)] creates a new account, charging signer, and reserves 8 bytes for Anchor's discriminator plus your data (here a u64). #[account(mut)] marks an account writable. Common types include Account<'info, T>, Signer<'info>, and Program<'info, System>. Anchor validates accounts before the handler runs; in the handler you use ctx.accounts, ctx.program_id, and ctx.bumps. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://www.anchor-lang.com/docs/basics/program-structure",
+    "license": "Apache-2.0",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "anchor-toml-cluster",
+    "library": "anchor",
+    "libraryVersion": "1.2",
+    "title": "Anchor.toml [provider] cluster selects localnet, devnet, or mainnet",
+    "body": "The [provider] table in Anchor.toml sets cluster and wallet (default wallet is ~/.config/solana/id.json). Default projects use Localnet so anchor test can boot solana-test-validator for you. Change cluster to Devnet or Mainnet before anchor deploy or anchor test against that cluster. [programs.localnet] (and the corresponding cluster tables) record program IDs. Deploying to devnet or mainnet requires SOL in the configured wallet for the program account and fees. To keep a local validator running yourself, start solana-test-validator and pass anchor test --skip-local-validator. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://www.anchor-lang.com/docs/quickstart/local",
+    "license": "Apache-2.0",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "anchor-install-avm",
+    "library": "anchor",
+    "libraryVersion": "1.2",
+    "title": "Install the Solana toolchain, then the Anchor CLI via AVM",
+    "body": "Official docs start with the Solana install script (curl --proto '=https' --tlsv1.2 -sSfL https://solana-install.solana.workers.dev | bash) on macOS and Linux (Windows uses WSL first), or install Rust, the Solana CLI, and Anchor separately. The recommended way to manage Anchor versions is AVM: avm install latest && avm use latest, or avm install 1.2.2 && avm use 1.2.2. Then confirm with anchor --version. Node.js and Yarn are needed when you initialize a project or use a TypeScript test template; the default LiteSVM tests do not require them day to day. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://www.anchor-lang.com/docs/installation",
+    "license": "Apache-2.0",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "cf-workers-fetch-handler",
+    "library": "cloudflare-workers",
+    "libraryVersion": "docs-2026-11",
+    "title": "The fetch() handler receives Request and must return a Response",
+    "body": "Incoming HTTP requests are passed to the module Worker's fetch() handler. The documented form is: export default { async fetch(request, env, ctx) { return new Response('Hello World!'); } }. request is the standard Request, env holds bindings, and ctx provides waitUntil() and passThroughOnException(). Return a Response (or a promise of one). The Workers runtime does not support XMLHttpRequest; use fetch() for outbound HTTP. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://developers.cloudflare.com/workers/runtime-apis/handlers/fetch/",
+    "license": "CC-BY-SA-4.0",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "cf-workers-c3",
+    "library": "cloudflare-workers",
+    "libraryVersion": "docs-2026-11",
+    "title": "Create a Worker with npm create cloudflare@latest, then deploy with Wrangler",
+    "body": "Official CLI getting-started uses C3: npm create cloudflare@latest -- my-first-worker (or yarn/pnpm create cloudflare). The wizard can scaffold a Hello World Worker-only project and write wrangler.jsonc. cd into the project to iterate, then deploy with Wrangler (npx wrangler deploy) once you are ready. You need a Cloudflare account and a supported Node.js version for Wrangler. C3 can also add an AGENTS.md file for coding agents. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://developers.cloudflare.com/workers/get-started/guide/",
+    "license": "CC-BY-SA-4.0",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "cf-workers-bindings-env",
+    "library": "cloudflare-workers",
+    "libraryVersion": "docs-2026-11",
+    "title": "Bindings are available on the env argument of fetch()",
+    "body": "Bindings connect a Worker to other Developer Platform resources (KV, D1, R2, Durable Objects, secrets, and more) without putting credentials in your source. They appear as properties on the env object passed to fetch(request, env, ctx). You can also import env from 'cloudflare:workers' to read bindings outside the handler. Declare bindings in wrangler.jsonc (or wrangler.toml). As long as the environment has not changed, the same env object may be reused across requests. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://developers.cloudflare.com/workers/runtime-apis/bindings/",
+    "license": "CC-BY-SA-4.0",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "cf-workers-wrangler-config",
+    "library": "cloudflare-workers",
+    "libraryVersion": "docs-2026-11",
+    "title": "wrangler.jsonc configures name, entry, compatibility_date, and bindings",
+    "body": "Wrangler reads wrangler.jsonc (or wrangler.toml) for the Worker name, main entry file, compatibility_date, and resource bindings. compatibility_date selects which runtime APIs are available; update it deliberately when you want newer behavior. C3 writes a starter config including source-map upload settings for JS/TS projects. Environments let you vary bindings and routes per dev/staging/production rather than hard-coding them in the handler. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://developers.cloudflare.com/workers/wrangler/configuration/",
+    "license": "CC-BY-SA-4.0",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "cf-workers-module-format",
+    "library": "cloudflare-workers",
+    "libraryVersion": "docs-2026-11",
+    "title": "ES module syntax is the supported Worker format",
+    "body": "Write Workers as ES modules: a default export with fetch (and optional scheduled, queue, or other handlers) rather than the legacy addEventListener('fetch', ...) service-worker syntax. Official docs recommend migrating any remaining service-worker Workers to modules. Module Workers get a clearer env and ctx, better tree-shaking, and current tooling support. TypeScript projects typically use a generated Env interface so bindings are typed. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://developers.cloudflare.com/workers/reference/migrate-to-module-workers/",
+    "license": "CC-BY-SA-4.0",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "expo-create-app",
+    "library": "expo",
+    "libraryVersion": "58.0",
+    "title": "npx create-expo-app@latest scaffolds an Expo project with Expo Router",
+    "body": "Official docs recommend npx create-expo-app@latest (or yarn create expo-app, pnpm create expo-app, bun create expo) to start a universal app with Expo Router already configured. Then npx expo start (or the yarn/pnpm/bun equivalent) launches the dev server. In the terminal UI, press W for web, A for Android, or I for iOS (Xcode on macOS is required for the iOS simulator). Start on a physical device with Expo Go; move to a development build when you need custom native code. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://docs.expo.dev/router/introduction/",
+    "license": "MIT",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "expo-router-routes",
+    "library": "expo",
+    "libraryVersion": "58.0",
+    "title": "Expo Router maps files in the app directory to routes",
+    "body": "Expo Router is a file-based router for Android, iOS, and web. When you add a file to the app directory, it becomes a route, so the same components can navigate on every platform. create-expo-app sets this up for you; you can also install the router manually if you are adding it to an existing project. URLs and screen names follow the file tree, similar to other file-system routers on the web. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://docs.expo.dev/router/introduction/",
+    "license": "MIT",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "expo-development-builds",
+    "library": "expo",
+    "libraryVersion": "58.0",
+    "title": "Development builds replace Expo Go once you need custom native code",
+    "body": "Expo Go is the fastest way to preview an app on a device, but it only includes a fixed set of native modules. A development build is your own debug binary (with your native dependencies) that still loads the JS bundle from the dev server. Create one when you add custom native code, a config plugin that changes native projects, or a library that is not in Expo Go. You can produce development builds locally or with EAS Build. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://docs.expo.dev/develop/development-builds/introduction/",
+    "license": "MIT",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "expo-app-config",
+    "library": "expo",
+    "libraryVersion": "58.0",
+    "title": "app.json, app.config.js, or app.config.ts is the Expo app config",
+    "body": "The Expo app config lives at app.json, or at app.config.js / app.config.ts when you need a dynamic config. It sets the app name, slug, icons, splash, scheme, platform settings, and the plugins/config plugins that change native projects during prebuild. Keep secrets out of this file if it is committed; use environment variables or EAS secrets for sensitive values. The official configuration guide covers static versus dynamic config and how values are applied. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://docs.expo.dev/workflow/configuration/",
+    "license": "MIT",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "expo-eas-build",
+    "library": "expo",
+    "libraryVersion": "58.0",
+    "title": "EAS CLI and eas.json configure Expo Build for Android and iOS",
+    "body": "Cloud native builds use Expo Build via EAS CLI: install with npm install -g eas-cli, log in with eas login (or set EXPO_TOKEN; never print a token). If the project has no eas.json, run eas build:configure --platform <android|ios> in a real terminal because it asks questions. Then create a development build for devices/simulators or a production build for the stores, following the platform and profile in eas.json. Local credentials and store submission are separate, later steps. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://docs.expo.dev/build/setup/",
+    "license": "MIT",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "tanstack-query-provider",
+    "library": "tanstack-query",
+    "libraryVersion": "5.108",
+    "title": "QueryClientProvider makes a QueryClient available to hooks",
+    "body": "Install @tanstack/react-query. Create const queryClient = new QueryClient() once and wrap the tree with <QueryClientProvider client={queryClient}>. Hooks such as useQuery and useMutation only work under that provider. Keep a single client per app (or per logical session); creating a new QueryClient on every render would reset the cache. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://tanstack.com/query/latest/docs/framework/react/overview",
+    "license": "MIT",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "tanstack-query-usequery",
+    "library": "tanstack-query",
+    "libraryVersion": "5.108",
+    "title": "useQuery needs a queryKey and a queryFn",
+    "body": "const { isPending, error, data } = useQuery({ queryKey: ['repoData'], queryFn: async () => { const response = await fetch(url); if (!response.ok) throw new Error('Failed to fetch'); return response.json() } }) is the documented basic form. queryKey identifies the cache entry; queryFn returns a promise of data or throws. In v5 the pending state is isPending (not the older isLoading-first examples). Render a loading state when isPending, an error message when error is set, and data only after a successful fetch. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://tanstack.com/query/latest/docs/framework/react/overview",
+    "license": "MIT",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "tanstack-query-keys",
+    "library": "tanstack-query",
+    "libraryVersion": "5.108",
+    "title": "Query keys uniquely identify cached queries and should be structured",
+    "body": "Every query is cached under its queryKey. Official guidance is to use an array key, often with a scope string first and then the variables that change the result (['todos', { status, page }]). When a key changes, React Query treats it as a different query. Matching keys is also how you invalidate or prefetch: invalidate queries that start with ['todos'] after a mutation. Keep keys serializable and include every input the queryFn depends on. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://tanstack.com/query/latest/docs/framework/react/guides/query-keys",
+    "license": "MIT",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "tanstack-query-mutations",
+    "library": "tanstack-query",
+    "libraryVersion": "5.108",
+    "title": "useMutation runs writes and can invalidate related queries",
+    "body": "useMutation({ mutationFn, onSuccess }) is the hook for creates, updates, and deletes. Call mutate(variables) or mutateAsync(variables). Unlike useQuery, mutations are not automatically retried in the same way and are not cached as a query. In onSuccess (or the mutation cache callbacks) call queryClient.invalidateQueries({ queryKey: ['todos'] }) so lists refetch. The hook exposes isPending, error, and data for UI state. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://tanstack.com/query/latest/docs/framework/react/guides/mutations",
+    "license": "MIT",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "playwright-install",
+    "library": "playwright",
+    "libraryVersion": "1.65",
+    "title": "npm init playwright@latest scaffolds Playwright Test and browsers",
+    "body": "Install with npm init playwright@latest (or yarn create playwright / pnpm create playwright). The wizard picks TypeScript or JavaScript, a tests folder, an optional GitHub Actions workflow, and whether to install browser binaries. Run tests with npx playwright test (add --headed, --project=chromium, a file path, or --ui). Open the HTML report with npx playwright show-report. Update later with npm install -D @playwright/test@latest and npx playwright install --with-deps. Node.js latest 22.x, 24.x, or 26.x is required. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://playwright.dev/docs/intro",
+    "license": "Apache-2.0",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "playwright-first-test",
+    "library": "playwright",
+    "libraryVersion": "1.65",
+    "title": "Tests import test and expect from @playwright/test and use the page fixture",
+    "body": "import { test, expect } from '@playwright/test'; test('has title', async ({ page }) => { await page.goto('https://playwright.dev/'); await expect(page).toHaveTitle(/Playwright/); }). The page fixture is an isolated browser page. Playwright waits for actionability before clicks and for assertions to pass, so you usually do not add manual sleeps. Tests in one file run with that same test() API; configure browsers and retries in playwright.config.ts. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://playwright.dev/docs/writing-tests",
+    "license": "Apache-2.0",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "playwright-locators",
+    "library": "playwright",
+    "libraryVersion": "1.65",
+    "title": "getByRole and other locators auto-wait before actions",
+    "body": "Locate elements with the Locators API, most often page.getByRole('link', { name: 'Get started' }), then chain .click(), .fill(), .check(), .press(), or .selectOption(). Playwright waits until the element is actionable before performing the action, which removes many race conditions. Prefer role, label, and text locators over CSS or XPath when you can, because they follow how users and assistive tech see the page. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://playwright.dev/docs/writing-tests",
+    "license": "Apache-2.0",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "playwright-assertions",
+    "library": "playwright",
+    "libraryVersion": "1.65",
+    "title": "Async expect matchers wait until the condition is true",
+    "body": "Playwright assertions are designed to retry until they pass or time out. Use await expect(page).toHaveTitle(/Playwright/), await expect(locator).toBeVisible(), toContainText(), toHaveText(), toHaveURL(), toBeChecked(), and similar matchers. Generic matchers such as toEqual or toBeTruthy are synchronous and do not take await — use them only on values you already have. This auto-waiting is what makes tests less flaky than assert-immediately libraries. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://playwright.dev/docs/writing-tests",
+    "license": "Apache-2.0",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "playwright-isolation-hooks",
+    "library": "playwright",
+    "libraryVersion": "1.65",
+    "title": "Each test gets an isolated BrowserContext; hooks wrap setup",
+    "body": "The built-in page fixture belongs to a fresh Browser Context, equivalent to a new browser profile, so tests do not share cookies, storage, or pages even when they run in the same browser. Group tests with test.describe and use test.beforeEach / test.afterEach for per-test setup, or test.beforeAll / test.afterAll once per worker. A typical beforeEach is await page.goto(startUrl) so each test starts from a known page. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://playwright.dev/docs/writing-tests",
+    "license": "Apache-2.0",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "sveltekit-create",
+    "library": "sveltekit",
+    "libraryVersion": "3.4",
+    "title": "npx sv create scaffolds a SvelteKit app in src/routes",
+    "body": "The easiest way to start is npx sv create my-app, then cd my-app and npm run dev (install dependencies first if the scaffolder did not). The dev server defaults to http://localhost:5173. Each page is a Svelte component, and you add pages as files under src/routes. The first visit is server-rendered, then the client-side app takes over. The CLI can set up TypeScript and other tooling during create. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://svelte.dev/docs/kit/creating-a-project",
+    "license": "MIT",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "sveltekit-routing",
+    "library": "sveltekit",
+    "libraryVersion": "3.4",
+    "title": "+page, +layout, +error, and +server files define routes",
+    "body": "Routes live in src/routes. +page.svelte is the page UI; +page.js or +page.server.js load data for that page. +layout.svelte (and +layout.js / +layout.server.js) wraps child routes. +error.svelte renders errors. +server.js (or .ts) defines HTTP handlers for that path. Folders name the URL segment; dynamic parameters use [param] folders. Colocate components used by only one route next to these files. $types is generated for each route's typings. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://svelte.dev/docs/kit/routing",
+    "license": "MIT",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "sveltekit-load",
+    "library": "sveltekit",
+    "libraryVersion": "3.4",
+    "title": "load functions in +page.js or +page.server.js provide page data",
+    "body": "Export a load function from +page.js (universal) or +page.server.js (server-only) to supply data for a route. Server load can use secrets, cookies, and headers; universal load can also run in the browser. Return an object that becomes data in the page component. Use the provided fetch so requests are tracked correctly during SSR. Layout load functions contribute data to child pages. Redirect or throw errors from load when the user should not see the page. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://svelte.dev/docs/kit/load",
+    "license": "MIT",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "sveltekit-form-actions",
+    "library": "sveltekit",
+    "libraryVersion": "3.4",
+    "title": "Form actions in +page.server.js handle POST submissions",
+    "body": "Export const actions from +page.server.js. The default action runs when a <form method='POST'> on that page is submitted. Named actions (for example login and register) are invoked with action='?/register' or a button formaction='?/register'. Actions always use POST because GET must not have side effects. You can post to another page's action with action='/login'. use:enhance progressively enhances the form so the page can stay put and apply the result without a full reload. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://svelte.dev/docs/kit/form-actions",
+    "license": "MIT",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "authjs-v5-beta",
+    "library": "authjs",
+    "libraryVersion": "5.0.0-beta",
+    "title": "authjs.dev documents Auth.js / next-auth v5, which is still published as a beta",
+    "body": "Auth.js is the documentation brand for next-auth@5.0.0-beta and later and for packages under the @auth/* namespace. Official getting-started docs state that they cover next-auth@5.0.0-beta and later; v4 docs remain at next-auth.js.org. On npm, the latest tag for next-auth may still be v4, so follow the Auth.js install instructions (including a beta tag when the docs say to use one) rather than assuming npm install next-auth installs v5. The library is runtime-agnostic and built on Web APIs. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://authjs.dev/getting-started",
+    "license": "ISC",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "authjs-secret",
+    "library": "authjs",
+    "libraryVersion": "5.0.0-beta",
+    "title": "AUTH_SECRET is required; generate it with npx auth secret",
+    "body": "The only mandatory environment variable is AUTH_SECRET, a random value used to encrypt tokens and email verification hashes. Generate and write it with the official CLI: npx auth secret, which also appends it to the framework's env file (for example .env.local in Next.js). Do not commit the secret or put it in client-side code. You do not need to install @auth/core yourself; framework packages depend on it and official docs say users should not interact with it directly. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://authjs.dev/getting-started/installation",
+    "license": "ISC",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "authjs-config-handlers",
+    "library": "authjs",
+    "libraryVersion": "5.0.0-beta",
+    "title": "auth.ts exports handlers, signIn, signOut, and auth from NextAuth()",
+    "body": "The recommended Next.js setup is a root auth.ts: import NextAuth from 'next-auth' and export const { handlers, signIn, signOut, auth } = NextAuth({ providers: [] }). Then create the App Router route handler at app/api/auth/[...nextauth]/route.ts that re-exports GET and POST from handlers. Fill the providers array with built-in providers imported from next-auth/providers/*. Other frameworks have their own init helpers but share this auth.ts convention. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://authjs.dev/getting-started/installation",
+    "license": "ISC",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "authjs-proxy-next16",
+    "library": "authjs",
+    "libraryVersion": "5.0.0-beta",
+    "title": "Next.js 16 renamed middleware.ts to proxy.ts for the auth wrapper",
+    "body": "Auth.js can wrap a Next.js proxy (formerly middleware) so the session is kept alive as requests pass through. Official installation notes that as of Next.js 16, middleware.ts has been renamed to proxy.ts. On Next.js 16, use the proxy file with the auth wrapper; on older Next.js, keep middleware.ts and export { auth as middleware }. This optional step is for session refresh and protecting routes, not a substitute for the /api/auth route handler. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://authjs.dev/getting-started/installation",
+    "license": "ISC",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "authjs-providers",
+    "library": "authjs",
+    "libraryVersion": "5.0.0-beta",
+    "title": "Auth.js supports OAuth, magic links, credentials, and WebAuthn",
+    "body": "Official getting-started lists four authentication methods: OAuth (Google, GitHub, LinkedIn, and many others), magic links (email providers such as Resend, Nodemailer, or SendGrid), credentials (username/password or an external API), and WebAuthn/passkeys. Optional database adapters persist users and accounts if you need them. Configure each method as a provider in the NextAuth({ providers }) array (or the equivalent for your framework) rather than rolling a custom token endpoint. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://authjs.dev/getting-started",
+    "license": "ISC",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "bun-install",
+    "library": "bun",
+    "libraryVersion": "1.4",
+    "title": "Install the Bun executable with the official script or a package manager",
+    "body": "Bun ships as a single executable. On macOS and Linux: curl -fsSL https://bun.com/install | bash (Linux needs unzip; kernel 5.6+ is recommended). On Windows 10 1809 or later: powershell -c \"irm bun.sh/install.ps1|iex\". You can also npm install -g bun, brew install oven-sh/bun/bun, scoop install bun, or docker pull oven/bun. Verify with bun --version and bun --revision. If the shell says command not found, add ~/.bun/bin to PATH (BUN_INSTALL=$HOME/.bun). This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://bun.com/docs/installation",
+    "license": "MIT",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "bun-run-scripts",
+    "library": "bun",
+    "libraryVersion": "1.4",
+    "title": "bun run executes TypeScript and package.json scripts directly",
+    "body": "bun run index.ts runs a TypeScript or JavaScript file without a separate transpile step. Scripts in package.json work as bun run start (or bun run <script>). Official quickstart notes that bun run has much less overhead than npm run. bun install installs packages; bun add adds one. A typical new project uses { \"module\": \"index.ts\", \"type\": \"module\" } and may include @types/bun. bun init can scaffold that layout. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://bun.com/docs/quickstart",
+    "license": "MIT",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "bun-serve",
+    "library": "bun",
+    "libraryVersion": "1.4",
+    "title": "Bun.serve starts an HTTP server with a routes object",
+    "body": "const server = Bun.serve({ port: 3000, routes: { '/': indexHtml, '/figlet': () => new Response(body) } }) is the documented pattern. Route values can be a Response, an HTML import, or a function that returns a Response. After start, server.url is the listening origin (for example http://localhost:3000/). This is the built-in server; you do not need Express to serve HTTP from Bun. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://bun.com/docs/runtime/http/server",
+    "license": "MIT",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "bun-test",
+    "library": "bun",
+    "libraryVersion": "1.4",
+    "title": "bun:test is a Jest-compatible runner invoked with bun test",
+    "body": "import { expect, test, describe } from 'bun:test' and write test('2 + 2', () => { expect(2 + 2).toBe(4) }). Group suites with describe, and use async test callbacks or a done callback (you must call done() or the test hangs). A third argument to test() is a timeout in milliseconds (default 5000). Run the runner with bun test. Long term, Bun aims for complete Jest compatibility; module mocks, hooks, and snapshots are documented separately. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://bun.com/docs/test/writing-tests",
+    "license": "MIT",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "sqlalchemy-engine",
+    "library": "sqlalchemy",
+    "libraryVersion": "2.1",
+    "title": "create_engine() is the starting point for every application",
+    "body": "from sqlalchemy import create_engine; engine = create_engine('sqlite+pysqlite:///:memory:', echo=True) builds an Engine. The URL names the dialect (sqlite), the DBAPI (pysqlite, optional when there is a default), and the location (/:memory: here). echo=True logs SQL, which is useful while learning. The Engine is usually a single global per database and includes a connection pool. create_engine() does not connect immediately; the first real operation opens a connection (lazy initialization). This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://docs.sqlalchemy.org/en/21/tutorial/engine.html",
+    "license": "MIT",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "sqlalchemy-core-and-orm",
+    "library": "sqlalchemy",
+    "libraryVersion": "2.1",
+    "title": "SQLAlchemy 2.1 is one Unified Tutorial covering Core and ORM",
+    "body": "SQLAlchemy has two APIs: Core (engine, Connection, Result, SQL expression language, metadata) and the ORM (mapped classes, Session, relationship()), which builds on Core. In 2.0-style (including 2.1) the ORM uses the same select() construct as Core, and transactional patterns line up between Connection and Session. Official 2.1 docs ask you to confirm sqlalchemy.__version__ starts with 2.1. New code should follow the Unified Tutorial, not the 1.x Query API. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://docs.sqlalchemy.org/en/21/tutorial/index.html",
+    "license": "MIT",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "sqlalchemy-declarative",
+    "library": "sqlalchemy",
+    "libraryVersion": "2.1",
+    "title": "DeclarativeBase and mapped_column define ORM mapped classes",
+    "body": "In the 2.x ORM, subclass DeclarativeBase for your Base, then declare classes with __tablename__ and typed attributes: id: Mapped[int] = mapped_column(primary_key=True). Import DeclarativeBase, Mapped, and mapped_column from sqlalchemy.orm. Call Base.metadata.create_all(engine) to emit CREATE TABLE in simple scripts, or use Alembic for real migrations. This declarative form is the documented quickstart style in 2.1. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://docs.sqlalchemy.org/en/21/orm/quickstart.html",
+    "license": "MIT",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "sqlalchemy-session-select",
+    "library": "sqlalchemy",
+    "libraryVersion": "2.1",
+    "title": "Session and select() are the 2.x way to load and persist objects",
+    "body": "Open a session with with Session(engine) as session: (or a sessionmaker factory). Add new objects with session.add(), then session.commit() to persist. Load rows with select(User) and session.scalars(...) or session.execute(...). Filter with select(User).where(User.name == 'ed'). Do not use the legacy Query API in new 2.1 code. Close or context-manage the Session so connections return to the pool. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://docs.sqlalchemy.org/en/21/tutorial/orm_data_manipulation.html",
+    "license": "MIT",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "llamaindex-function-agent",
+    "library": "llamaindex",
+    "libraryVersion": "0.14",
+    "title": "FunctionAgent runs an LLM with Python callables as tools",
+    "body": "The official starter builds an agent with FunctionAgent from llama_index.core.agent.workflow, passing tools=[multiply], an llm such as OpenAI(model='gpt-4o-mini'), and a system_prompt. Call await agent.run('What is 1234 * 4567?') inside asyncio.run(main()). Tool functions and their docstrings become the tool schema. Official docs recommend async code because many model providers support async calls. Default LLM wiring uses OpenAI; set OPENAI_API_KEY in the environment. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://docs.llamaindex.ai/en/stable/getting_started/starter_example/",
+    "license": "MIT",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "llamaindex-agent-context",
+    "library": "llamaindex",
+    "libraryVersion": "0.14",
+    "title": "Pass a Context to FunctionAgent.run to keep chat history",
+    "body": "AgentWorkflow (including FunctionAgent) can remember prior turns when you pass a Context. Create ctx = Context(agent) from llama_index.core.workflow, then await agent.run('My name is Logan', ctx=ctx) and later await agent.run('What is my name?', ctx=ctx). Without a shared Context, each run is independent. Keep one Context per conversation, not a global shared across users. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://docs.llamaindex.ai/en/stable/getting_started/starter_example/",
+    "license": "MIT",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "llamaindex-vector-index",
+    "library": "llamaindex",
+    "libraryVersion": "0.14",
+    "title": "VectorStoreIndex and SimpleDirectoryReader add RAG to an agent",
+    "body": "documents = SimpleDirectoryReader('data').load_data(); index = VectorStoreIndex.from_documents(documents); query_engine = index.as_query_engine() builds an in-memory index over files in data/. Wrap query_engine.aquery(query) in an async tool and pass that tool to FunctionAgent so the agent can search documents. With no Settings.embed_model configured, VectorStoreIndex falls back to OpenAIEmbedding (historically text-embedding-ada-002). Official docs recommend passing OpenAIEmbedding(model='text-embedding-3-small') explicitly in new projects, or a local HuggingFaceEmbedding. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://docs.llamaindex.ai/en/stable/getting_started/starter_example/",
+    "license": "MIT",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "llamaindex-persist-index",
+    "library": "llamaindex",
+    "libraryVersion": "0.14",
+    "title": "storage_context.persist saves an index so you can reload it",
+    "body": "index.storage_context.persist('storage') writes the index to disk. Later: from llama_index.core import StorageContext, load_index_from_storage; storage_context = StorageContext.from_defaults(persist_dir='storage'); index = load_index_from_storage(storage_context). If you used a vector store integration other than the default, you can often rebuild with VectorStoreIndex.from_vector_store(vector_store) instead of the local persist folder. Persisting avoids re-embedding documents on every process start. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://docs.llamaindex.ai/en/stable/getting_started/starter_example/",
+    "license": "MIT",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "react-router-modes",
+    "library": "react-router",
+    "libraryVersion": "8.5",
+    "title": "React Router 8 has Declarative, Data, and Framework modes",
+    "body": "React Router is a multi-strategy router. Declarative mode is the basic <BrowserRouter> style with Route, Link, useNavigate, and useLocation. Data mode moves route config outside of render and adds loader, action, and useFetcher via createBrowserRouter and RouterProvider. Framework mode wraps Data mode with a Vite plugin for type-safe route modules, href, code splitting, and SPA/SSR/static strategies. Features are additive: moving Declarative → Data → Framework adds capabilities and reduces some architectural control. Official docs say upgrading from v7 is generally non-breaking if you are caught up on future flags. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://reactrouter.com/start/modes",
+    "license": "MIT",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "react-router-declarative",
+    "library": "react-router",
+    "libraryVersion": "8.5",
+    "title": "Declarative mode wraps the app in BrowserRouter",
+    "body": "import { BrowserRouter } from 'react-router' and render <BrowserRouter><App /></BrowserRouter> (from react-dom). This mode gives URL matching, navigation, and active states with APIs such as Link, useNavigate, and useLocation. Official advice is to use it when you want the simplest router, you are coming from earlier React Router versions and are happy with BrowserRouter, or you already have your own data layer. Import from 'react-router', not the old 'react-router-dom' package name, in current v8 docs. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://reactrouter.com/start/modes",
+    "license": "MIT",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "react-router-data-mode",
+    "library": "react-router",
+    "libraryVersion": "8.5",
+    "title": "createBrowserRouter and RouterProvider enable loaders and actions",
+    "body": "import { createBrowserRouter, RouterProvider } from 'react-router'. let router = createBrowserRouter([{ path: '/', Component: Root, loader: loadRootData }]); then render <RouterProvider router={router} />. Because the route tree is defined outside of React render, loaders, actions, pending states, and useFetcher are available. Official docs recommend Data mode when you want those features but still want to control bundling and the server yourself, including apps that started a data router in v6.4. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://reactrouter.com/start/modes",
+    "license": "MIT",
+    "retrievedAt": "2026-11-21"
+  },
+  {
+    "id": "react-router-framework-mode",
+    "library": "react-router",
+    "libraryVersion": "8.5",
+    "title": "Framework mode uses a route module API and create-react-router",
+    "body": "Framework mode is scaffolded with the official installer (npx create-react-router@latest) and a routes file that uses index() and route() from @react-router/dev/routes, for example route('products/:pid', './product.tsx'). Route modules can export loader and a default component; types come from './+types/product.tsx' (Route.LoaderArgs, Route.ComponentProps, loaderData, typed params). You also get type-safe href, code splitting, and SPA, SSR, or static rendering. Official docs point newcomers who just want to build with React (or who are comparing Next.js, SvelteKit, and similar) to Framework mode. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://reactrouter.com/start/framework/installation",
+    "license": "MIT",
+    "retrievedAt": "2026-11-21"
   }
 ]

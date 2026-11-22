@@ -28,7 +28,7 @@ export const SERVICE_PITCH =
 export const LOOKUP_TOOL_DESCRIPTION = [
   "Answer a coding/API question with current, version-pinned documentation: returns 1–3 short snippets, each with the library version, official source URL, and license.",
   `Compact: the measured median answer is about ${MEASURED.mcpAnswerMedianTokens} tokens (${MEASURED.mcpAnswerRange} over ${MEASURED.sampleQueries} typical queries), smaller than loading a full docs page.`,
-  "Covers fast-moving libraries such as x402 v2, Solana Kit and web3.js v3, the MCP TypeScript and Python SDKs (v2), Phantom Connect, the AI SDK, Hono, Next.js, React, Stripe, OpenAI, LangChain, and more (call docs_libraries for the full list).",
+  "Covers fast-moving libraries such as x402 v2, Solana Kit and web3.js v3, Anchor, the MCP TypeScript and Python SDKs (v2), Phantom Connect, the AI SDK, OpenAI, Anthropic, LangChain, LlamaIndex, Hono, Cloudflare Workers, Next.js, React, Expo, SvelteKit, tRPC, Drizzle, Supabase, Stripe, and more (call docs_libraries for the full list).",
   `No API key. ${FREE_TEXT} (per client IP); after that ${PRICE_TEXT}. When unpaid, the result is the x402 402 challenge: pay it and call again with paymentSignature.`,
   "Pass library for better precision. Optional ref (a Solana address) credits the agent that referred you.",
 ].join(" ");

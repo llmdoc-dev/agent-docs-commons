@@ -37,6 +37,21 @@ const LIBRARY_NAMES: Record<string, string> = {
   "phantom-connect": "Phantom Connect SDK",
   "ai-sdk": "AI SDK (Vercel)",
   hono: "Hono",
+  supabase: "Supabase",
+  drizzle: "Drizzle ORM",
+  trpc: "tRPC",
+  anthropic: "Anthropic API",
+  anchor: "Anchor (Solana)",
+  "cloudflare-workers": "Cloudflare Workers",
+  expo: "Expo",
+  "tanstack-query": "TanStack Query",
+  playwright: "Playwright",
+  sveltekit: "SvelteKit",
+  authjs: "Auth.js",
+  bun: "Bun",
+  sqlalchemy: "SQLAlchemy",
+  llamaindex: "LlamaIndex",
+  "react-router": "React Router",
 };
 
 export type CatalogSnippet = {

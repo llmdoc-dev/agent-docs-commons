@@ -22,6 +22,17 @@ describe("quality checks", () => {
     expect(checkSourceUrl("https://docs.langchain.com/oss/python/langchain/agents").ok).toBe(true);
     expect(checkSourceUrl("https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/welcome.html").ok).toBe(true);
     expect(checkSourceUrl("https://docs.aws.amazon.com/boto3/latest/guide/credentials.html").ok).toBe(true);
+    expect(checkSourceUrl("https://supabase.com/docs/guides/getting-started").ok).toBe(true);
+    expect(checkSourceUrl("https://orm.drizzle.team/docs/get-started/postgresql-new").ok).toBe(true);
+    expect(checkSourceUrl("https://trpc.io/docs/quickstart").ok).toBe(true);
+    expect(checkSourceUrl("https://platform.claude.com/docs/en/get-started").ok).toBe(true);
+    expect(checkSourceUrl("https://developers.cloudflare.com/workers/get-started/guide/").ok).toBe(true);
+    expect(checkSourceUrl("https://docs.expo.dev/router/introduction/").ok).toBe(true);
+    expect(checkSourceUrl("https://playwright.dev/docs/intro").ok).toBe(true);
+    expect(checkSourceUrl("https://svelte.dev/docs/kit/routing").ok).toBe(true);
+    expect(checkSourceUrl("https://bun.com/docs/installation").ok).toBe(true);
+    expect(checkSourceUrl("https://docs.sqlalchemy.org/en/21/tutorial/engine.html").ok).toBe(true);
+    expect(checkSourceUrl("https://reactrouter.com/start/modes").ok).toBe(true);
     expect(checkSourceUrl("https://tailwindcss.com/docs/installation").ok).toBe(false);
   });
 

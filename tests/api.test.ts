@@ -154,8 +154,27 @@ describe("HTTP API", () => {
     expect(names).toEqual(
       expect.arrayContaining(["x402", "solana-kit", "solana-web3js", "mcp-typescript", "mcp-python", "phantom-connect", "ai-sdk", "hono"]),
     );
-    expect(libraries).toHaveLength(31);
-    expect(libraries.reduce((s, l) => s + l.count, 0)).toBe(99);
+    expect(names).toEqual(
+      expect.arrayContaining([
+        "supabase",
+        "drizzle",
+        "trpc",
+        "anthropic",
+        "anchor",
+        "cloudflare-workers",
+        "expo",
+        "tanstack-query",
+        "playwright",
+        "sveltekit",
+        "authjs",
+        "bun",
+        "sqlalchemy",
+        "llamaindex",
+        "react-router",
+      ]),
+    );
+    expect(libraries).toHaveLength(46);
+    expect(libraries.reduce((s, l) => s + l.count, 0)).toBe(167);
   });
 
   it("accepts a contribution, blocks self-verify, then verifies and pays out on use", async () => {
