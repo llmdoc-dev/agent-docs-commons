@@ -171,10 +171,11 @@ describe("HTTP API", () => {
         "sqlalchemy",
         "llamaindex",
         "react-router",
+        "vitest",
       ]),
     );
-    expect(libraries).toHaveLength(46);
-    expect(libraries.reduce((s, l) => s + l.count, 0)).toBe(167);
+    expect(libraries).toHaveLength(47);
+    expect(libraries.reduce((s, l) => s + l.count, 0)).toBe(170);
   });
 
   it("accepts a contribution, blocks self-verify, then verifies and pays out on use", async () => {

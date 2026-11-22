@@ -269,6 +269,8 @@ describe("SEO library pages", () => {
     for (const lib of ["react", "x402", "solana-kit", "mcp-typescript", "mcp-python", "phantom-connect", "hono", "ai-sdk"]) {
       expect(sitemap).toContain(`<loc>https://llmdocs.dev/browse/${lib}</loc>`);
     }
+    expect(sitemap).toMatch(/<loc>https:\/\/llmdocs\.dev\/browse\/vitest<\/loc><lastmod>\d{4}-\d{2}-\d{2}<\/lastmod>/);
+    expect(sitemap).toMatch(/<loc>https:\/\/llmdocs\.dev\/browse<\/loc><lastmod>\d{4}-\d{2}-\d{2}<\/lastmod>/);
     const robots = (await http("/robots.txt")).text;
     expect(robots).toContain("Allow: /browse/");
     expect(robots).toContain("Sitemap: https://llmdocs.dev/sitemap.xml");

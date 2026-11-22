@@ -70,6 +70,7 @@ export const ALLOWED_SOURCE_HOSTS = new Set([
   "developers.llamaindex.ai",
   "reactrouter.com",
   "www.reactrouter.com",
+  "vitest.dev",
 ]);
 
 export const ALLOWED_GITHUB_REPOS = [
@@ -129,6 +130,7 @@ export const ALLOWED_GITHUB_REPOS = [
   "sqlalchemy/sqlalchemy",
   "run-llama/llama_index",
   "remix-run/react-router",
+  "vitest-dev/vitest",
 ];
 
 export const MAX_BODY_CHARS = 1500;

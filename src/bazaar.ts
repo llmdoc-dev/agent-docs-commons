@@ -82,20 +82,29 @@ Sitemap: ${origin}/sitemap.xml
 `;
 }
 
-export function sitemapXml(publicBaseUrl: string, catalog: Array<{ library: string }> = []): string {
+export function sitemapXml(
+  publicBaseUrl: string,
+  catalog: Array<{ library: string; lastModified?: string }> = [],
+): string {
   const origin = publicBaseUrl.replace(/\/+$/, "");
-  const urls = [
-    "/",
-    "/browse",
-    ...catalog.map((lib) => `/browse/${encodeURIComponent(lib.library)}`),
-    "/referrals",
-    "/llms.txt",
-    "/openapi.json",
-    "/.well-known/x402",
-    "/.well-known/mcp/server-card.json",
+  const latest = catalog.reduce((max, lib) => (lib.lastModified && lib.lastModified > max ? lib.lastModified : max), "");
+  const catalogLastmod = latest || undefined;
+  const urls: Array<{ path: string; lastmod?: string }> = [
+    { path: "/", lastmod: catalogLastmod },
+    { path: "/browse", lastmod: catalogLastmod },
+    ...catalog.map((lib) => ({ path: `/browse/${encodeURIComponent(lib.library)}`, lastmod: lib.lastModified })),
+    { path: "/referrals" },
+    { path: "/llms.txt", lastmod: catalogLastmod },
+    { path: "/openapi.json" },
+    { path: "/.well-known/x402" },
+    { path: "/.well-known/mcp/server-card.json" },
   ];
   const body = urls
-    .map((path) => `  <url><loc>${origin}${path}</loc></url>`)
+    .map(({ path, lastmod }) =>
+      lastmod
+        ? `  <url><loc>${origin}${path}</loc><lastmod>${lastmod}</lastmod></url>`
+        : `  <url><loc>${origin}${path}</loc></url>`,
+    )
     .join("\n");
   return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">

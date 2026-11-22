@@ -56,3 +56,17 @@ describe("buildPublicCatalog", () => {
     expect(catalog[0]!.snippets[0]!).not.toHaveProperty("body");
   });
 });
+
+describe("catalog lastModified", () => {
+  it("uses the latest created or retrieved day per library and feeds sitemap lastmod", async () => {
+    const { sitemapXml } = await import("../src/bazaar.ts");
+    const catalog = buildPublicCatalog([
+      snippet({ id: "v1", library: "vitest", title: "a", body: "A vitest body long enough to make a preview for the catalog.", status: "verified", houseOwned: true, createdAt: "2026-11-20T00:00:00.000Z", retrievedAt: "2026-11-22" }),
+      snippet({ id: "v2", library: "vitest", title: "b", body: "Another vitest body long enough to make a preview for the catalog.", status: "verified", houseOwned: true, createdAt: "2026-11-21T00:00:00.000Z", retrievedAt: "2026-11-21" }),
+    ]);
+    expect(catalog[0]!.lastModified).toBe("2026-11-22");
+    const xml = sitemapXml("https://llmdocs.dev", catalog);
+    expect(xml).toContain("<loc>https://llmdocs.dev/browse/vitest</loc><lastmod>2026-11-22</lastmod>");
+    expect(xml).toContain("<loc>https://llmdocs.dev/referrals</loc></url>");
+  });
+});

@@ -52,6 +52,7 @@ const LIBRARY_NAMES: Record<string, string> = {
   sqlalchemy: "SQLAlchemy",
   llamaindex: "LlamaIndex",
   "react-router": "React Router",
+  vitest: "Vitest",
 };
 
 export type CatalogSnippet = {
@@ -68,6 +69,8 @@ export type CatalogLibrary = {
   displayName: string;
   count: number;
   snippets: CatalogSnippet[];
+  /** Latest YYYY-MM-DD among the library's snippets (created or retrieved), for sitemap lastmod. */
+  lastModified?: string;
 };
 
 export function libraryDisplayName(library: string): string {
@@ -88,8 +91,15 @@ export function snippetPreview(body: string, max = PREVIEW_MAX_CHARS): string {
 
 export function buildPublicCatalog(snippets: Snippet[]): CatalogLibrary[] {
   const groups = new Map<string, CatalogSnippet[]>();
+  const lastModified = new Map<string, string>();
   for (const snippet of snippets) {
     if (snippet.status !== "verified" && snippet.status !== "pending") continue;
+    for (const raw of [snippet.createdAt, snippet.retrievedAt]) {
+      const day = typeof raw === "string" ? raw.slice(0, 10) : "";
+      if (/^\d{4}-\d{2}-\d{2}$/.test(day) && day > (lastModified.get(snippet.library) ?? "")) {
+        lastModified.set(snippet.library, day);
+      }
+    }
     const list = groups.get(snippet.library) ?? [];
     list.push({
       id: snippet.id,
@@ -108,6 +118,7 @@ export function buildPublicCatalog(snippets: Snippet[]): CatalogLibrary[] {
       displayName: libraryDisplayName(library),
       count: items.length,
       snippets: items,
+      ...(lastModified.has(library) ? { lastModified: lastModified.get(library) } : {}),
     }));
 }
 
