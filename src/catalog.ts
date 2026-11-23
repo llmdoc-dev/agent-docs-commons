@@ -53,6 +53,7 @@ const LIBRARY_NAMES: Record<string, string> = {
   llamaindex: "LlamaIndex",
   "react-router": "React Router",
   vitest: "Vitest",
+  pytest: "pytest",
 };
 
 export type CatalogSnippet = {

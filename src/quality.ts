@@ -71,6 +71,7 @@ export const ALLOWED_SOURCE_HOSTS = new Set([
   "reactrouter.com",
   "www.reactrouter.com",
   "vitest.dev",
+  "docs.pytest.org",
 ]);
 
 export const ALLOWED_GITHUB_REPOS = [
@@ -131,6 +132,7 @@ export const ALLOWED_GITHUB_REPOS = [
   "run-llama/llama_index",
   "remix-run/react-router",
   "vitest-dev/vitest",
+  "pytest-dev/pytest",
 ];
 
 export const MAX_BODY_CHARS = 1500;

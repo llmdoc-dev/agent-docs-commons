@@ -172,10 +172,11 @@ describe("HTTP API", () => {
         "llamaindex",
         "react-router",
         "vitest",
+        "pytest",
       ]),
     );
-    expect(libraries).toHaveLength(47);
-    expect(libraries.reduce((s, l) => s + l.count, 0)).toBe(170);
+    expect(libraries).toHaveLength(48);
+    expect(libraries.reduce((s, l) => s + l.count, 0)).toBe(173);
   });
 
   it("accepts a contribution, blocks self-verify, then verifies and pays out on use", async () => {

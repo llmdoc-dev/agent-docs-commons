@@ -1698,5 +1698,35 @@
     "sourceUrl": "https://vitest.dev/guide/migration.html",
     "license": "MIT",
     "retrievedAt": "2026-11-22"
+  },
+  {
+    "id": "pytest-getting-started",
+    "library": "pytest",
+    "libraryVersion": "9.2",
+    "title": "Install pytest 9 in a virtual environment and write a first assert test",
+    "body": "Install into a virtual environment, not the system Python: python3 -m venv .venv, source .venv/bin/activate, pip install -U pytest. In a uv project (pyproject.toml) run uv add --dev pytest and prefix commands with uv run, e.g. uv run pytest. pytest --version should print pytest 9.2.0; pytest 9 requires Python >= 3.10 (3.9 support was dropped in 9.0). Tests are plain functions using bare assert statements: def test_answer(): assert func(3) == 5. Assertion introspection reports intermediate values (assert 4 == 5, where 4 = func(3)), so no assertEqual-style helpers are needed. Running pytest with no arguments collects files named test_*.py or *_test.py in the current directory and its subdirectories. Check exceptions with import pytest, then with pytest.raises(SystemExit): f(). Use pytest -q for quiet output. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://docs.pytest.org/en/stable/getting-started.html",
+    "license": "MIT",
+    "retrievedAt": "2026-11-23"
+  },
+  {
+    "id": "pytest-9-toml-config-strict",
+    "library": "pytest",
+    "libraryVersion": "9.2",
+    "title": "pytest 9 native TOML config: [tool.pytest] or pytest.toml, plus strict = true",
+    "body": "Since pytest 9.0, pyproject.toml supports native TOML types under [tool.pytest]: minversion = \"9.0\", addopts = [\"-ra\", \"-q\"], testpaths = [\"tests\", \"integration\"] (real TOML arrays, not space-separated strings). The older [tool.pytest.ini_options] table (INI compatibility mode, every value a string or list of strings, e.g. addopts = \"-ra -q\") still works, but the two tables cannot be used at the same time. A standalone pytest.toml or hidden .pytest.toml uses a [pytest] table and takes precedence over all other config files, even when empty; pytest.ini / .pytest.ini come next. pytest 9 warns when configuration is spread over more than one file, because only one is used. Strict mode (added in 9.0): strict = true enables strict_config, strict_markers, strict_parametrization_ids, and strict_xfail at once, and will also turn on strictness options added in future releases, so the docs advise it only with a pinned or locked pytest version. Individual options can still be overridden, e.g. strict = true with strict_parametrization_ids = false. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://docs.pytest.org/en/stable/reference/customize.html",
+    "license": "MIT",
+    "retrievedAt": "2026-11-23"
+  },
+  {
+    "id": "pytest-9-upgrade-changes",
+    "library": "pytest",
+    "libraryVersion": "9.2",
+    "title": "Upgrading to pytest 9.x: built-in subtests, removed-in-9 errors, keyword-only parametrize arguments",
+    "body": "9.0: subtests are built in (formerly the pytest-subtests plugin): def test_files(subtests: pytest.Subtests): for p in paths: with subtests.test(path=str(p)): assert check(p). Each failure is reported separately; unittest TestCase.subTest() also works. PytestRemovedIn9Warning became an error, and those features are gone as of 9.1. Overlapping or duplicate path arguments collapse (pytest a/ a/b runs a/ once, pytest x.py x.py runs once); --keep-duplicates restores the old behavior. CI mode now needs $CI or $BUILD_NUMBER set to a non-empty value. 9.1 deprecates non-Collection iterables such as generators as parametrize argvalues (pass a list or tuple), class-scoped fixtures defined as instance methods (use @classmethod), and --pastebin (now the pytest-pastebin plugin). 9.2 (2026-10-27): indirect, ids, and scope of @pytest.mark.parametrize are keyword-only, e.g. parametrize('x', [1, 2], ids=['a', 'b']); -c with a missing, directory, or unloadable path is a usage error; a plugin that cannot be found exits with code 4 (USAGE_ERROR) and one that fails to import exits with 3 (INTERNAL_ERROR); non-string values for string options in [tool.pytest.ini_options] emit PytestRemovedIn10Warning; yield_fixture is scheduled for removal. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://docs.pytest.org/en/stable/changelog.html",
+    "license": "MIT",
+    "retrievedAt": "2026-11-23"
   }
 ]

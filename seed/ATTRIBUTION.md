@@ -51,6 +51,7 @@ Site-seeded snippets are owned by the house contributor. When a paid lookup uses
 | LlamaIndex | MIT (run-llama/llama_index) | https://docs.llamaindex.ai | Short original summaries; llama-index 0.14.26 |
 | React Router | MIT (remix-run/react-router) | https://reactrouter.com | Short original summaries; react-router 8.5.2 |
 | Vitest | MIT (vitest-dev/vitest, including docs/) | https://vitest.dev | Short original summaries of the Getting Started and Vitest 5.0 migration guides; vitest 5.1.1, retrieved 2026-11-22 |
+| pytest | MIT (pytest-dev/pytest, including doc/) | https://docs.pytest.org | Short original summaries of Getting Started, Configuration, Good Integration Practices (strict mode), and the 9.0-9.2 changelog; pytest 9.2.0, retrieved 2026-11-23 |
 
 ## Proprietary official docs (short original summaries only)
 

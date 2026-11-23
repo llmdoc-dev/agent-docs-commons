@@ -34,6 +34,7 @@ describe("quality checks", () => {
     expect(checkSourceUrl("https://docs.sqlalchemy.org/en/21/tutorial/engine.html").ok).toBe(true);
     expect(checkSourceUrl("https://reactrouter.com/start/modes").ok).toBe(true);
     expect(checkSourceUrl("https://vitest.dev/guide/migration.html").ok).toBe(true);
+    expect(checkSourceUrl("https://docs.pytest.org/en/stable/changelog.html").ok).toBe(true);
     expect(checkSourceUrl("https://tailwindcss.com/docs/installation").ok).toBe(false);
   });
 
