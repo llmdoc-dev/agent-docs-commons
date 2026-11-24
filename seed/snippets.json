@@ -1728,5 +1728,35 @@
     "sourceUrl": "https://docs.pytest.org/en/stable/changelog.html",
     "license": "MIT",
     "retrievedAt": "2026-11-23"
+  },
+  {
+    "id": "uv-project-workflow",
+    "library": "uv",
+    "libraryVersion": "0.13",
+    "title": "uv 0.13 project workflow: uv init, uv add, uv lock, uv run, uv sync",
+    "body": "uv init hello-world (or uv init inside an existing directory) creates pyproject.toml, .python-version, README.md, .gitignore, a git repo, and a packaged src layout: src/hello_world/__init__.py, a [project.scripts] entry hello-world = \"hello_world:main\", and [build-system] requires = [\"uv_build>=0.13.9,<0.14\"], build-backend = \"uv_build\". Run it with uv run hello-world. The first uv run, uv sync, or uv lock creates .venv and uv.lock; uv.lock is a cross-platform TOML lockfile that should be committed and never edited by hand. uv add requests (or uv add 'requests==2.31.0', uv add git+https://github.com/psf/requests) updates pyproject.toml, the lockfile, and the environment; uv add -r requirements.txt -c constraints.txt migrates a requirements file; uv remove requests removes one; uv lock --upgrade-package requests upgrades a single package and keeps the rest of the lock. Before every uv run, uv checks that the lock matches pyproject.toml and the environment matches the lock: uv run -- flask run -p 3000 or uv run example.py. Alternatively uv sync, then source .venv/bin/activate (Windows: .venv\\Scripts\\activate). uv run does not remove extraneous packages by default. uv build writes an sdist and wheel to dist/; uv version --short prints the project version. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://docs.astral.sh/uv/guides/projects/",
+    "license": "MIT OR Apache-2.0",
+    "retrievedAt": "2026-11-24"
+  },
+  {
+    "id": "uv-scripts-inline-metadata",
+    "library": "uv",
+    "libraryVersion": "0.13",
+    "title": "Run Python scripts with uv: --with, PEP 723 inline dependencies, uv add --script, shebang, script lockfiles",
+    "body": "uv run example.py runs a script; in a directory with pyproject.toml it installs the current project first, so pass --no-project before the script name (uv run --no-project example.py) when the script does not need the project. One-off dependencies: uv run --with rich example.py, or uv run --with 'rich>12,<13' example.py (repeat --with for more). Prefer inline metadata (PEP 723): uv init --script example.py --python 3.12 creates it, and uv add --script example.py 'requests<3' rich writes a header block: # /// script, # requires-python = \">=3.12\", # dependencies = [\"requests<3\", \"rich\"], # ///. The dependencies field is required even if empty. With inline metadata, project dependencies are ignored (no --no-project needed) and uv downloads the required Python if missing. Executable scripts: first line #!/usr/bin/env -S uv run --script, then chmod +x. Lock a script explicitly with uv lock --script example.py (writes example.py.lock beside it, reused by uv run --script, uv add --script, uv export --script, uv tree --script). For reproducibility add [tool.uv] exclude-newer = \"2023-10-16T00:00:00Z\" (RFC 3339) inside the metadata block. Alternate index: uv add --index \"https://example.com/simple\" --script example.py pkg. Pick an interpreter per run with uv run --python 3.10 example.py; read from stdin with uv run -. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://docs.astral.sh/uv/guides/scripts/",
+    "license": "MIT OR Apache-2.0",
+    "retrievedAt": "2026-11-24"
+  },
+  {
+    "id": "uv-0-12-0-13-upgrade-changes",
+    "library": "uv",
+    "libraryVersion": "0.13",
+    "title": "Upgrading to uv 0.12/0.13: packaged uv init, Python 3.15 default, stable-first pre-releases, stricter hashes",
+    "body": "0.12.0 (2026-07-28): uv init now defines a uv_build build system, puts code in src/<name>, and adds a [project.scripts] command (uv run <name>); use uv init --no-package for the old main.py layout without a build system. Pre-release default is if-necessary: stable versions first, falling back to pre-releases, including ones required transitively (--prerelease disallow opts out; if-necessary-or-explicit is a deprecated alias). uv run path/to/script.py now discovers the project from the script's directory (opt out with --project .). uv venv --clear refuses a non-venv directory unless --force. uv init --project is an error (use uv init <path> or --directory). --require-hashes inside requirements.txt is enforced, MD5-only hashes are rejected in hash-checking mode, and .tar.bz2/.tar.xz sdists are rejected. 0.13.0 (2026-10-09): Python 3.15 is the default stable version for downloads when none is requested or pinned (uv python pin 3.14 or --python 3.14 to stay); --require-hashes in -c constraints files is honored; editable (-e) entries in constraints files are errors; --constraint/--override/--exclude/--build-constraint values are single paths (repeat the flag instead of quoting a space-separated list). Cache entries changed, so uv may re-download or rebuild after upgrading. Bump any uv_build upper bound, e.g. uv_build>=0.13.0,<0.14. Latest patch: 0.13.9 (2026-11-17). This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://github.com/astral-sh/uv/blob/main/CHANGELOG.md",
+    "license": "MIT OR Apache-2.0",
+    "retrievedAt": "2026-11-24"
   }
 ]

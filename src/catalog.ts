@@ -54,6 +54,7 @@ const LIBRARY_NAMES: Record<string, string> = {
   "react-router": "React Router",
   vitest: "Vitest",
   pytest: "pytest",
+  uv: "uv",
 };
 
 export type CatalogSnippet = {

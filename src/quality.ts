@@ -72,6 +72,7 @@ export const ALLOWED_SOURCE_HOSTS = new Set([
   "www.reactrouter.com",
   "vitest.dev",
   "docs.pytest.org",
+  "docs.astral.sh",
 ]);
 
 export const ALLOWED_GITHUB_REPOS = [
@@ -133,6 +134,7 @@ export const ALLOWED_GITHUB_REPOS = [
   "remix-run/react-router",
   "vitest-dev/vitest",
   "pytest-dev/pytest",
+  "astral-sh/uv",
 ];
 
 export const MAX_BODY_CHARS = 1500;

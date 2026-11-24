@@ -173,10 +173,11 @@ describe("HTTP API", () => {
         "react-router",
         "vitest",
         "pytest",
+        "uv",
       ]),
     );
-    expect(libraries).toHaveLength(48);
-    expect(libraries.reduce((s, l) => s + l.count, 0)).toBe(173);
+    expect(libraries).toHaveLength(49);
+    expect(libraries.reduce((s, l) => s + l.count, 0)).toBe(176);
   });
 
   it("accepts a contribution, blocks self-verify, then verifies and pays out on use", async () => {
