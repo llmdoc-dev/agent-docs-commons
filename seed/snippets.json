@@ -1758,5 +1758,35 @@
     "sourceUrl": "https://github.com/astral-sh/uv/blob/main/CHANGELOG.md",
     "license": "MIT OR Apache-2.0",
     "retrievedAt": "2026-11-24"
+  },
+  {
+    "id": "ruff-getting-started",
+    "library": "ruff",
+    "libraryVersion": "0.17",
+    "title": "Ruff 0.17 quick start: uv add --dev ruff, ruff check --fix, ruff format, config, pre-commit",
+    "body": "Add Ruff to a uv project with uv add --dev ruff (or pip install ruff), then run uv run ruff check (lint) and uv run ruff format (format, default 88-character line length); both run on the current directory unless you pass paths. Apply safe fixes with ruff check --fix; unsafe fixes need --fix --unsafe-fixes or unsafe-fixes = true. Ruff reads the first pyproject.toml, ruff.toml, or .ruff.toml in the file's directory or a parent. pyproject.toml: [tool.ruff] line-length = 79, then [tool.ruff.lint] extend-select = [\"UP\", \"D\"] and [tool.ruff.lint.pydocstyle] convention = \"google\"; in ruff.toml drop the tool.ruff prefix ([lint], [lint.pydocstyle]). Prefer extend-select over select so the default rule set (F, E, B, UP, RUF and more, minus formatter-overlapping style rules) stays on. The Python version comes from [project] requires-python = \">=3.10\" or target-version = \"py310\". pre-commit: repo https://github.com/astral-sh/ruff-pre-commit, rev: v0.17.6, hooks ruff-check then ruff-format (add types_or: [python, pyi, jupyter, markdown] to ruff-format for Markdown). When adopting a rule on legacy code, ruff check --select UP035 --add-noqa . (or --add-ignore) adds suppressions to existing violations. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://docs.astral.sh/ruff/tutorial/",
+    "license": "MIT",
+    "retrievedAt": "2026-11-25"
+  },
+  {
+    "id": "ruff-suppression-comments",
+    "library": "ruff",
+    "libraryVersion": "0.17",
+    "title": "Ruff suppression comments: noqa, ruff: ignore[...], ruff: disable/enable ranges, file-ignore, RUF100",
+    "body": "Line level: x = 1  # noqa: F841 (several codes: # noqa: E741, F841; bare # noqa ignores everything). Since 0.16 you can also write # ruff: ignore[F401] at the end of a line, or on its own line above a statement, where it covers the whole logical line (an entire multi-line def signature or list literal); placed inside a multi-line statement it covers only that physical line. Stacked ignore comments all apply to the next logical line. Since 0.15, block ranges: # ruff: disable[E501] ... # ruff: enable[E501]; codes, order, and indentation must match, at least one code is required (no blanket form), and ranges only suppress rules already selected. A disable without a matching enable runs until a less-indented scope and is reported as RUF104, so prefer explicit enable comments. File level: # ruff: noqa, # ruff: noqa: F841 (own line; # flake8: noqa is honored), or # ruff: file-ignore[F401, ARG001] at module scope near the top. For multi-line strings put # noqa after the closing quotes; for import sorting put # noqa: I001 on the first import of the block. Per-path ignores: lint.per-file-ignores. Find and remove stale suppressions with ruff check --extend-select RUF100 --fix; add suppressions for existing violations with --add-noqa or --add-ignore. In preview mode rule names such as unused-import can replace codes. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://docs.astral.sh/ruff/linter/",
+    "license": "MIT",
+    "retrievedAt": "2026-11-25"
+  },
+  {
+    "id": "ruff-0-15-0-17-upgrade-changes",
+    "library": "ruff",
+    "libraryVersion": "0.17",
+    "title": "Upgrading to Ruff 0.15-0.17: 2026 style, 413 default rules, Markdown formatting, Python 3.11 default, ruff-lsp removed",
+    "body": "0.15.0 (2026-02-03): the formatter applies the 2026 style guide (expect a one-time reformat); block suppressions # ruff: disable[CODE] / # ruff: enable[CODE]; extended config files are resolved before Ruff falls back to a default Python version. 0.16.0 (2026-07-23): the default rule set grows from 59 to 413 rules (see the Default Rules page), and 18 opinionated E/F rules leave it (E401, E402, E701-E703, E711-E714, E721, E731, E741-E743, F403, F405, F406, F722); ruff format now formats Python code blocks in Markdown files by default (opt out with extend-exclude = [\"*.md\"]; skip blocks with <!-- fmt:off --> / <!-- fmt:on -->); # ruff: ignore[CODE] comments work like noqa; check and format --check show fix diffs, and format --check accepts --output-format github or gitlab; JSON output location fields may be null. 0.17.0 (2026-10-09): the default target is Python 3.11 (was 3.10) when neither target-version nor requires-python is set; DTZ001/005/006/007/011/012/901 are no longer default while F406 is; the full output always displays unsafe fixes (applying them still needs --unsafe-fixes); ICN001 expects import datetime as dt; ruff-lsp support is removed (the VS Code extension always uses the native server; ruff.nativeServer is ignored); conda-forge builds drop Python, so python -m ruff and import ruff fail there. Latest patch: 0.17.6 (2026-11-19). This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://github.com/astral-sh/ruff/blob/main/CHANGELOG.md",
+    "license": "MIT",
+    "retrievedAt": "2026-11-25"
   }
 ]

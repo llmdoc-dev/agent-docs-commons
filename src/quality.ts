@@ -135,6 +135,7 @@ export const ALLOWED_GITHUB_REPOS = [
   "vitest-dev/vitest",
   "pytest-dev/pytest",
   "astral-sh/uv",
+  "astral-sh/ruff",
 ];
 
 export const MAX_BODY_CHARS = 1500;

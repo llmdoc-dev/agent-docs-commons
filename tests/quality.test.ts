@@ -37,6 +37,8 @@ describe("quality checks", () => {
     expect(checkSourceUrl("https://docs.pytest.org/en/stable/changelog.html").ok).toBe(true);
     expect(checkSourceUrl("https://docs.astral.sh/uv/guides/scripts/").ok).toBe(true);
     expect(checkSourceUrl("https://github.com/astral-sh/uv/blob/main/CHANGELOG.md").ok).toBe(true);
+    expect(checkSourceUrl("https://docs.astral.sh/ruff/linter/").ok).toBe(true);
+    expect(checkSourceUrl("https://github.com/astral-sh/ruff/blob/main/CHANGELOG.md").ok).toBe(true);
     expect(checkSourceUrl("https://tailwindcss.com/docs/installation").ok).toBe(false);
   });
 
