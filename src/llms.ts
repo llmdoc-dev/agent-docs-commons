@@ -64,6 +64,9 @@ ${catalogLines}
 - [Lookup](${cfg.publicBaseUrl}/v1/docs/lookup?library=react&q=useState): Version-pinned snippet answer (${price} after the free trial)
 - [Libraries](${cfg.publicBaseUrl}/v1/docs/libraries): What is already in the commons
 - [Browse](${cfg.publicBaseUrl}/browse): Human-readable catalog of titles, short previews, source, and status (free; full bodies stay paid)
+- [Check](${cfg.publicBaseUrl}/check): Human page for preflight tools — status, package health, and cited pricing (free page; API calls share the docs lookup cap)
+- [Preflight](${cfg.publicBaseUrl}/v1/check/preflight?service=openai): Combined check (after the free trial, ${price})
+- [Check services](${cfg.publicBaseUrl}/v1/check/services): Seeded service list (free)
 - [MCP](${cfg.publicBaseUrl}/mcp): Remote MCP JSON-RPC endpoint
 - [robots.txt](${cfg.publicBaseUrl}/robots.txt) and [sitemap](${cfg.publicBaseUrl}/sitemap.xml)
 - [PayAI Bazaar](https://facilitator.payai.network/discovery/resources?payTo=${cfg.payTo}): Facilitator discovery catalog

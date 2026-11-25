@@ -89,7 +89,7 @@ describe("one-click install", () => {
       referrals: { share: number; windowDays: number; capUsdPerReferredAgent: number };
     };
     expect(card.serverInfo.name).toBe("llmdocs");
-    expect(card.tools.map((t) => t.name)).toEqual(["docs_lookup", "docs_libraries", "docs_contribute", "docs_verify"]);
+    expect(card.tools.map((t) => t.name)).toEqual(["docs_lookup", "docs_libraries", "docs_contribute", "docs_verify", "preflight", "check_status", "check_package", "get_pricing", "list_check_services"]);
     expect(card.authentication.required).toBe(false);
     expect(card.referrals).toMatchObject({ share: 0.1, windowDays: 180, capUsdPerReferredAgent: 10 });
   });

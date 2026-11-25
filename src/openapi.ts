@@ -38,6 +38,57 @@ export function buildOpenApi(cfg: AppConfig): Record<string, unknown> {
           responses: { "200": { description: "HTML" }, "404": { description: "Library not in the catalog" } },
         },
       },
+
+      "/check": {
+        get: { summary: "Human page: preflight status, package health, and cited pricing facts", responses: { "200": { description: "HTML" } } },
+      },
+      "/v1/check/services": {
+        get: { summary: "List seeded services for preflight and pricing (free)", responses: { "200": { description: "JSON" } } },
+      },
+      "/v1/check/preflight": {
+        get: {
+          summary: "Combined status, package, and cited pricing check",
+          description: "Shares the docs lookup free daily cap, then $0.01 via x402. Pass service, url, and/or package name. Pricing fields are null when unverified.",
+          parameters: [
+            { name: "service", in: "query", schema: { type: "string" }, example: "openai" },
+            { name: "url", in: "query", schema: { type: "string" }, description: "Public https URL to probe" },
+            { name: "ecosystem", in: "query", schema: { type: "string", enum: ["npm", "pypi", "crates", "go"] } },
+            { name: "name", in: "query", schema: { type: "string" }, description: "Package name for a registry check" },
+            { name: "PAYMENT-SIGNATURE", in: "header", required: false, schema: { type: "string" } },
+          ],
+          responses: { "200": { description: "Preflight JSON" }, "402": { description: "Payment required" }, "400": { description: "Missing params" }, "404": { description: "Unknown service" } },
+        },
+      },
+      "/v1/check/status": {
+        get: {
+          summary: "Reachability probe and official status",
+          description: "Shares the docs lookup free daily cap, then $0.01 via x402.",
+          parameters: [
+            { name: "service", in: "query", schema: { type: "string" } },
+            { name: "url", in: "query", schema: { type: "string" } },
+          ],
+          responses: { "200": { description: "Status JSON" }, "402": { description: "Payment required" } },
+        },
+      },
+      "/v1/check/pricing": {
+        get: {
+          summary: "Cited plan and limit facts from official pages",
+          description: "Shares the docs lookup free daily cap, then $0.01 via x402. Unknown figures are null.",
+          parameters: [{ name: "service", in: "query", required: true, schema: { type: "string" }, example: "supabase" }],
+          responses: { "200": { description: "Pricing JSON" }, "402": { description: "Payment required" }, "404": { description: "Unknown service" } },
+        },
+      },
+      "/v1/check/package": {
+        get: {
+          summary: "Official registry package health",
+          description: "Shares the docs lookup free daily cap, then $0.01 via x402.",
+          parameters: [
+            { name: "ecosystem", in: "query", schema: { type: "string", enum: ["npm", "pypi", "crates", "go"] }, example: "npm" },
+            { name: "name", in: "query", required: true, schema: { type: "string" }, example: "request" },
+          ],
+          responses: { "200": { description: "Package JSON" }, "402": { description: "Payment required" } },
+        },
+      },
       "/.well-known/mcp/server-card.json": {
         get: { summary: "Static MCP server card: tools, transport, pricing, referral terms", responses: { "200": { description: "JSON" } } },
       },
@@ -51,7 +102,7 @@ export function buildOpenApi(cfg: AppConfig): Record<string, unknown> {
         get: { summary: "x402 discovery: payment requirements, free trial, answer size, and referral terms", responses: { "200": { description: "OK" } } },
       },
       "/mcp": {
-        post: { summary: "Remote MCP endpoint (Streamable HTTP): docs_lookup, docs_libraries, docs_contribute, docs_verify", responses: { "200": { description: "JSON-RPC" } } },
+        post: { summary: "Remote MCP endpoint (Streamable HTTP): docs_lookup, docs_libraries, docs_contribute, docs_verify, preflight, check_status, check_package, get_pricing, list_check_services", responses: { "200": { description: "JSON-RPC" } } },
       },
       "/llms.txt": {
         get: { summary: "Agent-oriented site index", responses: { "200": { description: "Markdown" } } },

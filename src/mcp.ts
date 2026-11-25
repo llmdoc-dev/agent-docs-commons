@@ -69,6 +69,31 @@ const TOOLS = [
     description: "List libraries already in the commons.",
     inputSchema: { type: "object", properties: {} },
   },
+  {
+    name: "preflight",
+    description: "Check status, package health, and cited pricing before relying on a service.",
+    inputSchema: { type: "object", properties: { service: { type: "string" }, url: { type: "string" }, ecosystem: { type: "string" }, name: { type: "string" } } },
+  },
+  {
+    name: "check_status",
+    description: "Probe a public URL or known service for reachability.",
+    inputSchema: { type: "object", properties: { service: { type: "string" }, url: { type: "string" } } },
+  },
+  {
+    name: "check_package",
+    description: "Check a package on npm, PyPI, crates.io, or the Go module proxy.",
+    inputSchema: { type: "object", required: ["name"], properties: { name: { type: "string" }, ecosystem: { type: "string" } } },
+  },
+  {
+    name: "get_pricing",
+    description: "Cited official plan and limit facts for a seeded service.",
+    inputSchema: { type: "object", required: ["service"], properties: { service: { type: "string" } } },
+  },
+  {
+    name: "list_check_services",
+    description: "List seeded services for preflight and pricing. Free.",
+    inputSchema: { type: "object", properties: {} },
+  },
 ];
 
 async function callApi(path: string, init?: RequestInit): Promise<unknown> {
@@ -108,6 +133,26 @@ async function handleTool(name: string, args: Record<string, unknown>): Promise<
   }
   if (name === "docs_libraries") {
     return callApi("/v1/docs/libraries");
+  }
+  if (name === "list_check_services") {
+    return callApi("/v1/check/services");
+  }
+  const checkPaths: Record<string, string> = {
+    preflight: "/v1/check/preflight",
+    check_status: "/v1/check/status",
+    check_package: "/v1/check/package",
+    get_pricing: "/v1/check/pricing",
+  };
+  if (checkPaths[name]) {
+    const q = new URLSearchParams();
+    if (args.service) q.set("service", String(args.service));
+    if (args.url) q.set("url", String(args.url));
+    if (args.ecosystem) q.set("ecosystem", String(args.ecosystem));
+    if (args.name) q.set("name", String(args.name));
+    const qs = q.toString();
+    return callApi(`${checkPaths[name]}${qs ? `?${qs}` : ""}`, {
+      headers: { "X-PAYMENT": `mock:${payer}` },
+    });
   }
   throw new Error(`Unknown tool: ${name}`);
 }

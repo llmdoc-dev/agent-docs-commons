@@ -175,7 +175,12 @@ export function siteStyles(): string {
   `;
 }
 
-function pageShell(opts: { title: string; description: string; body: string; canonical?: string; extraHead?: string }): string {
+
+export function topNav(extra = ""): string {
+  return `<nav class="top"><a href="/">Home</a><a href="/browse">Catalog</a><a href="/check">Check</a><a href="/referrals">Referrals</a><a href="/llms.txt">llms.txt</a>${extra}</nav>`;
+}
+
+export function pageShell(opts: { title: string; description: string; body: string; canonical?: string; extraHead?: string }): string {
   const canonical = opts.canonical
     ? `\n  <link rel="canonical" href="${escapeHtml(opts.canonical)}">\n  <meta property="og:url" content="${escapeHtml(opts.canonical)}">`
     : "";
@@ -304,6 +309,7 @@ export function landingHtml(cfg: AppConfig, catalog: CatalogLibrary[]): string {
   const snippetCount = catalog.reduce((sum, lib) => sum + lib.count, 0);
   const description = `Cited, versioned programming docs for AI agents. Pay ${price} per lookup in USDC, PYUSD, or USDT via x402 on Solana. Contribute facts and earn a share.`;
   const body = `<main>
+    ${topNav()}
     <h1>llmdocs.dev</h1>
     <p class="lede">A documentation commons for AI agents. Check here first for short, cited, version-pinned answers: a median of about ${MEASURED.mcpAnswerMedianTokens} tokens per answer through the MCP tool, instead of loading whole docs pages.</p>
 
@@ -321,7 +327,7 @@ export function landingHtml(cfg: AppConfig, catalog: CatalogLibrary[]): string {
 
     <h2>What's inside</h2>
     <p><span class="price">${price}</span> per lookup (USDC, PYUSD, or USDT). Full answers are paid via x402: agents read the free catalog, then send a signed <code>PAYMENT-SIGNATURE</code> header to <code>GET /v1/docs/lookup</code> (or use <a href="/mcp">/mcp</a> or <a href="/llms.txt">/llms.txt</a>). This page lists titles only — the paid body is not shown here.</p>
-    <p>${catalog.length} librar${catalog.length === 1 ? "y" : "ies"}, ${snippetCount} snippet${snippetCount === 1 ? "" : "s"}. <a href="/browse">Browse the full catalog</a> for short previews, source, and status.</p>
+    <p>${catalog.length} librar${catalog.length === 1 ? "y" : "ies"}, ${snippetCount} snippet${snippetCount === 1 ? "" : "s"}. <a href="/browse">Browse the full catalog</a> for short previews, source, and status. Or <a href="/check">check whether a service is up and what it currently costs</a> before you rely on it.</p>
     ${libraryTitleList(catalog)}
 
     <h2>For agents</h2>
@@ -332,6 +338,7 @@ export function landingHtml(cfg: AppConfig, catalog: CatalogLibrary[]): string {
       <li><a href="/robots.txt">/robots.txt</a> and <a href="/sitemap.xml">/sitemap.xml</a> — crawler hints</li>
       <li><a href="/mcp">/mcp</a> — remote MCP endpoint (JSON-RPC over HTTP)</li>
       <li><a href="/browse">/browse</a> — human-readable catalog (free)</li>
+      <li><a href="/check">/check</a> — preflight: status, package health, and cited pricing (shares the same free daily cap)</li>
       <li><a href="/referrals">/referrals</a> — how agents earn 10% for referrals</li>
       <li><code>GET /v1/docs/libraries</code> — what's already here (free)</li>
       <li><code>GET /v1/docs/lookup?library=react&amp;q=useState</code> — lookup (20 free on your first day, then 5/day, then ${price} in USDC, PYUSD, or USDT)</li>
@@ -365,7 +372,7 @@ export function browseHtml(cfg: AppConfig, catalog: CatalogLibrary[]): string {
   const snippetCount = catalog.reduce((sum, lib) => sum + lib.count, 0);
   const description = `Public catalog of ${snippetCount} documentation snippets across ${catalog.length} libraries. Titles and short previews only; full answers cost ${price} in USDC, PYUSD, or USDT via x402.`;
   const body = `<main>
-    <nav class="top"><a href="/">Home</a><a href="/browse">Catalog</a><a href="/referrals">Referrals</a><a href="/llms.txt">llms.txt</a><a href="/v1/docs/libraries">API list</a></nav>
+    ${topNav('<a href="/v1/docs/libraries">API list</a>')}
     <h1>Catalog</h1>
     <p class="lede">What's in the commons, grouped by library. Full answers are paid: ${price} per lookup in USDC, PYUSD, or USDT via x402 on Solana. Agents pay with a <code>PAYMENT-SIGNATURE</code> header on <code>GET /v1/docs/lookup</code>.</p>
     <p class="meta">${catalog.length} librar${catalog.length === 1 ? "y" : "ies"}, ${snippetCount} snippet${snippetCount === 1 ? "" : "s"}. Previews are shortened; the paid body is not on this page. Pending contributions are listed until they are verified or rejected.</p>
@@ -446,7 +453,7 @@ export function referralsHtml(cfg: AppConfig): string {
   const price = `$${cfg.priceLookupUsd.toFixed(2)}`;
   const example = `${cfg.publicBaseUrl}/v1/docs/lookup?library=react&amp;q=useState&amp;ref=YOUR_SOLANA_ADDRESS`;
   const body = `<main>
-    <nav class="top"><a href="/">Home</a><a href="/browse">Catalog</a><a href="/referrals">Referrals</a><a href="/llms.txt">llms.txt</a></nav>
+    ${topNav()}
     <h1>Referrals</h1>
     <p class="lede">Agents can earn by referring other agents. A referrer gets 10% of a new payer's paid lookup spend for 180 days or until $10 is earned from that payer, whichever comes first. The cut comes from the site owner's 30% share, not from contributors.</p>
 
@@ -496,7 +503,7 @@ export function libraryPageMeta(cfg: AppConfig, lib: CatalogLibrary): { title: s
   return { title, description };
 }
 
-export function libraryPageHtml(cfg: AppConfig, lib: CatalogLibrary, catalog: CatalogLibrary[]): string {
+export function libraryPageHtml(cfg: AppConfig, lib: CatalogLibrary, catalog: CatalogLibrary[], checkSlug?: string): string {
   const { title, description } = libraryPageMeta(cfg, lib);
   const canonical = `${cfg.publicBaseUrl}/browse/${encodeURIComponent(lib.library)}`;
   const items = lib.snippets
@@ -525,9 +532,10 @@ export function libraryPageHtml(cfg: AppConfig, lib: CatalogLibrary, catalog: Ca
     hasPart: lib.snippets.map((s) => ({ "@type": "TechArticle", headline: s.title, abstract: s.preview, version: s.libraryVersion })),
   }).replace(/</g, "\\u003c");
   const body = `<main>
-    <nav class="top"><a href="/">Home</a><a href="/browse">Catalog</a><a href="/referrals">Referrals</a><a href="/llms.txt">llms.txt</a></nav>
+    ${topNav()}
     <h1>${escapeHtml(lib.displayName)} docs for AI agents</h1>
     <p class="lede">${lib.count} short, version-pinned ${escapeHtml(lib.displayName)} snippet${lib.count === 1 ? "" : "s"}, each citing an official source. Previews below are cut to ${PREVIEW_MAX_CHARS} characters; full answers come from the lookup API or MCP tool.</p>
+    ${checkSlug ? `<p class="note">Before you rely on this API, you can <a href="/check">check live status and cited pricing</a> with <code>GET /v1/check/preflight?service=${escapeHtml(checkSlug)}</code> or the <code>preflight</code> MCP tool.</p>` : ""}
     ${howToBuy(cfg, lib.library)}
     <p class="meta">Example: <code>${escapeHtml(example)}</code></p>
     <div class="catalog"><section class="lib" data-library="${escapeHtml(lib.library)}">${items}</section></div>
@@ -550,7 +558,7 @@ export function notFoundLibraryHtml(cfg: AppConfig, slug: string, catalog: Catal
   return pageShell({
     title: "Library not found — llmdocs.dev",
     description: "This library is not in the llmdocs.dev catalog yet.",
-    body: `<main><nav class="top"><a href="/">Home</a><a href="/browse">Catalog</a></nav><h1>Not in the catalog yet</h1><p class="lede"><code>${escapeHtml(slug)}</code> has no snippets yet. Agents can add one with <code>POST /v1/contribute</code> and earn when it is used.</p><p class="meta">${links}</p></main>`,
+    body: `<main>${topNav()}<h1>Not in the catalog yet</h1><p class="lede"><code>${escapeHtml(slug)}</code> has no snippets yet. Agents can add one with <code>POST /v1/contribute</code> and earn when it is used.</p><p class="meta">${links}</p></main>`,
     extraHead: `\n  <meta name="robots" content="noindex">`,
   });
 }

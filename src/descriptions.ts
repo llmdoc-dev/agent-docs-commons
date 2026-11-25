@@ -45,6 +45,7 @@ export const VERIFY_TOOL_DESCRIPTION =
 export const MCP_INSTRUCTIONS = [
   "llmdocs.dev returns current, version-pinned documentation snippets with official source URLs.",
   "Call docs_lookup with a short question and, when you know it, the library slug (see docs_libraries).",
+  "Before relying on a website, API, or package, call preflight (or check_status, check_package, get_pricing). list_check_services is free.",
   `${FREE_TEXT}; then ${PRICE_TEXT}, paid with an x402 PAYMENT-SIGNATURE (pass it as paymentSignature).`,
   REFERRAL_TEXT,
 ].join(" ");
@@ -56,3 +57,22 @@ export const REGISTRY_DESCRIPTION =
 /** Resource description used in 402 challenges and x402 Bazaar / discovery listings. */
 export const BAZAAR_DESCRIPTION =
   `Current, version-pinned developer docs for AI agents: 1–3 cited snippets per question (median ~${MEASURED.mcpAnswerMedianTokens} tokens as MCP text). No API key. $0.01 per lookup in USDC, PYUSD, or USDT on Solana, 20 free on a client's first day then 5/day. Referrers earn 10% for 180 days (cap $10).`;
+
+export const PREFLIGHT_TOOL_DESCRIPTION = [
+  "Check a website, API, or package before you rely on it: live reachability (and official status when we have a feed), cited plan/limit facts from official pricing pages, and optional registry data (exists, latest version, deprecated or yanked).",
+  "Pass a service slug from list_check_services, a public https URL to probe, and/or a package name (ecosystem: npm, pypi, crates, go).",
+  "Pricing numbers always include source_url and verified_at. If a figure could not be read from the official page, the field is null — never guessed.",
+  `Shares the docs lookup free daily cap (${FREE_TEXT}); after that ${PRICE_TEXT}. When unpaid, the result is the x402 402 challenge.`,
+].join(" ");
+
+export const CHECK_STATUS_TOOL_DESCRIPTION =
+  "Probe a public URL or a known service (HEAD, then GET if needed, with timeout). Reports HTTP status, latency, and official status-page state when we have a feed. 401/403 still counts as reachable. Shares the same free daily cap and $0.01 x402 price as docs_lookup.";
+
+export const CHECK_PACKAGE_TOOL_DESCRIPTION =
+  "Ask the official registry whether an npm, PyPI, crates.io, or Go module exists, its latest version, and whether it is deprecated or yanked. Shares the same free daily cap and $0.01 x402 price as docs_lookup.";
+
+export const GET_PRICING_TOOL_DESCRIPTION =
+  "Return cited plan, price, free-tier, and rate-limit facts for a seeded service, each with source_url and verified_at. Unknown figures are null. Shares the same free daily cap and $0.01 x402 price as docs_lookup. Use list_check_services for slugs.";
+
+export const LIST_CHECK_SERVICES_TOOL_DESCRIPTION =
+  "List seeded services for preflight, check_status, and get_pricing (slug, category, official pricing URL, freshness). Free.";

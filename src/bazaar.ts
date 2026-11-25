@@ -73,6 +73,7 @@ export function robotsTxt(publicBaseUrl: string): string {
 User-agent: *
 Allow: /
 Allow: /browse/
+Allow: /check
 Disallow: /v1/payouts/
 
 # Content signals (search index and query-time model input are welcome).
@@ -92,6 +93,7 @@ export function sitemapXml(
   const urls: Array<{ path: string; lastmod?: string }> = [
     { path: "/", lastmod: catalogLastmod },
     { path: "/browse", lastmod: catalogLastmod },
+    { path: "/check" },
     ...catalog.map((lib) => ({ path: `/browse/${encodeURIComponent(lib.library)}`, lastmod: lib.lastModified })),
     { path: "/referrals" },
     { path: "/llms.txt", lastmod: catalogLastmod },

@@ -48,6 +48,8 @@ import {
 import { serverCard } from "./server-card.ts";
 import { BAZAAR_DESCRIPTION, MEASURED, REFERRAL_TEXT, SERVICE_PITCH } from "./descriptions.ts";
 import { handleMcp } from "./mcp-http.ts";
+import { handleCheckRoutes } from "./check/routes.ts";
+import { getServiceByDocsLibrary } from "./check/seed.ts";
 import { seedIfEmpty, seedOfficialSnippets } from "./seed-data.ts";
 import { lookupResourceUrl, robotsTxt, sitemapXml } from "./bazaar.ts";
 import {
@@ -118,7 +120,7 @@ async function route(cfg: AppConfig, db: Db, req: Request, url: URL): Promise<Re
     const catalog = await loadPublicCatalog(db);
     const lib = findCatalogLibrary(catalog, slug);
     if (!lib) return textResponse(404, "text/html; charset=utf-8", notFoundLibraryHtml(cfg, slug, catalog));
-    return textResponse(200, "text/html; charset=utf-8", libraryPageHtml(cfg, lib, catalog), {
+    return textResponse(200, "text/html; charset=utf-8", libraryPageHtml(cfg, lib, catalog, getServiceByDocsLibrary(lib.library)?.slug), {
       "Cache-Control": "public, max-age=300",
     });
   }
@@ -128,6 +130,8 @@ async function route(cfg: AppConfig, db: Db, req: Request, url: URL): Promise<Re
   if (method === "GET" && path === "/referrals") {
     return textResponse(200, "text/html; charset=utf-8", referralsHtml(cfg));
   }
+  const checkRes = await handleCheckRoutes(cfg, db, req, url, path, method);
+  if (checkRes) return checkRes;
   if (method === "GET" && path === "/health") {
     return jsonResponse(200, {
       ok: true,
@@ -232,6 +236,8 @@ async function wellKnownX402(cfg: AppConfig, url: URL): Promise<Response> {
       mcpServerCard: `${cfg.publicBaseUrl}/.well-known/mcp/server-card.json`,
       libraries: `${cfg.publicBaseUrl}/v1/docs/libraries`,
       browse: `${cfg.publicBaseUrl}/browse`,
+      check: `${cfg.publicBaseUrl}/check`,
+      checkServices: `${cfg.publicBaseUrl}/v1/check/services`,
       sitemap: `${cfg.publicBaseUrl}/sitemap.xml`,
     },
     answerSize: {
@@ -267,6 +273,14 @@ async function wellKnownX402(cfg: AppConfig, url: URL): Promise<Response> {
         assets: challenge.accepts.map((a) => ({ symbol: a.extra.name, asset: a.asset, amount: a.amount })),
         network: cfg.network,
         payTo: cfg.payTo,
+      },
+      {
+        method: "GET",
+        path: "/v1/check/preflight",
+        priceUsd: cfg.priceLookupUsd,
+        network: cfg.network,
+        payTo: cfg.payTo,
+        note: "Shares the docs lookup free daily cap and price. Also /v1/check/status, /v1/check/pricing, /v1/check/package.",
       },
     ],
     acceptedAssets: acceptedAssetsPublic(cfg),

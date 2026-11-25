@@ -3,10 +3,15 @@ import type { Db } from "./db.ts";
 import { jsonResponse, paymentCorsHeaders, textResponse } from "./payment.ts";
 import { listLibraries } from "./db.ts";
 import {
+  CHECK_PACKAGE_TOOL_DESCRIPTION,
+  CHECK_STATUS_TOOL_DESCRIPTION,
   CONTRIBUTE_TOOL_DESCRIPTION,
+  GET_PRICING_TOOL_DESCRIPTION,
   LIBRARIES_TOOL_DESCRIPTION,
+  LIST_CHECK_SERVICES_TOOL_DESCRIPTION,
   LOOKUP_TOOL_DESCRIPTION,
   MCP_INSTRUCTIONS,
+  PREFLIGHT_TOOL_DESCRIPTION,
   VERIFY_TOOL_DESCRIPTION,
 } from "./descriptions.ts";
 
@@ -78,6 +83,77 @@ export const TOOLS = [
       },
     },
   },
+
+  {
+    name: "preflight",
+    title: "Preflight a service, URL, or package",
+    description: PREFLIGHT_TOOL_DESCRIPTION,
+    annotations: { readOnlyHint: true, openWorldHint: true },
+    inputSchema: {
+      type: "object",
+      properties: {
+        service: { type: "string", description: "Service slug from list_check_services, e.g. openai, stripe, supabase" },
+        url: { type: "string", description: "Public https URL to probe when the service is not in the catalog" },
+        ecosystem: { type: "string", enum: ["npm", "pypi", "crates", "go"], description: "Registry for a package check (default npm)" },
+        name: { type: "string", description: "Package or module name to check on the official registry" },
+        paymentSignature: { type: "string", description: "x402 v2 PAYMENT-SIGNATURE from a previous 402" },
+        format: { type: "string", enum: ["text", "json"], description: "text (default) or json" },
+      },
+    },
+  },
+  {
+    name: "check_status",
+    title: "Check reachability and official status",
+    description: CHECK_STATUS_TOOL_DESCRIPTION,
+    annotations: { readOnlyHint: true, openWorldHint: true },
+    inputSchema: {
+      type: "object",
+      properties: {
+        service: { type: "string" },
+        url: { type: "string" },
+        paymentSignature: { type: "string" },
+        format: { type: "string", enum: ["text", "json"] },
+      },
+    },
+  },
+  {
+    name: "check_package",
+    title: "Check a package on the official registry",
+    description: CHECK_PACKAGE_TOOL_DESCRIPTION,
+    annotations: { readOnlyHint: true, openWorldHint: true },
+    inputSchema: {
+      type: "object",
+      required: ["name"],
+      properties: {
+        name: { type: "string", description: "Package or module name, e.g. request or golang.org/x/mod" },
+        ecosystem: { type: "string", enum: ["npm", "pypi", "crates", "go"], description: "Default npm" },
+        paymentSignature: { type: "string" },
+        format: { type: "string", enum: ["text", "json"] },
+      },
+    },
+  },
+  {
+    name: "get_pricing",
+    title: "Cited official plan and limit facts",
+    description: GET_PRICING_TOOL_DESCRIPTION,
+    annotations: { readOnlyHint: true, openWorldHint: false },
+    inputSchema: {
+      type: "object",
+      required: ["service"],
+      properties: {
+        service: { type: "string", description: "Service slug from list_check_services" },
+        paymentSignature: { type: "string" },
+        format: { type: "string", enum: ["text", "json"] },
+      },
+    },
+  },
+  {
+    name: "list_check_services",
+    title: "List preflight services",
+    description: LIST_CHECK_SERVICES_TOOL_DESCRIPTION,
+    annotations: { readOnlyHint: true, openWorldHint: false },
+    inputSchema: { type: "object", properties: {} },
+  },
 ];
 
 export async function handleMcp(
@@ -91,7 +167,7 @@ export async function handleMcp(
     return textResponse(
       200,
       "text/plain; charset=utf-8",
-      `llmdocs MCP endpoint (Streamable HTTP, JSON responses). POST JSON-RPC 2.0 to this URL. Tools: docs_lookup, docs_libraries, docs_contribute, docs_verify.\n\n${MCP_INSTRUCTIONS}\n\nInstall: claude mcp add --transport http llmdocs ${cfg.publicBaseUrl}/mcp  |  Cursor/VS Code: see ${cfg.publicBaseUrl}/#install\n`,
+      `llmdocs MCP endpoint (Streamable HTTP, JSON responses). POST JSON-RPC 2.0 to this URL. Tools: docs_lookup, docs_libraries, docs_contribute, docs_verify, preflight, check_status, check_package, get_pricing, list_check_services.\n\n${MCP_INSTRUCTIONS}\n\nInstall: claude mcp add --transport http llmdocs ${cfg.publicBaseUrl}/mcp  |  Cursor/VS Code: see ${cfg.publicBaseUrl}/#install\n`,
     );
   }
   if (req.method !== "POST") {
@@ -189,6 +265,45 @@ async function callTool(
     const text = await res.text();
     return { content: [{ type: "text", text }], isError: !res.ok };
   }
+
+  const checkTools: Record<string, string> = {
+    preflight: "/v1/check/preflight",
+    check_status: "/v1/check/status",
+    check_package: "/v1/check/package",
+    get_pricing: "/v1/check/pricing",
+    list_check_services: "/v1/check/services",
+  };
+  if (name === "list_check_services") {
+    const inner = new Request(`${origin}/v1/check/services`, { headers: { accept: "application/json" } });
+    const res = dispatch ? await dispatch(inner) : await fetch(inner);
+    const text = await res.text();
+    return { content: [{ type: "text", text }], isError: !res.ok };
+  }
+  if (checkTools[name]) {
+    const params = new URLSearchParams();
+    if (args.service) params.set("service", String(args.service));
+    if (args.url) params.set("url", String(args.url));
+    if (args.ecosystem) params.set("ecosystem", String(args.ecosystem));
+    if (args.name) params.set("name", String(args.name));
+    const headers: Record<string, string> = { accept: "application/json" };
+    const payment = args.paymentSignature ? String(args.paymentSignature) : incoming.headers.get("PAYMENT-SIGNATURE") ?? incoming.headers.get("X-PAYMENT");
+    if (payment) headers["PAYMENT-SIGNATURE"] = payment;
+    const incomingRef = incoming.headers.get("X-Llmdocs-Ref");
+    if (incomingRef) headers["X-Llmdocs-Ref"] = incomingRef;
+    for (const headerName of ["CF-Connecting-IP", "True-Client-IP", "X-Forwarded-For"]) {
+      const value = incoming.headers.get(headerName);
+      if (value) headers[headerName] = value;
+    }
+    const qs = params.toString();
+    const lookupReq = new Request(`${origin}${checkTools[name]}${qs ? `?${qs}` : ""}`, { headers });
+    const res = dispatch ? await dispatch(lookupReq) : await fetch(lookupReq);
+    const text = await res.text();
+    const wantJson = String(args.format ?? "text") === "json";
+    return {
+      content: [{ type: "text", text: wantJson ? text : renderCheckText(res.status, text) }],
+      isError: res.status >= 400 && res.status !== 402,
+    };
+  }
   return { content: [{ type: "text", text: `Unknown tool: ${name}` }], isError: true };
 }
 
@@ -236,3 +351,62 @@ export function renderLookupText(status: number, raw: string, origin: string): s
   }
   return lines.join("\n\n");
 }
+
+
+export function renderCheckText(status: number, raw: string): string {
+  if (status !== 200) {
+    if (status === 402) {
+      return `Payment required: the shared free trial for today is used up. Pay the x402 challenge below ($0.01 in USDC, PYUSD, or USDT on Solana) and call again with paymentSignature set to your PAYMENT-SIGNATURE value.\n${raw}`;
+    }
+    return raw;
+  }
+  try {
+    const body = JSON.parse(raw) as Record<string, unknown>;
+    const lines: string[] = [];
+    if (body.displayName || body.service) {
+      lines.push(`# ${String(body.displayName ?? body.service)}${body.overall ? ` — ${String(body.overall)}` : ""}`);
+    }
+    const official = body.official as { state?: string; description?: string; statusUrl?: string } | null | undefined;
+    if (official) {
+      lines.push(`Official status: ${official.state ?? "unknown"}${official.description ? ` (${official.description})` : ""}${official.statusUrl ? `\nSource: ${official.statusUrl}` : ""}`);
+    }
+    const probe = body.probe as { reachable?: boolean; httpStatus?: number | null; latencyMs?: number | null; target?: string; note?: string | null } | undefined;
+    if (probe && probe.target) {
+      lines.push(`Probe: ${probe.reachable ? "reachable" : "unreachable"} HTTP ${probe.httpStatus ?? "n/a"} in ${probe.latencyMs ?? "?"}ms\nTarget: ${probe.target}${probe.note ? `\n${probe.note}` : ""}`);
+    }
+    const pricing = (body.pricing as { freshness?: string; plans?: Array<{ name: string; priceUsd: number | null; pricePeriod: string | null; priceNote: string | null; included: string | null; sourceUrl: string; verifiedAt: string | null }>; models?: Array<{ name: string; inputPerMillionUsd: number | null; outputPerMillionUsd: number | null }> | null } | undefined) ?? (body.plans ? body as typeof body & { plans: unknown } : undefined);
+    const plans = (body.plans as PricingPlan[] | undefined) ?? pricing?.plans;
+    if (plans && Array.isArray(plans)) {
+      lines.push(`Pricing freshness: ${String((body.freshness ?? pricing?.freshness) ?? "unknown")}`);
+      for (const p of plans) {
+        const price = p.priceUsd == null ? "price not published here" : `$${p.priceUsd}${p.pricePeriod ? ` / ${p.pricePeriod}` : ""}`;
+        lines.push(`## ${p.name}: ${price}\n${p.priceNote ?? ""}${p.included ? `\nIncluded: ${p.included}` : ""}\nSource: ${p.sourceUrl}${p.verifiedAt ? ` · verified ${p.verifiedAt}` : " · unverified"}`);
+      }
+    }
+    const models = (Array.isArray(body.models) ? body.models : pricing && Array.isArray(pricing.models) ? pricing.models : []) as Array<{ name: string; inputPerMillionUsd: number | null; outputPerMillionUsd: number | null }>;
+    if (models.length) {
+      lines.push("Model rates (USD per 1M tokens, official page):");
+      for (const m of models.slice(0, 12)) {
+        lines.push(`- ${m.name}: in ${m.inputPerMillionUsd ?? "n/a"} / out ${m.outputPerMillionUsd ?? "n/a"}`);
+      }
+    }
+    const pkg = body.package as { ecosystem?: string; name?: string; exists?: boolean; latest?: string | null; deprecated?: boolean | null; yanked?: boolean | null; registryUrl?: string } | undefined;
+    // When the body itself is a package result
+    const pkgBody = body.ecosystem && body.name ? body as typeof pkg : pkg;
+    if (pkgBody && pkgBody.name) {
+      lines.push(`Package ${pkgBody.ecosystem}:${pkgBody.name}: ${pkgBody.exists ? `exists, latest ${pkgBody.latest ?? "unknown"}` : "not found"}${pkgBody.deprecated ? " (deprecated)" : ""}${pkgBody.yanked ? " (yanked)" : ""}${pkgBody.registryUrl ? `\nRegistry: ${pkgBody.registryUrl}` : ""}`);
+    }
+    const payment = body.payment as { mode?: string; remainingFreeLookups?: number } | undefined;
+    if (payment?.mode === "free") {
+      lines.push(`[free trial check · ${payment.remainingFreeLookups ?? 0} free left today · then $0.01 via x402]`);
+    } else if (payment?.mode) {
+      lines.push(`[paid check · mode ${payment.mode}]`);
+    }
+    if (typeof body.disclaimer === "string") lines.push(body.disclaimer);
+    return lines.filter(Boolean).join("\n\n") || raw;
+  } catch {
+    return raw;
+  }
+}
+
+type PricingPlan = { name: string; priceUsd: number | null; pricePeriod: string | null; priceNote: string | null; included: string | null; sourceUrl: string; verifiedAt: string | null };
