@@ -1788,5 +1788,35 @@
     "sourceUrl": "https://github.com/astral-sh/ruff/blob/main/CHANGELOG.md",
     "license": "MIT",
     "retrievedAt": "2026-11-25"
+  },
+  {
+    "id": "biome-getting-started",
+    "library": "biome",
+    "libraryVersion": "2.6",
+    "title": "Biome 2.6 quick start: npm i -D -E @biomejs/biome, biome init, biome check --write, biome ci",
+    "body": "Install pinned: npm i -D -E @biomejs/biome (pnpm add -D -E, bun add -D -E, deno add -D npm:@biomejs/biome; no-Node standalone: curl -fsSL https://biomejs.dev/install | bash). -E pins the exact version so editors and CI agree. npx biome init writes biome.json with \"$schema\": \"https://biomejs.dev/schemas/2.6.9/schema.json\", formatter on (indentStyle \"tab\"), linter \"rules\": { \"preset\": \"recommended\" }, javascript.formatter.quoteStyle \"double\", and assist.actions.source.organizeImports \"on\"; since 2.6, init inside a Git repo (or with --git) also sets vcs.enabled, vcs.clientKind \"git\", vcs.useIgnoreFile true. npx biome check runs formatter, linter, and import sorting in one pass; biome check --write applies formatting and safe fixes, --write --unsafe also applies unsafe fixes; biome format --write and biome lint run one tool. In CI use biome ci . (no --write; GitHub annotations; --reporter=gitlab etc.). With VCS enabled plus vcs.defaultBranch \"main\", biome check --changed (or --since=next) checks only changed files and biome check --staged only staged files (not in ci). Config files: biome.json, biome.jsonc, .biome.json, .biome.jsonc, found in the cwd, then parent folders, then the user config dir. Lock files (package-lock.json, pnpm-lock.yaml, yarn.lock) are always ignored. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://biomejs.dev/installation/quick-start/",
+    "license": "MIT",
+    "retrievedAt": "2026-11-26"
+  },
+  {
+    "id": "biome-config-and-suppressions",
+    "library": "biome",
+    "libraryVersion": "2.6",
+    "title": "Biome config and suppressions: preset, <language>.formatter, files.includes globs, biome-ignore comments",
+    "body": "Shared options go under the tool, per-language ones under <language>.<tool>: { \"formatter\": { \"indentStyle\": \"space\", \"lineWidth\": 100 }, \"javascript\": { \"formatter\": { \"quoteStyle\": \"single\" } }, \"json\": { \"formatter\": { \"enabled\": false } } } (\"javascript\" covers TS, JSX, TSX; defaults are tab and lineWidth 80). Rules: linter.rules.preset is \"recommended\", \"all\", or \"none\" (replaces the deprecated recommended: true; biome migrate rewrites it), per group too (\"style\": { \"preset\": \"all\" }), and single rules: \"suspicious\": { \"noDebugger\": \"off\" }. Files: \"files\": { \"includes\": [\"**\", \"!**/*.generated.js\", \"!!**/dist\"] }; ! skips lint/format, !! also stops indexing for project rules and type inference, and negations must follow \"**\". Per-tool linter.includes can only narrow files.includes; use overrides: [{ \"includes\": [\"*.scss\"], \"linter\": {...} }] for per-path settings. Suppressions need a reason: // biome-ignore lint/suspicious/noDebugger: reason (next line), // biome-ignore-all lint/...: reason at the top of a file, and // biome-ignore-start ... / // biome-ignore-end ... ranges (must be paired). Categories are lint, assist, syntax, and lint/plugin[/name] for GritQL plugins; a biome-ignore-all not at the top reports suppression/unused. Migrate: biome migrate eslint --write, biome migrate prettier --write, biome migrate stylelint --write (2.6). This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://biomejs.dev/configuration/configure-biome/",
+    "license": "MIT",
+    "retrievedAt": "2026-11-26"
+  },
+  {
+    "id": "biome-2-5-2-6-upgrade-changes",
+    "library": "biome",
+    "libraryVersion": "2.6",
+    "title": "Upgrading to Biome 2.5/2.6: rule presets, Markdown, YAML and SCSS support, migrate stylelint, inspect",
+    "body": "2.5.0 (2026-06-12): linter.rules.preset (\"recommended\" | \"all\" | \"none\", also per group) replaces recommended: true; --watch for check/format/lint; --reporter=concise; biome upgrade for standalone installs; .svg format and lint; 73 nursery rules promoted; .git/info/exclude honored when vcs.useIgnoreFile is on. 2.6 (first published as 2.6.2 on 2026-10-21): Markdown (CommonMark; GFM not yet) and YAML (.yaml/.yml) are formatted, and Markdown linted, by default, so expect new diffs on .md and .yml files; fenced code blocks in Markdown are formatted with their language's formatter (opt out with markdown.formatter.formatEmbeds: false; markdown.formatter.proseWrap and markdown.parser.frontmatter are opt-in; markdown.analyzeEmbeds lints blocks, off by default). Also SCSS format/lint (.module.scss as CSS Modules), .gs (Apps Script) and .htm files; biome migrate stylelint; biome init enables Git VCS integration automatically (--git to force); extends can nest up to ten levels; biome inspect config (resolved values and origins), inspect file, inspect plugins; 59 nursery rules promoted; the tailwind domain auto-enables only for tailwindcss v4+; javascript.parser.gritMetavariables was removed and is now a configuration error. Latest patch: 2.6.9 (2026-11-24). This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://github.com/biomejs/biome/blob/main/packages/@biomejs/biome/CHANGELOG.md",
+    "license": "MIT OR Apache-2.0",
+    "retrievedAt": "2026-11-26"
   }
 ]

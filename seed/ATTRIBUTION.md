@@ -54,6 +54,7 @@ Site-seeded snippets are owned by the house contributor. When a paid lookup uses
 | pytest | MIT (pytest-dev/pytest, including doc/) | https://docs.pytest.org | Short original summaries of Getting Started, Configuration, Good Integration Practices (strict mode), and the 9.0-9.2 changelog; pytest 9.2.0, retrieved 2026-11-23 |
 | uv | MIT OR Apache-2.0 (astral-sh/uv, including docs/) | https://docs.astral.sh/uv | Short original summaries of the Working on projects and Running scripts guides and the 0.12.0/0.13.0 release notes (CHANGELOG.md, changelogs/0.12.x.md); uv 0.13.9, retrieved 2026-11-24 |
 | Ruff | MIT (astral-sh/ruff, including docs/) | https://docs.astral.sh/ruff | Short original summaries of the Tutorial and Linter (error suppression) docs and the 0.15.0/0.16.0/0.17.0 release notes (CHANGELOG.md, changelogs/0.15.x.md, changelogs/0.16.x.md); ruff 0.17.6, retrieved 2026-11-25 |
+| Biome | MIT OR Apache-2.0 (biomejs/biome); website docs MIT (biomejs/website) | https://biomejs.dev | Short original summaries of the Quick start, Configure Biome, Suppressions, Integrate with your VCS, Migrate from other tools, and Continuous integration docs and the 2.5.0/2.6.2 release notes (packages/@biomejs/biome/CHANGELOG.md); @biomejs/biome 2.6.9, retrieved 2026-11-26 |
 
 ## Proprietary official docs (short original summaries only)
 

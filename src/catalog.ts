@@ -56,6 +56,7 @@ const LIBRARY_NAMES: Record<string, string> = {
   pytest: "pytest",
   uv: "uv",
   ruff: "Ruff",
+  biome: "Biome",
 };
 
 export type CatalogSnippet = {

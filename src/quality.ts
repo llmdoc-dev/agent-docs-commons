@@ -73,6 +73,7 @@ export const ALLOWED_SOURCE_HOSTS = new Set([
   "vitest.dev",
   "docs.pytest.org",
   "docs.astral.sh",
+  "biomejs.dev",
 ]);
 
 export const ALLOWED_GITHUB_REPOS = [
@@ -136,6 +137,8 @@ export const ALLOWED_GITHUB_REPOS = [
   "pytest-dev/pytest",
   "astral-sh/uv",
   "astral-sh/ruff",
+  "biomejs/biome",
+  "biomejs/website",
 ];
 
 export const MAX_BODY_CHARS = 1500;
