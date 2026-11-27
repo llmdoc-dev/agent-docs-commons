@@ -74,6 +74,7 @@ export const ALLOWED_SOURCE_HOSTS = new Set([
   "docs.pytest.org",
   "docs.astral.sh",
   "biomejs.dev",
+  "eslint.org",
 ]);
 
 export const ALLOWED_GITHUB_REPOS = [
@@ -139,6 +140,7 @@ export const ALLOWED_GITHUB_REPOS = [
   "astral-sh/ruff",
   "biomejs/biome",
   "biomejs/website",
+  "eslint/eslint",
 ];
 
 export const MAX_BODY_CHARS = 1500;

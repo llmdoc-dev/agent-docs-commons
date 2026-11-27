@@ -1818,5 +1818,35 @@
     "sourceUrl": "https://github.com/biomejs/biome/blob/main/packages/@biomejs/biome/CHANGELOG.md",
     "license": "MIT OR Apache-2.0",
     "retrievedAt": "2026-11-26"
+  },
+  {
+    "id": "eslint-getting-started",
+    "library": "eslint",
+    "libraryVersion": "10.15",
+    "title": "ESLint 10 quick start: npm init @eslint/config, eslint.config.js with defineConfig, js/recommended, npx eslint",
+    "body": "Requires Node.js ^20.19.0, ^22.13.0, or >=24 (TypeScript 5.3+ if you use ESLint's type definitions). Fastest setup: npm init @eslint/config@latest (pnpm create @eslint/config@latest, bun create @eslint/config@latest; needs an existing package.json); it asks questions and writes eslint.config.js or eslint.config.mjs. Manual setup: npm install --save-dev eslint@latest @eslint/js@latest, then eslint.config.js: import { defineConfig } from \"eslint/config\"; import js from \"@eslint/js\"; export default defineConfig([{ files: [\"**/*.js\"], plugins: { js }, extends: [\"js/recommended\"], rules: { \"no-unused-vars\": \"warn\", \"no-undef\": \"warn\" } }]); For browser globals add languageOptions: { globals: globals.browser } (import globals from the globals package, as the wizard does). ESLint lints nothing until you extend a shared config or turn rules on. Severities: \"off\"/0, \"warn\"/1 (does not affect exit code), \"error\"/2 (exit code 1). Run npx eslint file.js or npx eslint src/ (pnpm dlx eslint, bunx eslint). With pnpm, add auto-install-peers=true and node-linker=hoisted to .npmrc. Install ESLint locally; a global install still needs plugins and shareable configs installed locally. Shareable config at setup: npm init @eslint/config@latest -- --config eslint-config-xo. Latest: eslint 10.15.0 (2026-11-13), whose faster @eslint/config-array config resolution needs no config changes. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://eslint.org/docs/latest/use/getting-started",
+    "license": "MIT",
+    "retrievedAt": "2026-11-27"
+  },
+  {
+    "id": "eslint-flat-config-files",
+    "library": "eslint",
+    "libraryVersion": "10.15",
+    "title": "ESLint 10 config files: eslint.config.* objects, files/ignores, globalIgnores(), basePath, extends, TypeScript configs",
+    "body": "Config file names, in precedence order: eslint.config.js, .mjs, .cjs, then .ts, .mts, .cts; it exports an array of config objects, usually via defineConfig([...]) from \"eslint/config\" (CommonJS syntax if package.json has \"type\": \"commonjs\"). Object keys: name, basePath, files, ignores, extends, language (\"js/js\" default), languageOptions (ecmaVersion \"latest\", sourceType \"module\" for .js/.mjs and \"commonjs\" for .cjs, globals, parser, parserOptions), linterOptions (noInlineConfig, reportUnusedDisableDirectives default \"warn\"), processor, plugins, rules. Default lint targets are **/*.js, **/*.cjs, **/*.mjs. files/ignores are minimatch globs relative to the config file (relative to cwd with --config). An object with only ignores is a global ignore; prefer globalIgnores([\"dist/\", \".config/\"]). Non-global ignores match files only, so use \"dir/**\", not \"dir/\". basePath: \"tests\" scopes an object's files/ignores to a subdirectory. extends takes \"plugin/config\" strings (plugin must be in plugins), config objects, or arrays. Lookup starts in each linted file's directory and walks up to the nearest eslint.config.*, so monorepo packages can have their own; --config path skips it. TypeScript config on Node needs dev dependency jiti >= 2.2.0 (Bun and Deno load it natively), or on Node >= 22.13.0: npx --node-options='--experimental-strip-types' eslint --flag unstable_native_nodejs_ts_config. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://eslint.org/docs/latest/use/configure/configuration-files",
+    "license": "MIT",
+    "retrievedAt": "2026-11-27"
+  },
+  {
+    "id": "eslint-9-to-10-upgrade-changes",
+    "library": "eslint",
+    "libraryVersion": "10.15",
+    "title": "Upgrading ESLint 9 to 10: eslintrc removed, per-file config lookup, new recommended rules, eslint-env errors, codemods",
+    "body": "ESLint 10.0.0 shipped 2026-02-06. Start with npx codemod @eslint/v9-to-v10 and review the result. Users: Node.js below 20.19 and v21/v23 are dropped. The old .eslintrc format is gone (ESLINT_USE_FLAT_CONFIG=false no longer works; FlatESLint/LegacyESLint are removed, use ESLint). Config lookup now starts from each linted file's directory (the v10_config_lookup_from_file flag is removed and errors if passed; use --config for the old cwd-based behavior). eslint:recommended adds no-unassigned-vars, no-useless-assignment, and preserve-caught-error. JSX identifiers are tracked as references, so no-unused-vars/no-undef results in JSX files may change and workarounds like @eslint-react/jsx-uses-vars can go. /* eslint-env */ comments are now reported as errors; delete them. TypeScript configs need jiti >= 2.2.0. The stylish formatter honors NO_COLOR and NODE_DISABLE_COLORS, and --color/--no-color beat env vars. no-shadow-restricted-names reports globalThis by default (reportGlobalThis: false restores the old behavior). Stricter schemas for func-names and no-invalid-regexp. @eslint/js configs have name again (update @eslint/eslintrc if you use FlatCompat). Plugin authors: removed deprecated context/SourceCode methods, fixer text must be a string, RuleTester rejects type in errors and errors/output in valid cases, Program range spans the whole file. This is a short original summary for agents, not a substitute for the official documentation.",
+    "sourceUrl": "https://eslint.org/docs/latest/use/migrate-to-10.0.0",
+    "license": "MIT",
+    "retrievedAt": "2026-11-27"
   }
 ]

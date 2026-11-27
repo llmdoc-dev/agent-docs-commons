@@ -57,6 +57,7 @@ const LIBRARY_NAMES: Record<string, string> = {
   uv: "uv",
   ruff: "Ruff",
   biome: "Biome",
+  eslint: "ESLint",
 };
 
 export type CatalogSnippet = {

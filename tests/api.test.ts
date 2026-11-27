@@ -176,10 +176,11 @@ describe("HTTP API", () => {
         "uv",
         "ruff",
         "biome",
+        "eslint",
       ]),
     );
-    expect(libraries).toHaveLength(51);
-    expect(libraries.reduce((s, l) => s + l.count, 0)).toBe(182);
+    expect(libraries).toHaveLength(52);
+    expect(libraries.reduce((s, l) => s + l.count, 0)).toBe(185);
   });
 
   it("accepts a contribution, blocks self-verify, then verifies and pays out on use", async () => {
