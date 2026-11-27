@@ -155,6 +155,12 @@ Do not put the site wallet secret in Wrangler secrets or Worker code.
 | `npm run seed` | Insert any official seed excerpts that are not already in the database |
 | `npm run typecheck` | TypeScript check |
 
+## Listings
+
+[![llmdocs.dev MCP connector](https://glama.ai/mcp/connectors/dev.llmdocs/docs/badges/score.svg)](https://glama.ai/mcp/connectors/dev.llmdocs/docs)
+
+The hosted MCP server is listed on [Glama](https://glama.ai/mcp/connectors/dev.llmdocs/docs). See also the [awesome-mcp-servers](https://github.com/punkpeye/awesome-mcp-servers) directory.
+
 ## License
 
 Prototype code is intended for private evaluation. Seed snippets remain under their upstream licenses. See `seed/ATTRIBUTION.md`.

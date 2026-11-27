@@ -71,6 +71,8 @@ describe("seed and human page", () => {
     expect(page.text).toContain("/browse/openai");
     const home = await http("/");
     expect(home.text).toContain('href="/check"');
+    expect(home.text).toContain("https://glama.ai/mcp/connectors/dev.llmdocs/docs");
+    expect(home.text).toContain("https://github.com/punkpeye/awesome-mcp-servers");
     const sitemap = await http("/sitemap.xml");
     expect(sitemap.text).toContain("/check");
     const stripeDocs = await http("/browse/stripe");

@@ -358,6 +358,7 @@ export function landingHtml(cfg: AppConfig, catalog: CatalogLibrary[]): string {
 
     <footer>
       Payments go to the site treasury. Contributor and owner payouts are batched from a separate job (minimum $0.10, always paid in USDC). This is not a background-check or screening service.
+      <p class="meta"><a href="https://glama.ai/mcp/connectors/dev.llmdocs/docs"><img src="https://glama.ai/mcp/connectors/dev.llmdocs/docs/badges/score.svg" width="110" height="20" alt="llmdocs.dev MCP connector score on Glama"></a> Listed on <a href="https://glama.ai/mcp/connectors/dev.llmdocs/docs">Glama</a>. See also the <a href="https://github.com/punkpeye/awesome-mcp-servers">awesome-mcp-servers</a> directory.</p>
     </footer>
   </main>`;
   return pageShell({
