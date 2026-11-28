@@ -56,6 +56,7 @@ Site-seeded snippets are owned by the house contributor. When a paid lookup uses
 | Ruff | MIT (astral-sh/ruff, including docs/) | https://docs.astral.sh/ruff | Short original summaries of the Tutorial and Linter (error suppression) docs and the 0.15.0/0.16.0/0.17.0 release notes (CHANGELOG.md, changelogs/0.15.x.md, changelogs/0.16.x.md); ruff 0.17.6, retrieved 2026-11-25 |
 | Biome | MIT OR Apache-2.0 (biomejs/biome); website docs MIT (biomejs/website) | https://biomejs.dev | Short original summaries of the Quick start, Configure Biome, Suppressions, Integrate with your VCS, Migrate from other tools, and Continuous integration docs and the 2.5.0/2.6.2 release notes (packages/@biomejs/biome/CHANGELOG.md); @biomejs/biome 2.6.9, retrieved 2026-11-26 |
 | ESLint | MIT (eslint/eslint, including docs/; eslint.org content licensed MIT) | https://eslint.org/docs | Short original summaries of the Getting Started, Configuration Files, and Migrate to v10.x docs and the v10.15.0 release notes; eslint 10.15.0, retrieved 2026-11-27 |
+| Prettier | MIT (prettier/prettier, including docs/ and website/blog/) | https://prettier.io/docs | Short original summaries of the Install, Configuration File, Options, CLI, Ignoring Code, and Integrating with Linters docs and the 3.8.0/3.9.0/3.10.0 release posts and CHANGELOG.md (3.10.1); prettier 3.10.1, retrieved 2026-11-28 |
 
 ## Proprietary official docs (short original summaries only)
 

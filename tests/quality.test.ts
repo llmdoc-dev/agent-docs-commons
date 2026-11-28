@@ -43,6 +43,8 @@ describe("quality checks", () => {
     expect(checkSourceUrl("https://github.com/biomejs/biome/blob/main/packages/@biomejs/biome/CHANGELOG.md").ok).toBe(true);
     expect(checkSourceUrl("https://eslint.org/docs/latest/use/migrate-to-10.0.0").ok).toBe(true);
     expect(checkSourceUrl("https://github.com/eslint/eslint/blob/main/docs/src/use/getting-started.md").ok).toBe(true);
+    expect(checkSourceUrl("https://prettier.io/docs/configuration").ok).toBe(true);
+    expect(checkSourceUrl("https://github.com/prettier/prettier/blob/main/docs/install.md").ok).toBe(true);
     expect(checkSourceUrl("https://tailwindcss.com/docs/installation").ok).toBe(false);
   });
 

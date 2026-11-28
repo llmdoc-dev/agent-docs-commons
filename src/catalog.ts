@@ -58,6 +58,7 @@ const LIBRARY_NAMES: Record<string, string> = {
   ruff: "Ruff",
   biome: "Biome",
   eslint: "ESLint",
+  prettier: "Prettier",
 };
 
 export type CatalogSnippet = {

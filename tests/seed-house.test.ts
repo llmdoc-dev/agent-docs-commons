@@ -29,7 +29,7 @@ describe("official seed catalog", () => {
     const libraries = [...new Set(rows.map((r) => r.library))].sort();
     expect(libraries.length).toBeGreaterThanOrEqual(15);
     expect(libraries.length).toBeLessThanOrEqual(60);
-    expect(rows.length).toBe(185);
+    expect(rows.length).toBe(188);
     expect(libraries).not.toContain("tailwind");
     expect(libraries).toEqual(expect.arrayContaining(["stripe", "openai", "langchain", "aws-sdk", "boto3"]));
     expect(libraries).toEqual(
@@ -58,6 +58,7 @@ describe("official seed catalog", () => {
         "ruff",
         "biome",
         "eslint",
+        "prettier",
       ]),
     );
     const ids = new Set<string>();

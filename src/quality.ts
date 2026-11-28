@@ -75,6 +75,7 @@ export const ALLOWED_SOURCE_HOSTS = new Set([
   "docs.astral.sh",
   "biomejs.dev",
   "eslint.org",
+  "prettier.io",
 ]);
 
 export const ALLOWED_GITHUB_REPOS = [
@@ -141,6 +142,7 @@ export const ALLOWED_GITHUB_REPOS = [
   "biomejs/biome",
   "biomejs/website",
   "eslint/eslint",
+  "prettier/prettier",
 ];
 
 export const MAX_BODY_CHARS = 1500;
